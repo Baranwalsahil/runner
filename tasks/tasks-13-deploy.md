@@ -36,7 +36,7 @@ services:
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-    pythonVersion: "3.12"
+    pythonVersion: "3.13"
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -92,7 +92,7 @@ services:
 |------|---------|
 | `render.yaml` | Render blueprint (python runtime) |
 | `client/vercel.json` | Vercel config |
-| `server/runtime.txt` | `python-3.12.x` pin (Render auto-detects, but pin explicitly) |
+| `server/runtime.txt` | `python-3.13.x` pin (Render auto-detects, but pin explicitly) |
 | `.github/workflows/ci.yml` | (Optional) GH Actions: client `npm test` + server `pytest` on PR |
 | `README.md` (repo root) | Quickstart (Python venv + npm) + architecture summary + links to tasks/ |
 
@@ -118,7 +118,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: '3.12' }
+        with: { python-version: '3.13' }
       - run: pip install -r requirements.txt
       - run: pytest -v
 ```
