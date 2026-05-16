@@ -1,0 +1,42 @@
+# Territory Run — Task Index
+
+Build plan derived from `claude.md` + Stitch HTML mockups in `stitch_territory_runner/`.
+
+## Sequence
+
+Tasks run strictly in order — later tasks depend on earlier scaffolding.
+
+| # | File | Title | Layer | Est. effort |
+|---|------|-------|-------|-------------|
+| 01 | [tasks-01-frontend-scaffold.md](./tasks-01-frontend-scaffold.md) | Frontend scaffold (Vite + React + Tailwind theme) | FE | S |
+| 02 | [tasks-02-shared-layout.md](./tasks-02-shared-layout.md) | Shared layout (TopNav, AlertBar, Footer, FAB) + router | FE | M |
+| 03 | [tasks-03-landing-page.md](./tasks-03-landing-page.md) | Port Landing Page screen | FE | M |
+| 04 | [tasks-04-player-dashboard.md](./tasks-04-player-dashboard.md) | Port Player Dashboard (incl. scroll battles fix) | FE | M |
+| 05 | [tasks-05-battlefield-map.md](./tasks-05-battlefield-map.md) | Port Battlefield Map (MapLibre + h3-js) | FE | L |
+| 06 | [tasks-06-global-leaderboard.md](./tasks-06-global-leaderboard.md) | Port Global Leaderboard | FE | M |
+| 07 | [tasks-07-backend-scaffold.md](./tasks-07-backend-scaffold.md) | Backend scaffold (Express, env, healthcheck) | BE | S |
+| 08 | [tasks-08-db-schema.md](./tasks-08-db-schema.md) | Postgres + PostGIS schema + migrations | DB | M |
+| 09 | [tasks-09-auth-supabase.md](./tasks-09-auth-supabase.md) | Supabase auth (FE + BE JWT verify) | Auth | M |
+| 10 | [tasks-10-runs-api.md](./tasks-10-runs-api.md) | Runs ingest → H3 claim → DB upsert | BE | L |
+| 11 | [tasks-11-territory-leaderboard-api.md](./tasks-11-territory-leaderboard-api.md) | Territory + Leaderboard GET endpoints | BE | M |
+| 12 | [tasks-12-realtime-cache.md](./tasks-12-realtime-cache.md) | Redis cache + polling/real-time updates | Infra | M |
+| 13 | [tasks-13-deploy.md](./tasks-13-deploy.md) | Vercel + Render + Neon + Supabase deploy | DevOps | M |
+
+## Rules
+
+- Don't skip ahead. Earlier task wires deps later tasks assume.
+- Each task file = self-contained brief: goal, prereqs, install cmds, files, acceptance.
+- Mockups in `/home/sahil/runner/stitch_territory_runner/*.html` are reference truth for visuals.
+- Tech stack locked by `claude.md` § Tech Stack. No substitutions without flagging.
+
+## Working directory layout (final)
+
+```
+runner/
+├── claude.md
+├── stitch_territory_runner/   # design refs (DO NOT edit further)
+├── tasks/                     # this folder
+├── client/                    # built in tasks 01-06
+├── server/                    # built in tasks 07-12
+└── shared/                    # built in task 08
+```

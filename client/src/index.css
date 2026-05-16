@@ -1,0 +1,48 @@
+@import "maplibre-gl/dist/maplibre-gl.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #131313;
+    background-image: radial-gradient(
+      circle at 2px 2px,
+      rgba(195, 244, 0, 0.05) 1px,
+      transparent 0
+    );
+    background-size: 40px 40px;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: rgba(32, 31, 31, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(142, 147, 121, 0.2);
+  }
+
+  .neon-border-cyan {
+    border: 1px solid rgba(0, 219, 233, 0.4);
+    box-shadow: 0 0 15px rgba(0, 219, 233, 0.1);
+  }
+
+  .neon-border-lime {
+    border: 1px solid rgba(195, 244, 0, 0.4);
+    box-shadow: 0 0 15px rgba(195, 244, 0, 0.1);
+  }
+
+  .hex-grid {
+    background-image: radial-gradient(circle, #c3f400 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+
+  .hex-mesh {
+    mask-image: radial-gradient(circle, black, transparent 80%);
+    background-image: url("data:image/svg+xml,%3Csvg width='24' height='42' viewBox='0 0 24 42' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 0l12 6.928v13.856L12 27.712 0 20.784V6.928L12 0zm0 27.712l12 6.928v13.856l-12 6.928-12-6.928V34.64l12-6.928z' fill='%23abd600' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+  }
+}
