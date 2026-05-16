@@ -1,0 +1,368 @@
+<html class="dark"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&amp;family=Lexend:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    body {
+      background-color: #131313;
+      background-image: 
+        radial-gradient(circle at 2px 2px, rgba(195, 244, 0, 0.05) 1px, transparent 0);
+      background-size: 40px 40px;
+    }
+    .glass-panel {
+      background: rgba(32, 31, 31, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(142, 147, 121, 0.2);
+    }
+    .neon-border-cyan {
+      border: 1px solid rgba(0, 219, 233, 0.4);
+      box-shadow: 0 0 15px rgba(0, 219, 233, 0.1);
+    }
+    .neon-border-lime {
+      border: 1px solid rgba(195, 244, 0, 0.4);
+      box-shadow: 0 0 15px rgba(195, 244, 0, 0.1);
+    }
+    .hex-mesh {
+      mask-image: radial-gradient(circle, black, transparent 80%);
+      background-image: url("data:image/svg+xml,%3Csvg width='24' height='42' viewBox='0 0 24 42' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 0l12 6.928v13.856L12 27.712 0 20.784V6.928L12 0zm0 27.712l12 6.928v13.856l-12 6.928-12-6.928V34.64l12-6.928z' fill='%23abd600' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+    }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "error": "#ffb4ab",
+                  "surface-container-high": "#2a2a2a",
+                  "outline": "#8e9379",
+                  "surface": "#131313",
+                  "on-primary-container": "#556d00",
+                  "primary-container": "#c3f400",
+                  "primary": "#ffffff",
+                  "primary-fixed-dim": "#abd600",
+                  "inverse-surface": "#e5e2e1",
+                  "tertiary-container": "#ffdad5",
+                  "on-error": "#690005",
+                  "secondary-fixed-dim": "#00dbe9",
+                  "on-surface": "#e5e2e1",
+                  "inverse-primary": "#506600",
+                  "on-surface-variant": "#c4c9ac",
+                  "surface-container-lowest": "#0e0e0e",
+                  "tertiary-fixed": "#ffdad5",
+                  "on-error-container": "#ffdad6",
+                  "tertiary": "#ffffff",
+                  "surface-variant": "#353534",
+                  "secondary-fixed": "#7df4ff",
+                  "outline-variant": "#444933",
+                  "on-secondary": "#00363a",
+                  "on-primary": "#283500",
+                  "inverse-on-surface": "#313030",
+                  "on-tertiary-container": "#ca0a0f",
+                  "on-secondary-fixed-variant": "#004f54",
+                  "surface-container": "#201f1f",
+                  "surface-bright": "#393939",
+                  "background": "#131313",
+                  "surface-dim": "#131313",
+                  "surface-tint": "#abd600",
+                  "error-container": "#93000a",
+                  "secondary": "#d3fbff",
+                  "surface-container-low": "#1c1b1b",
+                  "primary-fixed": "#c3f400",
+                  "secondary-container": "#00eefc",
+                  "on-secondary-fixed": "#002022",
+                  "on-tertiary": "#690003",
+                  "on-tertiary-fixed": "#410001",
+                  "surface-container-highest": "#353534",
+                  "on-primary-fixed-variant": "#3c4d00",
+                  "on-background": "#e5e2e1",
+                  "tertiary-fixed-dim": "#ffb4aa",
+                  "on-secondary-container": "#00686f",
+                  "on-primary-fixed": "#161e00",
+                  "on-tertiary-fixed-variant": "#930005"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.125rem",
+                  "lg": "0.25rem",
+                  "xl": "0.5rem",
+                  "full": "0.75rem"
+          },
+          "spacing": {
+                  "base": "8px",
+                  "lg": "40px",
+                  "gutter": "16px",
+                  "xs": "4px",
+                  "sm": "12px",
+                  "md": "24px",
+                  "margin-safe": "24px",
+                  "xl": "64px"
+          },
+          "fontFamily": {
+                  "label-bold": ["Inter"],
+                  "body-md": ["Inter"],
+                  "headline-lg": ["Lexend"],
+                  "stats-display": ["Lexend"],
+                  "headline-md": ["Lexend"],
+                  "body-lg": ["Inter"],
+                  "headline-xl": ["Lexend"]
+          },
+          "fontSize": {
+                  "label-bold": ["14px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                  "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                  "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                  "stats-display": ["20px", {"lineHeight": "1", "fontWeight": "600"}],
+                  "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                  "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                  "headline-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+          }
+        },
+      },
+    }
+  </script>
+</head>
+<body class="min-h-screen text-on-background flex flex-col font-body-md overflow-x-hidden">
+<!-- TopNavBar Large -->
+<header class="fixed top-0 z-50 w-full h-16 flex justify-between items-center px-margin-safe bg-surface/60 backdrop-blur-lg border-b border-outline-variant/30 shadow-[0_0_15px_rgba(195,244,0,0.1)]">
+<div class="flex items-center gap-base">
+<span class="font-headline-md text-primary-fixed tracking-tighter italic font-black">TERRITORY RUN</span>
+</div>
+<nav class="hidden md:flex gap-lg">
+<a class="text-on-surface-variant font-label-bold hover:text-primary transition-colors" href="#">BATTLEFIELD</a>
+<a class="text-primary-fixed border-b-2 border-primary-fixed font-label-bold pb-1" href="#">DASHBOARD</a>
+<a class="text-on-surface-variant font-label-bold hover:text-primary transition-colors" href="#">LEADERBOARD</a>
+</nav>
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined text-primary-fixed hover:bg-surface-variant/50 p-2 rounded-full transition-all duration-200" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-primary-fixed hover:bg-surface-variant/50 p-2 rounded-full transition-all duration-200" data-icon="account_circle">account_circle</button>
+</div>
+</header>
+<!-- Alert Bar -->
+<div class="fixed top-16 z-40 w-full h-10 flex justify-center items-center px-4 gap-base bg-error-container/80 backdrop-blur-md border-b border-error/20 animate-pulse">
+<span class="material-symbols-outlined text-on-error-container" data-icon="warning">warning</span>
+<span class="font-label-bold text-on-error-container uppercase tracking-widest">SECTOR B-4: CONTESTED BY @RUNNER_X</span>
+<button class="bg-on-error-container text-error-container px-3 py-1 font-label-bold text-[10px] rounded hover:brightness-110 transition-all">RECLAIM</button>
+</div>
+<main class="mt-32 px-margin-safe max-w-7xl mx-auto w-full flex-grow pb-xl">
+<!-- Hero Stats / Bento Header -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
+<!-- Territory Dominance -->
+<div class="md:col-span-2 glass-panel neon-border-lime p-md rounded-xl relative overflow-hidden">
+<div class="absolute inset-0 hex-mesh opacity-20 pointer-events-none"></div>
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-md">
+<div>
+<p class="font-label-bold text-on-surface-variant mb-1">TOTAL CELLS OWNED</p>
+<h1 class="font-headline-xl text-primary-fixed">1,284 <span class="text-headline-md font-normal text-on-surface-variant">HEX</span></h1>
+</div>
+<div class="bg-primary-container text-on-primary-container font-label-bold px-3 py-1 rounded-full text-xs">
+              TOP 5% IN SEATTLE
+            </div>
+</div>
+<div class="h-48 w-full flex items-end gap-2 px-1">
+<!-- Mock Bar Chart for Growth -->
+<div class="flex-1 bg-surface-container-high h-[30%] rounded-t-sm relative group">
+<div class="absolute bottom-0 w-full bg-primary-fixed/40 h-full"></div>
+</div>
+<div class="flex-1 bg-surface-container-high h-[45%] rounded-t-sm relative group">
+<div class="absolute bottom-0 w-full bg-primary-fixed/50 h-full"></div>
+</div>
+<div class="flex-1 bg-surface-container-high h-[40%] rounded-t-sm relative group">
+<div class="absolute bottom-0 w-full bg-primary-fixed/60 h-full"></div>
+</div>
+<div class="flex-1 bg-surface-container-high h-[65%] rounded-t-sm relative group">
+<div class="absolute bottom-0 w-full bg-primary-fixed/70 h-full"></div>
+</div>
+<div class="flex-1 bg-surface-container-high h-[85%] rounded-t-sm relative group">
+<div class="absolute bottom-0 w-full bg-primary-fixed/80 h-full"></div>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-primary-fixed font-stats-display text-xs">+12.4%</div>
+</div>
+<div class="flex-1 bg-surface-container-high h-[75%] rounded-t-sm relative group">
+<div class="absolute bottom-0 w-full bg-primary-fixed/90 h-full"></div>
+</div>
+<div class="flex-1 bg-primary-fixed h-[100%] rounded-t-sm shadow-[0_0_20px_rgba(195,244,0,0.3)]"></div>
+</div>
+<p class="font-label-bold text-on-surface-variant text-center mt-4">TERRITORY GROWTH (LAST 7 DAYS)</p>
+</div>
+</div>
+<!-- Quick Run Stats -->
+<div class="glass-panel p-md rounded-xl flex flex-col justify-between">
+<div class="flex items-center gap-base mb-base">
+<span class="material-symbols-outlined text-secondary-fixed-dim" data-icon="sprint">sprint</span>
+<p class="font-label-bold text-on-surface-variant">TRADITIONAL STATS</p>
+</div>
+<div class="space-y-md">
+<div class="flex justify-between items-end border-b border-outline-variant/30 pb-2">
+<span class="text-on-surface-variant font-label-bold">PACE</span>
+<span class="font-stats-display text-primary text-2xl">7'12" <small class="text-xs text-on-surface-variant">/MI</small></span>
+</div>
+<div class="flex justify-between items-end border-b border-outline-variant/30 pb-2">
+<span class="text-on-surface-variant font-label-bold">MILES</span>
+<span class="font-stats-display text-primary text-2xl">42.8 <small class="text-xs text-on-surface-variant">WEEKLY</small></span>
+</div>
+<div class="flex justify-between items-end border-b border-outline-variant/30 pb-2">
+<span class="text-on-surface-variant font-label-bold">CALORIES</span>
+<span class="font-stats-display text-primary text-2xl">3,450 <small class="text-xs text-on-surface-variant">KCAL</small></span>
+</div>
+</div>
+<button class="mt-base w-full bg-secondary-fixed text-on-secondary-fixed font-label-bold py-3 rounded-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-base">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+          LOG SESSION
+        </button>
+</div>
+</div>
+<!-- Middle Section: Map & Battles -->
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-gutter h-full">
+<!-- Territory Map Focus -->
+<div class="lg:col-span-3 glass-panel rounded-xl overflow-hidden relative group h-[500px]">
+<div class="absolute inset-0 bg-surface-container-low">
+<img class="w-full h-full object-cover grayscale opacity-40 mix-blend-overlay" data-alt="A detailed, high-contrast digital map interface showing a modern urban layout of Seattle in dark mode. The map features glowing green and cyan highlight regions representing player-controlled territories, creating a technical HUD-style aesthetic. The lighting is low-key with vibrant neon accents reflecting off architectural details. The atmosphere is competitive and futuristic, consistent with high-performance athletic branding." data-location="Seattle, WA" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHR4w0XSEUpj8b0rma3P3j6NmQrzEBnlWRrgbw_AQ-AsSTeoZ4nrMOQYfjUM5YNP1P9sqPvC6nfriR_fckIFsxnzHarQ_k6RSegCfifSvz8gGMKcnlbNRNKsaQBkOjLdkHodGFVG2ye7hDTyNUmu1vy87v5Q5Z7HqbkT76eLm8BQ2RzItMYyuIgJeTTgUb0WnOCc5MneuDWs7dbvqyYw1xozmuIoQXI6u-mFeZ8plQt_aXQK04-NYd9rZhT46RaJDWY6m2MavhU3fD"/>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent"></div>
+<!-- Map HUD Overlays -->
+<div class="absolute top-md left-md p-sm glass-panel neon-border-cyan rounded-lg">
+<div class="flex items-center gap-base">
+<div class="w-3 h-3 rounded-full bg-secondary-fixed animate-pulse"></div>
+<span class="font-label-bold text-xs">LIVE BATTLES: 14</span>
+</div>
+</div>
+<div class="absolute bottom-md right-md flex flex-col gap-base">
+<button class="bg-surface-container-highest/80 backdrop-blur-md p-base rounded-full border border-outline-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-all">
+<span class="material-symbols-outlined" data-icon="zoom_in">zoom_in</span>
+</button>
+<button class="bg-surface-container-highest/80 backdrop-blur-md p-base rounded-full border border-outline-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-all">
+<span class="material-symbols-outlined" data-icon="zoom_out">zoom_out</span>
+</button>
+</div>
+<!-- Floating Hex Detail -->
+<div class="absolute top-1/2 left-1/3 -translate-y-1/2 glass-panel p-md rounded-xl neon-border-lime max-w-[200px]">
+<p class="font-label-bold text-[10px] text-primary-fixed mb-1">CAPITOL HILL DISTRICT</p>
+<p class="font-body-md font-bold mb-2 text-white">92% OWNERSHIP</p>
+<div class="w-full bg-surface-container h-1 rounded-full overflow-hidden">
+<div class="bg-primary-fixed h-full w-[92%] shadow-[0_0_8px_#c3f400]"></div>
+</div>
+</div>
+</div>
+<!-- Recent Battles Feed -->
+<div class="glass-panel rounded-xl flex flex-col h-[500px]">
+<div class="p-md border-b border-outline-variant/30 flex justify-between items-center flex-shrink-0">
+<h3 class="font-label-bold uppercase tracking-widest text-on-surface-variant">Recent Battles</h3>
+<span class="material-symbols-outlined text-primary-fixed text-sm" data-icon="history">history</span>
+</div>
+<div id="battles-list" class="flex-grow overflow-y-auto divide-y divide-outline-variant/20 scroll-smooth">
+<!-- Battle Item: Loss -->
+<div class="p-md hover:bg-surface-variant/20 transition-all">
+<div class="flex justify-between items-start mb-base">
+<span class="text-error font-label-bold text-xs uppercase">Territory Lost</span>
+<span class="text-on-surface-variant text-[10px]">2m ago</span>
+</div>
+<p class="text-sm font-medium mb-1">Sector D-9 Overrun</p>
+<p class="text-xs text-on-surface-variant">by <span class="text-secondary-fixed">@GhostRunner</span></p>
+<button class="mt-base text-xs font-label-bold text-primary-fixed border border-primary-fixed/30 px-2 py-1 rounded hover:bg-primary-fixed hover:text-on-primary-fixed transition-all">CHALLENGE</button>
+</div>
+<!-- Battle Item: Gain -->
+<div class="p-md hover:bg-surface-variant/20 transition-all bg-primary-fixed/5 border-l-2 border-primary-fixed">
+<div class="flex justify-between items-start mb-base">
+<span class="text-primary-fixed font-label-bold text-xs uppercase">Territory Gained</span>
+<span class="text-on-surface-variant text-[10px]">1h ago</span>
+</div>
+<p class="text-sm font-medium mb-1">Central Park East</p>
+<p class="text-xs text-on-surface-variant">Claimed from <span class="text-secondary-fixed">@StreetKing</span></p>
+</div>
+<!-- Battle Item: Defense -->
+<div class="p-md hover:bg-surface-variant/20 transition-all">
+<div class="flex justify-between items-start mb-base">
+<span class="text-on-surface-variant font-label-bold text-xs uppercase">Defended</span>
+<span class="text-on-surface-variant text-[10px]">3h ago</span>
+</div>
+<p class="text-sm font-medium mb-1">Interbay Hub</p>
+<p class="text-xs text-on-surface-variant">3 cells held vs <span class="text-secondary-fixed">@Apex</span></p>
+</div>
+<!-- Battle Item: Loss -->
+<div class="p-md hover:bg-surface-variant/20 transition-all">
+<div class="flex justify-between items-start mb-base">
+<span class="text-error font-label-bold text-xs uppercase">Territory Lost</span>
+<span class="text-on-surface-variant text-[10px]">5h ago</span>
+</div>
+<p class="text-sm font-medium mb-1">Queen Anne Stairway</p>
+<p class="text-xs text-on-surface-variant">by <span class="text-secondary-fixed">@MountainGoat</span></p>
+</div>
+</div>
+<button id="load-more-btn" class="w-full p-md border-t border-outline-variant/30 flex items-center justify-center gap-base text-xs font-label-bold uppercase tracking-widest text-on-surface-variant hover:text-primary-fixed hover:bg-surface-variant/20 transition-all flex-shrink-0">
+<span id="load-more-label">View Full History</span>
+<span id="load-more-icon" class="material-symbols-outlined text-base" data-icon="arrow_downward">arrow_downward</span>
+</button>
+</div>
+<script>
+  (function () {
+    const btn = document.getElementById('load-more-btn');
+    const list = document.getElementById('battles-list');
+    const label = document.getElementById('load-more-label');
+    const icon = document.getElementById('load-more-icon');
+    const extra = [
+      { type: 'lost', label: 'Territory Lost', time: '8h ago', title: 'Beacon Hill Loop', sub: 'by ', user: '@NightOwl', accent: false },
+      { type: 'gained', label: 'Territory Gained', time: '11h ago', title: 'Pike Place Market', sub: 'Claimed from ', user: '@SunsetDash', accent: true },
+      { type: 'defended', label: 'Defended', time: '14h ago', title: 'Fremont Bridge', sub: '5 cells held vs ', user: '@TrailBlaze', accent: false },
+      { type: 'gained', label: 'Territory Gained', time: '1d ago', title: 'Gas Works Park', sub: 'Claimed from ', user: '@LakeRunner', accent: true },
+      { type: 'lost', label: 'Territory Lost', time: '1d ago', title: 'Ballard Locks', sub: 'by ', user: '@WaveCrest', accent: false },
+      { type: 'defended', label: 'Defended', time: '2d ago', title: 'Discovery Park', sub: '2 cells held vs ', user: '@WindRunner', accent: false },
+      { type: 'gained', label: 'Territory Gained', time: '2d ago', title: 'Green Lake Path', sub: 'Claimed from ', user: '@PaceMaker', accent: true },
+      { type: 'lost', label: 'Territory Lost', time: '3d ago', title: 'Magnolia Bluff', sub: 'by ', user: '@CliffHanger', accent: false }
+    ];
+    let loaded = false;
+    function classFor(type) {
+      if (type === 'lost') return 'text-error';
+      if (type === 'gained') return 'text-primary-fixed';
+      return 'text-on-surface-variant';
+    }
+    function render(item) {
+      const wrap = document.createElement('div');
+      wrap.className = 'p-md hover:bg-surface-variant/20 transition-all' + (item.accent ? ' bg-primary-fixed/5 border-l-2 border-primary-fixed' : '');
+      wrap.innerHTML = `
+        <div class="flex justify-between items-start mb-base">
+          <span class="${classFor(item.type)} font-label-bold text-xs uppercase">${item.label}</span>
+          <span class="text-on-surface-variant text-[10px]">${item.time}</span>
+        </div>
+        <p class="text-sm font-medium mb-1">${item.title}</p>
+        <p class="text-xs text-on-surface-variant">${item.sub}<span class="text-secondary-fixed">${item.user}</span></p>
+      `;
+      return wrap;
+    }
+    btn.addEventListener('click', () => {
+      if (!loaded) {
+        const firstNew = render(extra[0]);
+        extra.forEach((item, i) => list.appendChild(i === 0 ? firstNew : render(item)));
+        loaded = true;
+        label.textContent = 'End of History';
+        icon.textContent = 'check';
+        icon.setAttribute('data-icon', 'check');
+        btn.disabled = true;
+        btn.classList.add('opacity-60', 'cursor-not-allowed');
+        firstNew.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  })();
+</script>
+</div>
+</main>
+<!-- Footer -->
+<footer class="mt-auto border-t border-outline-variant/20 bg-surface-container-lowest">
+<div class="max-w-7xl mx-auto w-full px-margin-safe py-md flex flex-col md:flex-row justify-between items-center gap-md">
+<div class="font-headline-sm text-primary-fixed/50">TERRITORY RUN</div>
+<div class="flex gap-lg">
+<a class="text-on-surface-variant font-label-bold hover:text-primary transition-colors" href="#">Game Rules</a>
+<a class="text-on-surface-variant font-label-bold hover:text-primary transition-colors" href="#">Privacy Protocol</a>
+<a class="text-on-surface-variant font-label-bold hover:text-primary transition-colors" href="#">System Status</a>
+<a class="text-on-surface-variant font-label-bold hover:text-primary transition-colors" href="#">Support</a>
+</div>
+<p class="text-body-md text-on-surface-variant/60 font-label-bold">© 2024 TERRITORY RUN. DOMINATE THE GRID.</p>
+</div>
+</footer>
+<!-- FAB: Contextual to Home/Dashboard -->
+<button class="fixed bottom-md right-md bg-primary-fixed text-on-primary-fixed p-md rounded-full shadow-xl hover:scale-110 active:scale-95 transition-all z-50 flex items-center justify-center group">
+<span class="material-symbols-outlined text-3xl" data-icon="add">add</span>
+<span class="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:ml-2 transition-all duration-300 font-label-bold uppercase whitespace-nowrap">Start Session</span>
+</button>
+</body></html>

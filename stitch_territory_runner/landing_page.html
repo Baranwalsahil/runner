@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TERRITORY RUN | DOMINATE THE GRID</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&amp;family=Inter:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "error": "#ffb4ab",
+                    "surface-container-high": "#2a2a2a",
+                    "outline": "#8e9379",
+                    "surface": "#131313",
+                    "on-primary-container": "#556d00",
+                    "primary-container": "#c3f400",
+                    "primary": "#ffffff",
+                    "primary-fixed-dim": "#abd600",
+                    "inverse-surface": "#e5e2e1",
+                    "tertiary-container": "#ffdad5",
+                    "on-error": "#690005",
+                    "secondary-fixed-dim": "#00dbe9",
+                    "on-surface": "#e5e2e1",
+                    "inverse-primary": "#506600",
+                    "on-surface-variant": "#c4c9ac",
+                    "surface-container-lowest": "#0e0e0e",
+                    "tertiary-fixed": "#ffdad5",
+                    "on-error-container": "#ffdad6",
+                    "tertiary": "#ffffff",
+                    "surface-variant": "#353534",
+                    "secondary-fixed": "#7df4ff",
+                    "outline-variant": "#444933",
+                    "on-secondary": "#00363a",
+                    "on-primary": "#283500",
+                    "inverse-on-surface": "#313030",
+                    "on-tertiary-container": "#ca0a0f",
+                    "on-secondary-fixed-variant": "#004f54",
+                    "surface-container": "#201f1f",
+                    "surface-bright": "#393939",
+                    "background": "#131313",
+                    "surface-dim": "#131313",
+                    "surface-tint": "#abd600",
+                    "error-container": "#93000a",
+                    "secondary": "#d3fbff",
+                    "surface-container-low": "#1c1b1b",
+                    "primary-fixed": "#c3f400",
+                    "secondary-container": "#00eefc",
+                    "on-secondary-fixed": "#002022",
+                    "on-tertiary": "#690003",
+                    "on-tertiary-fixed": "#410001",
+                    "surface-container-highest": "#353534",
+                    "on-primary-fixed-variant": "#3c4d00",
+                    "on-background": "#e5e2e1",
+                    "tertiary-fixed-dim": "#ffb4aa",
+                    "on-secondary-container": "#00686f",
+                    "on-primary-fixed": "#161e00",
+                    "on-tertiary-fixed-variant": "#930005"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "lg": "40px",
+                    "gutter": "16px",
+                    "xs": "4px",
+                    "sm": "12px",
+                    "md": "24px",
+                    "margin-safe": "24px",
+                    "xl": "64px"
+            },
+            "fontFamily": {
+                    "label-bold": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Lexend"],
+                    "stats-display": ["Lexend"],
+                    "headline-md": ["Lexend"],
+                    "body-lg": ["Inter"],
+                    "headline-xl": ["Lexend"]
+            },
+            "fontSize": {
+                    "label-bold": ["14px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "stats-display": ["20px", {"lineHeight": "1", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(53, 53, 52, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(196, 201, 172, 0.1);
+        }
+        .hex-grid {
+            background-image: radial-gradient(circle, #c3f400 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        .pulse-error {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TopNavBar Large -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-surface/60 backdrop-blur-lg border-b border-outline-variant/30 shadow-[0_0_15px_rgba(195,244,0,0.1)] flex justify-between items-center w-full px-margin-safe h-16">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-primary-fixed tracking-tighter italic font-black">TERRITORY RUN</span>
+<div class="hidden md:flex gap-md">
+<a class="text-on-surface-variant font-label-bold hover:text-primary transition-colors" href="#">BATTLEFIELD</a>
+<a class="text-on-surface-variant font-label-bold hover:text-primary transition-colors" href="#">DASHBOARD</a>
+<a class="text-on-surface-variant font-label-bold hover:text-primary transition-colors" href="#">LEADERBOARD</a>
+</div>
+</div>
+<div class="flex items-center gap-base">
+<button class="p-base hover:bg-surface-variant/50 transition-all duration-200 rounded-full active:scale-95 opacity-80">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="notifications">notifications</span>
+</button>
+<button class="p-base hover:bg-surface-variant/50 transition-all duration-200 rounded-full active:scale-95 opacity-80">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</nav>
+<!-- TopNavBar Small (Status Banner) -->
+<div class="fixed top-16 left-0 right-0 z-40 bg-error-container/80 backdrop-blur-md border-b border-error/20 flex justify-center items-center w-full px-4 h-10 gap-base pulse-error">
+<span class="material-symbols-outlined text-on-error-container" data-icon="warning">warning</span>
+<span class="font-label-bold text-on-error-container uppercase tracking-widest text-[12px]">SECTOR B-4: CONTESTED BY @RUNNER_X</span>
+<button class="ml-base bg-on-error-container text-error-container px-sm py-xs font-label-bold rounded-full hover:brightness-110 transition-all">RECLAIM</button>
+</div>
+<main class="pt-28">
+<!-- Hero Section -->
+<section class="relative min-h-[921px] flex items-center justify-center overflow-hidden px-margin-safe">
+<div class="absolute inset-0 z-0">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background"></div>
+<img class="w-full h-full object-cover opacity-30 mix-blend-overlay" data-alt="A high-intensity nighttime city street view from a low-angle perspective, showing glowing neon lime GPS trace lines streaking across the asphalt and buildings. The atmosphere is dark, moody, and competitive with high-contrast shadows and sharp cinematic lighting. The aesthetic is technical and performance-driven, echoing a tactical HUD overlay on a modern urban battlefield." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAazTlMuTLNCvqrt-42IX7yiDIpQJXWLVT0Z5mm2CD0oQgdjqtoxh7lIp4tes68DaTyVY859e5-k19agEBydZKZ3KZMLnobnTNzoAsKMLam3x4Mvb-zol_wak9T212cjRaQ1pm6haoh-9QmF8oB6F2HzVSG3Acdgss_KMNra3SCezdAsYiaGEvEQ7Ejpf9UhA8AiIzaTvDwQGTcuyLIbBiz476KiQAdrlaxjQSvjY_v7Mdprh0M-Y5b503nz77HmsPBxCtEfaU72Z62"/>
+</div>
+<div class="relative z-10 text-center max-w-4xl">
+<h1 class="font-headline-xl text-primary mb-md tracking-tighter">DOMINATE THE <span class="text-primary-fixed italic">GRID</span></h1>
+<p class="font-body-lg text-on-surface-variant mb-xl max-w-2xl mx-auto">
+                    The world is your battlefield. Every step is a conquest. Every mile is a claim. Sync your runs, capture territory, and defend your dominion against runners worldwide.
+                </p>
+<div class="flex flex-col sm:flex-row gap-md justify-center">
+<button class="bg-primary-fixed text-on-primary-fixed px-xl py-md font-label-bold text-lg rounded-none hover:scale-105 transition-transform shadow-[0_0_30px_rgba(195,244,0,0.4)]">
+                        START RUNNING
+                    </button>
+<button class="border border-secondary-fixed-dim text-secondary-fixed-dim px-xl py-md font-label-bold text-lg rounded-none hover:bg-secondary-fixed-dim/10 transition-all shadow-[0_0_20px_rgba(0,219,233,0.2)]">
+                        VIEW BATTLEFIELD
+                    </button>
+</div>
+</div>
+</section>
+<!-- Core Loop Section -->
+<section class="py-xl px-margin-safe max-w-7xl mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Step 1: Run -->
+<div class="glass-panel p-xl rounded-xl group hover:border-primary-fixed transition-all">
+<div class="mb-md text-primary-fixed">
+<span class="material-symbols-outlined text-[48px]" data-icon="directions_run" data-weight="fill" style="font-variation-settings: 'FILL' 1;">directions_run</span>
+</div>
+<h3 class="font-headline-md text-primary mb-sm">RUN</h3>
+<p class="text-on-surface-variant font-body-md">Log your miles through GPS. Speed and elevation gain technical bonuses that increase your capture radius.</p>
+</div>
+<!-- Step 2: Claim -->
+<div class="glass-panel p-xl rounded-xl group hover:border-secondary-fixed transition-all">
+<div class="mb-md text-secondary-fixed">
+<span class="material-symbols-outlined text-[48px]" data-icon="pentagon" data-weight="fill" style="font-variation-settings: 'FILL' 1;">pentagon</span>
+</div>
+<h3 class="font-headline-md text-primary mb-sm">CLAIM</h3>
+<p class="text-on-surface-variant font-body-md">Turn distance into territory. Convert GPS traces into hexagonal claims. The more you run, the larger your empire.</p>
+</div>
+<!-- Step 3: Defend -->
+<div class="glass-panel p-xl rounded-xl group hover:border-error transition-all">
+<div class="mb-md text-error">
+<span class="material-symbols-outlined text-[48px]" data-icon="shield" data-weight="fill" style="font-variation-settings: 'FILL' 1;">shield</span>
+</div>
+<h3 class="font-headline-md text-primary mb-sm">DEFEND</h3>
+<p class="text-on-surface-variant font-body-md">Territories decay over time. Re-run your routes to fortify your borders and repel rival runners attempting a takeover.</p>
+</div>
+</div>
+</section>
+<!-- Map Preview Section -->
+<section class="py-xl px-margin-safe">
+<div class="max-w-7xl mx-auto glass-panel rounded-xl overflow-hidden relative min-h-[600px] flex items-center">
+<div class="absolute inset-0 z-0 opacity-20 hex-grid"></div>
+<div class="grid grid-cols-1 lg:grid-cols-2 w-full relative z-10 p-xl gap-xl items-center">
+<div>
+<h2 class="font-headline-xl text-primary mb-md">THE GLOBAL <span class="text-secondary-fixed">HEX-GRID</span></h2>
+<p class="font-body-lg text-on-surface-variant mb-lg">
+                            Monitor contested zones in real-time. Our tactical HUD interface displays territory ownership, decay rates, and active challenges in your local area.
+                        </p>
+<div class="space-y-base">
+<div class="flex items-center gap-md p-md bg-surface-container/50 border-l-4 border-primary-fixed">
+<div class="w-12 h-12 bg-primary-fixed/20 flex items-center justify-center rounded-lg">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="leaderboard">leaderboard</span>
+</div>
+<div>
+<p class="font-label-bold text-primary">YOUR RANK: #42</p>
+<p class="text-xs text-on-surface-variant uppercase">340 HEXES OWNED</p>
+</div>
+</div>
+<div class="flex items-center gap-md p-md bg-surface-container/50 border-l-4 border-error">
+<div class="w-12 h-12 bg-error/20 flex items-center justify-center rounded-lg">
+<span class="material-symbols-outlined text-error" data-icon="notification_important">notification_important</span>
+</div>
+<div>
+<p class="font-label-bold text-error">CRITICAL ALERT</p>
+<p class="text-xs text-on-surface-variant uppercase">DOWNTOWN HUB UNDER ATTACK</p>
+</div>
+</div>
+</div>
+</div>
+<div class="relative group">
+<div class="absolute -inset-4 bg-primary-fixed/10 blur-3xl group-hover:bg-primary-fixed/20 transition-all"></div>
+<div class="relative glass-panel rounded-xl border-outline-variant/30 overflow-hidden shadow-2xl">
+<img class="w-full h-auto" data-alt="A stylized digital map interface showing a futuristic Tokyo cityscape overlaid with a neon green hexagonal grid. Some hexagons pulse with a vibrant cyan light representing claimed territory, while others are highlighted in a sharp warning red to indicate contested zones. The lighting is dark and high-contrast, mimicking a military-grade tactical display used for territorial management and athlete tracking." data-location="Tokyo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBm8bB5FO4K5Y0a9j9cBlba3jdX-HKKb5kUF8SP9l3lflXogQKeUHDBBWMCMVP8m3IlXzPzGi84ReLldQNOp4Bla_Jwex_RjHt-9-L2Frbc5QAbZcs24GhoeOePdLFBU4kffVihT26yRlgK8pTN19L3O0OUTaTGQ_yz1WfzV5lOiW4ko9pSPhf_o445WPV9043QMrWgUicLwjtNu7km86PIHglEafA0nc9-YYRCd_Wd8juv_9LBPQr9r1Z38Hz0dFIS_8OiZ_Msxh8S"/>
+<div class="absolute bottom-base left-base right-base p-md glass-panel flex justify-between items-center rounded-lg">
+<div class="flex items-center gap-base">
+<div class="w-3 h-3 bg-primary-fixed rounded-full animate-pulse"></div>
+<span class="font-label-bold text-primary">LIVE INTEL: SECTOR J-9</span>
+</div>
+<span class="text-xs font-mono text-primary-fixed">35.6762° N, 139.6503° E</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="py-xl text-center px-margin-safe bg-surface-container-lowest border-y border-outline-variant/20">
+<h2 class="font-headline-xl text-primary mb-md">READY TO DOMINATE?</h2>
+<p class="font-body-lg text-on-surface-variant mb-xl max-w-xl mx-auto">Join thousands of runners turning their daily exercise into a global strategy game.</p>
+<button class="bg-primary-fixed text-on-primary-fixed px-xl py-md font-label-bold text-xl rounded-none hover:scale-105 transition-all shadow-[0_0_40px_rgba(195,244,0,0.3)]">
+                START RUNNING
+            </button>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant/20">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-margin-safe py-md max-w-7xl mx-auto gap-md">
+<div class="flex flex-col items-center md:items-start gap-xs">
+<span class="font-headline-sm text-primary-fixed/50">TERRITORY RUN</span>
+<p class="text-on-surface-variant font-body-md text-sm">© 2024 TERRITORY RUN. DOMINATE THE GRID.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-md">
+<a class="text-on-surface-variant font-label-bold hover:text-primary transition-colors" href="#">Game Rules</a>
+<a class="text-on-surface-variant font-label-bold hover:text-primary transition-colors" href="#">Privacy Protocol</a>
+<a class="text-on-surface-variant font-label-bold hover:text-primary transition-colors" href="#">System Status</a>
+<a class="text-on-surface-variant font-label-bold hover:text-primary transition-colors" href="#">Support</a>
+</div>
+<div class="flex gap-base">
+<button class="text-on-surface-variant hover:text-secondary-fixed transition-colors">
+<span class="material-symbols-outlined" data-icon="language">language</span>
+</button>
+<button class="text-on-surface-variant hover:text-secondary-fixed transition-colors">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+</button>
+</div>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,58 @@
+import { NavLink, Link } from "react-router-dom";
+import Icon from "./Icon.jsx";
+
+const NAV_LINKS = [
+  { to: "/battlefield", label: "BATTLEFIELD" },
+  { to: "/dashboard", label: "DASHBOARD" },
+  { to: "/leaderboard", label: "LEADERBOARD" },
+];
+
+export default function TopNavBar() {
+  return (
+    <nav
+      data-testid="top-nav"
+      className="fixed top-0 left-0 right-0 z-50 bg-surface/60 backdrop-blur-lg border-b border-outline-variant/30 shadow-[0_0_15px_rgba(195,244,0,0.1)] flex justify-between items-center w-full px-margin-safe h-16"
+    >
+      <div className="flex items-center gap-md">
+        <Link
+          to="/"
+          className="font-headline-md text-primary-fixed tracking-tighter italic font-black"
+        >
+          TERRITORY RUN
+        </Link>
+        <div className="hidden md:flex gap-md">
+          {NAV_LINKS.map(({ to, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                [
+                  "font-label-bold transition-colors pb-1",
+                  isActive
+                    ? "text-primary-fixed border-b-2 border-primary-fixed"
+                    : "text-on-surface-variant hover:text-primary",
+                ].join(" ")
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center gap-base">
+        <button
+          aria-label="notifications"
+          className="p-base hover:bg-surface-variant/50 transition-all duration-200 rounded-full active:scale-95 opacity-80"
+        >
+          <Icon name="notifications" className="text-primary-fixed" />
+        </button>
+        <button
+          aria-label="account"
+          className="p-base hover:bg-surface-variant/50 transition-all duration-200 rounded-full active:scale-95 opacity-80"
+        >
+          <Icon name="account_circle" className="text-primary-fixed" />
+        </button>
+      </div>
+    </nav>
+  );
+}
