@@ -1,4 +1,4 @@
-# Task 13 — Deploy (Vercel + Render Python + Neon + Supabase)
+# Task 13 — Deploy (Vercel + Render Python + Supabase)
 
 ## Goal
 
@@ -11,17 +11,17 @@ Ship full stack to free-tier infra per CLAUDE.md § Free Deployment Guide. Produ
 
 ## Steps
 
-### 1. Database (Neon)
+### 1. Database + Auth + Realtime (Supabase)
 
-- Create project at [neon.tech](https://neon.tech)
-- Save `DATABASE_URL` (Neon pooled connection string)
-- Run `psql $DATABASE_URL < server/app/db/schema.sql` OR `python -m scripts.migrate` against prod URL once
-- Verify: `\dt` shows tables, `\dx` shows postgis
-
-### 2. Auth (Supabase)
-
-- Already created in task 09
-- Copy prod project URL + anon key + JWT secret
+- Project already created in task 09 (used for auth)
+- Enable PostGIS: dashboard → Database → Extensions → enable `postgis` and `pgcrypto`
+- Copy connection strings from dashboard → Settings → Database:
+  - **Pooled / transaction-mode** (port `6543`) → `DATABASE_URL` (app runtime)
+  - **Direct** (port `5432`) → `DATABASE_URL_DIRECT` (migrations only)
+- Copy prod project URL + anon key + JWT secret (Settings → API)
+- Run `python -m scripts.migrate` against prod direct URL once (or `psql $DATABASE_URL_DIRECT < server/app/db/schema.sql`)
+- Verify: `\dt` shows tables, `\dx` shows postgis + pgcrypto
+- Verify Realtime publication includes `claimed_cells`: dashboard → Database → Replication
 
 ### 3. Backend (Render)
 
@@ -39,7 +39,9 @@ services:
     pythonVersion: "3.13"
     envVars:
       - key: DATABASE_URL
-        sync: false
+        sync: false              # Supabase pooled URL (port 6543)
+      - key: DATABASE_URL_DIRECT
+        sync: false              # Supabase direct URL (port 5432, for migrations)
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
@@ -84,7 +86,7 @@ services:
 
 - After deploy: set Render `FRONTEND_URL` = Vercel prod URL
 - Set Vercel `VITE_API_URL` = Render prod URL (e.g., `https://territory-run-api.onrender.com`)
-- Hit `<vercel-url>/`, sign up, run a session, verify cell appears in prod Neon DB
+- Hit `<vercel-url>/`, sign up, run a session, verify cell appears in prod Supabase DB
 
 ## Files to create
 
@@ -128,7 +130,7 @@ jobs:
 - Production Vercel URL serves landing + dashboard + battlefield + leaderboard
 - Production API on Render returns 200 on `/health`
 - Sign up + login works end-to-end against prod Supabase
-- Running a session (phone w/ real GPS) claims cells visible in prod Neon DB
+- Running a session (phone w/ real GPS) claims cells visible in prod Supabase DB
 - No CORS errors in browser console
 - CI green on PR
 
