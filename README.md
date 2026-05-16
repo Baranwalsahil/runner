@@ -20,7 +20,7 @@ GPS-based territory game. Run through real-world hexagonal cells to claim them. 
 
 ### Backend (`server/`)
 
-- Python 3.12+
+- Python 3.13+
 - FastAPI + uvicorn
 - asyncpg (Postgres + PostGIS)
 - pydantic v2 + pydantic-settings
@@ -80,7 +80,7 @@ runner/
     ├── scripts/migrate.py
     ├── tests/                  # pytest suite
     ├── requirements.txt
-    └── runtime.txt             # python-3.12.x for Render
+    └── runtime.txt             # python-3.13.x for Render
 ```
 
 ---
@@ -90,7 +90,7 @@ runner/
 ### Prereqs
 
 - Node 20+
-- Python 3.12+
+- Python 3.13+
 - Postgres 14+ with PostGIS (or `docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgis/postgis`)
 - Optional: Redis (`docker run -p 6379:6379 redis`)
 - Supabase project (free tier) — copy URL, anon key, JWT secret
@@ -118,7 +118,7 @@ npm run build        # production bundle to dist/
 
 ```bash
 cd server
-python3.12 -m venv .venv
+python3.13 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python -m scripts.migrate          # apply DB schema
