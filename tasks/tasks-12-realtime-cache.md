@@ -1,36 +1,71 @@
-# Task 12 — Redis Cache + Real-time Updates (Python)
+# Task 12 — Redis Cache + Real-time Updates (Supabase Realtime)
 
 ## Goal
 
-Cache hot leaderboard + territory bbox queries in Redis. Add simple polling (or Ably) so dashboard/battlefield reflect new claims w/o page reload.
+Cache hot leaderboard + territory bbox queries in Redis. Use **Supabase Realtime** (Postgres logical replication CDC) to push `claimed_cells` INSERT/UPDATE events to FE so dashboard/battlefield reflect new claims without polling. Polling kept only as fallback when Realtime channel unavailable.
+
+> **Why Supabase Realtime instead of Ably/Pusher**: same provider as auth + DB → zero extra accounts, zero extra secrets, no API quota math, free at this scale. Event stream comes straight from Postgres replication slot — no app-code publish step needed.
 
 ## Prereqs
 
 - Task 11 done
+- Task 08 enabled `claimed_cells` for `supabase_realtime` publication
 - Upstash Redis account (or local docker: `docker run -p 6379:6379 redis`)
 
 ## Install
 
+### Backend
+
 ```bash
 cd /home/sahil/runner/server
 source .venv/bin/activate
-pip install "redis[hiredis]"
+pip install "redis[hiredis]" fakeredis
 pip freeze > requirements.txt
 ```
 
-(Uses `redis.asyncio` client — async-native, replaces ioredis.)
+### Frontend
 
-## BE files
+```bash
+cd /home/sahil/runner/client
+# @supabase/supabase-js already installed in task 09 — Realtime client is bundled
+```
+
+## BE files (Redis cache only — Realtime is FE-side)
 
 | Path | Purpose |
 |------|---------|
 | `server/app/cache/__init__.py` | empty |
-| `server/app/cache/redis_client.py` | Singleton `redis.asyncio.Redis` from `settings.redis_url`. Null-safe wrapper: if `REDIS_URL` unset, return `NullCache` no-op stub so every call returns `None`/`False`. Use `redis.asyncio.from_url(...)`. |
-| `server/app/cache/leaderboard_cache.py` | Maintains `ZSET leaderboard:global` (member=user_id, score=total_cells). On every `claimed_cells` upsert batch, call `ZADD`. Read: `ZREVRANGE 0 49 WITHSCORES`. Map back to user rows via cached hash or DB JOIN on the small ID set. |
+| `server/app/cache/redis_client.py` | Singleton `redis.asyncio.Redis` from `settings.redis_url`. **NullCache** stub when unset — every op returns `None`/`False`/`[]`. Use `redis.asyncio.from_url(...)`. |
+| `server/app/cache/leaderboard_cache.py` | Maintains `ZSET leaderboard:global` (member=user_id, score=total_cells). On every `claimed_cells` upsert batch, call `ZADD`. Read: `ZREVRANGE 0 49 WITHSCORES`. Map back to user rows via DB JOIN on small ID set. |
 | `server/app/cache/territory_cache.py` | `GET /territory?bounds=...` cached by bbox hash w/ 10s TTL. Cache key: `territory:{floor(sw_lat,3)}:{floor(sw_lng,3)}:{floor(ne_lat,3)}:{floor(ne_lng,3)}`. Value: JSON-serialized cell list. |
-| `server/app/services/run_service.py` | After claim batch, `ZADD leaderboard:global {new_total} {user_id}` + `SCAN` + `DEL` keys matching `territory:*` (simple flush; OK for MVP scale). |
+| `server/app/services/run_service.py` | After claim batch: `ZADD leaderboard:global {new_total} {user_id}` + `SCAN MATCH territory:*` + `DEL` (simple flush; OK for MVP scale). Supabase Realtime auto-emits the INSERT/UPDATE events from DB — no manual publish call needed. |
 
-Wire cache lookups into `territory_service.cells_in_bounds` and `leaderboard_service.top` (cache-first, DB-fallback, populate-on-miss).
+## FE files
+
+| Path | Purpose |
+|------|---------|
+| `client/src/lib/realtime.js` | Wraps `supabase.channel('claimed-cells').on('postgres_changes', {event: '*', schema: 'public', table: 'claimed_cells'}, handler).subscribe()`. Exports `subscribeClaimedCells(handler)` returning unsubscribe fn. |
+| `client/src/hooks/useTerritoryRealtime.js` | Subscribes on mount, patches local GeoJSON FeatureCollection on each event (`INSERT` → add feature; `UPDATE` → swap feature; `DELETE` → remove). Falls back to 30s polling via `useInterval` when subscription `status === 'CHANNEL_ERROR'` or `VITE_SUPABASE_URL` missing. |
+| `client/src/hooks/useLeaderboardRealtime.js` | Same pattern, subscribes to events for `claimed_cells`, debounces 5s before refetching `/leaderboard` (no need to patch — ranks shift globally). 60s polling fallback. |
+| `client/src/hooks/usePageVisibility.js` | Pauses polling when tab hidden (Realtime subscription is paused automatically by Supabase client) |
+| `client/src/components/battlefield/MapCanvas.jsx` | Wires `useTerritoryRealtime(bounds)` (replaces `useTerritory` from task 11 — or merge them) |
+
+### Realtime payload shape
+
+`postgres_changes` event delivers:
+
+```js
+{
+  schema: 'public',
+  table: 'claimed_cells',
+  commit_timestamp: '2026-05-16T...',
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE',
+  new: { h3_index, user_id, resolution, claim_count, claimed_at },
+  old: { h3_index, ... }    // only present for UPDATE / DELETE
+}
+```
+
+FE handler enriches with `color` + `username` via in-memory user cache (loaded once on map mount).
 
 ## redis_client.py skeleton
 
@@ -62,55 +97,29 @@ async def get_cache():
     return _client
 ```
 
-## FE files
-
-(Unchanged — same polling hooks.)
-
-| Path | Purpose |
-|------|---------|
-| `client/src/hooks/useTerritory.js` | Add `useInterval` 30s refetch when tab visible |
-| `client/src/hooks/useLeaderboard.js` | Same — poll every 60s |
-| `client/src/hooks/usePageVisibility.js` | Pause polling when tab hidden |
-
-## Optional: Ably channel
-
-If using Ably free tier:
-
-```bash
-pip install ably
-pip freeze > requirements.txt
-```
-
-- BE: after run claim, `await ably.channels.get("cells").publish("cells-updated", {"cells":[...], "ownerId": user_id})`
-- FE: subscribe on Battlefield, patch local GeoJSON in place — no full refetch
-
-Keep polling as fallback when `ABLY_API_KEY` not configured.
-
 ## Tests
 
 | Path | Purpose |
 |------|---------|
 | `server/tests/test_redis_null.py` | NullCache used when REDIS_URL unset; all ops no-op |
-| `server/tests/test_leaderboard_cache.py` | ZADD then ZREVRANGE returns top-N; integration uses local redis or fakeredis |
+| `server/tests/test_leaderboard_cache.py` | ZADD then ZREVRANGE returns top-N; use `fakeredis` |
 | `server/tests/test_territory_cache.py` | Bbox key derivation stable; 10s TTL respected (fake clock) |
 | `server/tests/test_cache_invalidation.py` | After claim, leaderboard ZSET reflects new score; territory:* keys flushed |
-
-Use `fakeredis` for unit tests:
-
-```bash
-pip install fakeredis
-```
+| `client/src/test/useTerritoryRealtime.test.js` | Mock supabase client; verify subscribe on mount, unsubscribe on unmount, INSERT event patches GeoJSON, fallback to polling when channel errors |
 
 ## Acceptance
 
-- `GET /leaderboard` w/ Redis populated returns from cache (verify via timing < 5ms or log line)
+- `GET /leaderboard` w/ Redis populated returns from cache (timing < 5ms log line)
 - Submitting a run → cached leaderboard ZSET updated; next request reflects new score w/o DB hit
 - Bbox cache: 2nd identical territory request inside 10s served from cache
-- FE Battlefield: after another user claims cells, page updates w/in 30s (polling) or instantly (Ably)
+- FE Battlefield: another user's claim appears within ~1-2s via Realtime channel (verify by submitting a run as user B in another tab)
+- Pulling Realtime subscription (`VITE_SUPABASE_URL` blanked) → FE falls back to 30s polling cleanly, no errors
 - When `REDIS_URL` empty: server still works, falls back to DB
-- `pytest -v` → green
+- `pytest -v` + `npm test` → green
 
 ## Out of scope
 
 - Multi-region cache invalidation
 - Conflict resolution for simultaneous claims (last write wins, OK for MVP)
+- Presence channels (showing live runner positions) — task 10.5 if added later
+- Broadcast channels (chat / taunts) — out of MVP

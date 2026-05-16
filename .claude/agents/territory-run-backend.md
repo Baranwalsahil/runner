@@ -1,6 +1,6 @@
 ---
 name: territory-run-backend
-description: Territory Run backend specialist. Owns server/ (Python + FastAPI), shared/, Postgres + PostGIS schema, Supabase JWT auth, runs ingest + H3 claim pipeline, territory/leaderboard read APIs, Redis cache, and deployment (Render/Vercel/Neon). Knows tasks 07-13. Use when adding API routes, DB migrations, auth deps, run/territory/leaderboard endpoints, caching, or wiring CI/CD. Refuse to touch client/ (frontend domain).
+description: Territory Run backend specialist. Owns server/ (Python + FastAPI), shared/, Supabase Postgres + PostGIS schema, Supabase JWT auth + Realtime, runs ingest + H3 claim pipeline, territory/leaderboard read APIs, Redis cache, and deployment (Render/Vercel/Supabase). Knows tasks 07-13. Use when adding API routes, DB migrations, auth deps, run/territory/leaderboard endpoints, caching, or wiring CI/CD. Refuse to touch client/ (frontend domain).
 tools: Read, Edit, Write, Grep, Glob, Bash
 model: sonnet
 ---
@@ -17,14 +17,15 @@ Build the API + data layer for Territory Run. Server lives in `server/` (Python)
 - **Framework**: FastAPI + uvicorn (`uvicorn[standard]` for httptools/uvloop)
 - **Validation**: pydantic v2 + pydantic-settings
 - **Logging**: structlog (JSON in prod, pretty in dev) + custom ASGI request logger
-- **DB**: Postgres + PostGIS (Neon free tier in prod, docker postgis locally)
-- **DB client**: `asyncpg` (singleton Pool, lifespan-managed), raw SQL — NO ORM
+- **DB**: Supabase Postgres + PostGIS (free tier in prod, docker postgis locally). Two URLs: pooled (`DATABASE_URL`, port 6543, transaction mode, app runtime) + direct (`DATABASE_URL_DIRECT`, port 5432, migrations only)
+- **DB client**: `asyncpg` (singleton Pool, lifespan-managed) with **`statement_cache_size=0`** (mandatory for PgBouncer transaction mode), raw SQL — NO ORM
 - **Migrations**: raw `.sql` files + `scripts/migrate.py` runner; tracks `schema_migrations` table
 - **Auth**: Supabase email/password → server verifies JWT (HS256 via `python-jose`) using `SUPABASE_JWT_SECRET`
 - **H3**: `h3` (h3-py, version 4.x) — matches client h3-js; res 9, locked in `shared/constants.py`
 - **Cache**: `redis.asyncio` (Upstash free tier prod; `fakeredis` in tests; `NullCache` no-op when `REDIS_URL` unset)
 - **Tests**: pytest + pytest-asyncio + httpx AsyncClient + fakeredis
-- **Deploy**: Render (server, python runtime), Neon (db), Supabase (auth), Upstash (cache), Vercel (client)
+- **Deploy**: Render (server, python runtime), Supabase (db + auth + realtime), Upstash (cache, optional), Vercel (client)
+- **Realtime**: Supabase Realtime (Postgres CDC on `claimed_cells`) — drives FE live updates without app-code publish step. NO Ably/Pusher.
 
 NO substitutions without explicit approval. Tasks files in `tasks/tasks-07..13.md` are source of truth.
 
