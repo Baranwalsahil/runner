@@ -31,8 +31,7 @@ GPS-based territory game. Run through real-world hexagonal cells to claim them. 
 
 ### Infra
 
-- DB: Neon (free Postgres + PostGIS)
-- Auth: Supabase (email/password)
+- DB + Auth + Realtime: Supabase (Postgres + PostGIS, email/password, Postgres CDC)
 - Cache: Upstash Redis (optional, graceful degrade)
 - API hosting: Render (Python runtime, free tier)
 - FE hosting: Vercel
@@ -93,8 +92,7 @@ runner/
 - Python 3.13+
 - Postgres 14+ with PostGIS (or `docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgis/postgis`)
 - Optional: Redis (`docker run -p 6379:6379 redis`)
-- Supabase project (free tier) — copy URL, anon key, JWT secret
-- Neon project for cloud Postgres (or local docker)
+- Supabase project (free tier) — DB + Auth + Realtime. Copy pooled + direct DB URLs, project URL, anon key, JWT secret. Or use local docker postgis + skip Realtime.
 
 ### Clone
 
@@ -156,7 +154,7 @@ Tasks run **strictly in order**. Each is a self-contained brief with goal, insta
 | 10 | BE | Runs ingest → H3 claim → DB upsert | ⏳ |
 | 11 | BE | Territory + Leaderboard GET endpoints | ⏳ |
 | 12 | Infra | Redis cache + polling/real-time updates | ⏳ |
-| 13 | DevOps | Vercel + Render + Neon + Supabase deploy | ⏳ |
+| 13 | DevOps | Vercel + Render + Supabase deploy | ⏳ |
 
 Source: [`tasks/tasks-00-index.md`](./tasks/tasks-00-index.md). Live status: [`progress.md`](./progress.md).
 
@@ -233,14 +231,13 @@ See [`tasks/tasks-13-deploy.md`](./tasks/tasks-13-deploy.md) for full step-by-st
 
 TL;DR:
 
-1. Neon → create Postgres, run schema
-2. Supabase → already wired (task 09)
-3. Render → connect GitHub, `render.yaml` blueprint, set env vars
-4. Vercel → import repo, root = `client/`, set `VITE_*` envs
-5. Upstash Redis → optional, set `REDIS_URL` in Render
-6. Cross-wire `FRONTEND_URL` (Render) and `VITE_API_URL` (Vercel)
+1. Supabase → create project, enable PostGIS + pgcrypto, run migrations against direct URL, enable Realtime on `claimed_cells`
+2. Render → connect GitHub, `render.yaml` blueprint, set `DATABASE_URL` (pooled) + `DATABASE_URL_DIRECT` + `SUPABASE_*` envs
+3. Vercel → import repo, root = `client/`, set `VITE_*` envs
+4. Upstash Redis → optional, set `REDIS_URL` in Render
+5. Cross-wire `FRONTEND_URL` (Render) and `VITE_API_URL` (Vercel)
 
-Free-tier limits: 100GB Vercel bandwidth, 750h Render, 512MB Neon, 50K Supabase MAU, 10K Upstash cmds/day.
+Free-tier limits: 100GB Vercel bandwidth, 750h Render, 500MB Supabase DB + 50K MAU + Realtime, 10K Upstash cmds/day.
 
 ---
 
