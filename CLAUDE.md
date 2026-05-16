@@ -80,7 +80,7 @@ We use Uber's H3 library which provides a hierarchical hexagonal grid system wit
 │  Hosting: Vercel (free tier)                                │
 ├─────────────────────────────────────────────────────────────┤
 │  BACKEND                                                    │
-│  Runtime: Python 3.11+                                       │
+│  Runtime: Python 3.12+                                       │
 │  Framework: FastAPI + uvicorn                               │
 │  Hosting: Render (free tier, 750 hrs/mo)                    │
 ├─────────────────────────────────────────────────────────────┤
@@ -269,7 +269,7 @@ GET  /leaderboard/nearby   - Get players near current user's rank
 
 - GitHub account
 - Node.js 18+ installed locally (frontend only)
-- Python 3.11+ installed locally (backend)
+- Python 3.12+ installed locally (backend)
 
 ### Step 1: Set Up Database (Neon)
 
