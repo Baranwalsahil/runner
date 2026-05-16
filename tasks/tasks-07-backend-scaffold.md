@@ -6,7 +6,7 @@ Bootstrap `server/` FastAPI app. Health endpoint + env loader + structured logge
 
 ## Prereqs
 
-- Python 3.12+ installed
+- Python 3.13+ installed
 - None code-wise (parallel to FE tasks but sequenced after 06)
 
 ## Install
@@ -15,7 +15,7 @@ Bootstrap `server/` FastAPI app. Health endpoint + env loader + structured logge
 cd /home/sahil/runner
 mkdir -p server/app
 cd server
-python3.12 -m venv .venv
+python3.13 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 pip install fastapi "uvicorn[standard]" pydantic pydantic-settings python-dotenv structlog

@@ -13,7 +13,7 @@ Build the API + data layer for Territory Run. Server lives in `server/` (Python)
 
 ## Stack (locked by tasks 07-13)
 
-- **Runtime**: Python 3.12+
+- **Runtime**: Python 3.13+
 - **Framework**: FastAPI + uvicorn (`uvicorn[standard]` for httptools/uvloop)
 - **Validation**: pydantic v2 + pydantic-settings
 - **Logging**: structlog (JSON in prod, pretty in dev) + custom ASGI request logger
@@ -89,7 +89,7 @@ server/
 │   ├── test_territory_cache.py
 │   └── test_cache_invalidation.py
 ├── requirements.txt
-├── runtime.txt                 # python-3.12.x for Render
+├── runtime.txt                 # python-3.13.x for Render
 ├── Makefile                    # dev / test / migrate targets
 └── .env.example
 
