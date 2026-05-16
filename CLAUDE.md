@@ -632,3 +632,41 @@ When user says **"implement tasks list in folder tasks"** (or variants: "continu
 - [x] complete: task-03-name — done YYYY-MM-DD
 ```
 
+---
+
+## Workflow: Per-task feat branch (mandatory)
+
+For **every** task implementation (any `tasks/tasks-NN-*.md`):
+
+1. **Before any code edits**, create + checkout a feature branch off the current `main`:
+   ```bash
+   git checkout main
+   git pull origin main
+   git checkout -b feat/task-NN-<short-slug>
+   ```
+   Slug examples: `feat/task-07-backend-scaffold`, `feat/task-08-db-schema`.
+2. Implement task on the branch. Commit incrementally — small logical commits beat one giant commit.
+3. Run full test suite (`npm test` for FE, `pytest -v` for BE). Run curl checks per task acceptance. Update `progress.md` to `complete` on the branch.
+4. Push the branch:
+   ```bash
+   git push -u origin feat/task-NN-<short-slug>
+   ```
+5. Merge to `main` (fast-forward or `--no-ff` based on git config), then delete branch locally + remotely:
+   ```bash
+   git checkout main
+   git pull origin main
+   git merge --no-ff feat/task-NN-<short-slug> -m "Merge task-NN: <title>"
+   git push origin main
+   git branch -d feat/task-NN-<short-slug>
+   git push origin --delete feat/task-NN-<short-slug>
+   ```
+
+**Why:** Per-task branches keep `main` always green, give a clean revert point per task, and let CI run isolated checks per scope. Deletion after merge keeps the branch list tidy.
+
+**How to apply:** Triggers automatically on any "implement task NN" / "continue tasks" / "resume tasks" prompt. Never edit code directly on `main`. The only exception: tiny doc-only fixes (typo, broken link) — those may go on `main` directly with explicit user OK.
+
+**Confirm before pushing to `main`:** Always ask user for approval before the final `git push origin main` and before deleting the remote branch.
+
+**If task fails mid-way:** Leave the branch open. Update `progress.md` to `paused` with reason. Do NOT merge a partial task.
+
+
