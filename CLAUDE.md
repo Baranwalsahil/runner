@@ -85,16 +85,16 @@ We use Uber's H3 library which provides a hierarchical hexagonal grid system wit
 │  Hosting: Render (free tier, 750 hrs/mo)                    │
 ├─────────────────────────────────────────────────────────────┤
 │  DATABASE                                                   │
-│  Primary: Neon Postgres (free tier, 512MB)                  │
-│  Extensions: PostGIS + pg_h3                                │
+│  Primary: Supabase Postgres (free tier, 500MB)              │
+│  Extensions: PostGIS + pgcrypto (h3 done app-side via h3-py)│
 │  Cache: Upstash Redis (free tier, 10K commands/day)         │
 ├─────────────────────────────────────────────────────────────┤
 │  AUTH                                                       │
 │  Provider: Supabase Auth (free tier, 50K MAU)               │
 ├─────────────────────────────────────────────────────────────┤
-│  REAL-TIME (optional for MVP)                               │
-│  Provider: Ably or Pusher free tier                         │
-│  Alternative: Poll every 30 seconds                         │
+│  REAL-TIME                                                  │
+│  Provider: Supabase Realtime (Postgres CDC, free, bundled)  │
+│  Fallback: Poll every 30 seconds when channel unavailable   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -271,25 +271,21 @@ GET  /leaderboard/nearby   - Get players near current user's rank
 - Node.js 18+ installed locally (frontend only)
 - Python 3.13+ installed locally (backend)
 
-### Step 1: Set Up Database (Neon)
-
-1. Go to [neon.tech](https://neon.tech) and sign up
-2. Create a new project
-3. Save your connection string: `postgresql://user:pass@host/db`
-4. Enable PostGIS extension:
-   ```sql
-   CREATE EXTENSION IF NOT EXISTS postgis;
-   ```
-5. Run the schema SQL from above
-
-### Step 2: Set Up Auth (Supabase)
+### Step 1: Set Up Supabase (DB + Auth + Realtime)
 
 1. Go to [supabase.com](https://supabase.com) and sign up
-2. Create a new project
-3. Go to Settings → API and save:
+2. Create a new project (region close to Render region)
+3. Enable required extensions: dashboard → Database → Extensions → enable `postgis` and `pgcrypto`
+4. Copy connection strings from dashboard → Settings → Database:
+   - **Pooled** (port `6543`, transaction mode) → `DATABASE_URL` (app runtime — required for asyncpg + PgBouncer)
+   - **Direct** (port `5432`) → `DATABASE_URL_DIRECT` (migrations only)
+5. Copy auth credentials from dashboard → Settings → API:
    - `SUPABASE_URL`
    - `SUPABASE_ANON_KEY`
-4. Enable Email auth in Authentication → Providers
+   - `SUPABASE_JWT_SECRET`
+6. Enable Email auth in Authentication → Providers
+7. Run schema: `python -m scripts.migrate` against `DATABASE_URL_DIRECT`
+8. Enable Realtime on `claimed_cells`: dashboard → Database → Replication → toggle `claimed_cells` in `supabase_realtime` publication
 
 ### Step 3: Deploy Backend (Render)
 
@@ -335,8 +331,7 @@ GET  /leaderboard/nearby   - Get players near current user's rank
 |---------|-------|--------|
 | Vercel | 100GB bandwidth | Monthly |
 | Render | 750 hours | Monthly |
-| Neon | 512MB storage | — |
-| Supabase Auth | 50K users | — |
+| Supabase | 500MB DB + 50K MAU + Realtime (200 concurrent) | — |
 | Upstash Redis | 10K commands/day | Daily |
 
 ---
@@ -595,7 +590,8 @@ function filterGpsTrace(points) {
 - [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/)
 - [PostGIS Documentation](https://postgis.net/documentation/)
 - [Supabase Auth Docs](https://supabase.com/docs/guides/auth)
-- [Neon Postgres](https://neon.tech/docs)
+- [Supabase Docs](https://supabase.com/docs)
+- [Supabase Realtime](https://supabase.com/docs/guides/realtime)
 - [Render Deployment](https://render.com/docs)
 
 ---
