@@ -14,7 +14,7 @@ Tasks run strictly in order — later tasks depend on earlier scaffolding.
 | 04 | [tasks-04-player-dashboard.md](./tasks-04-player-dashboard.md) | Port Player Dashboard (incl. scroll battles fix) | FE | M |
 | 05 | [tasks-05-battlefield-map.md](./tasks-05-battlefield-map.md) | Port Battlefield Map (MapLibre + h3-js) | FE | L |
 | 06 | [tasks-06-global-leaderboard.md](./tasks-06-global-leaderboard.md) | Port Global Leaderboard | FE | M |
-| 07 | [tasks-07-backend-scaffold.md](./tasks-07-backend-scaffold.md) | Backend scaffold (Express, env, healthcheck) | BE | S |
+| 07 | [tasks-07-backend-scaffold.md](./tasks-07-backend-scaffold.md) | Backend scaffold (FastAPI, env, healthcheck) | BE | S |
 | 08 | [tasks-08-db-schema.md](./tasks-08-db-schema.md) | Postgres + PostGIS schema + migrations | DB | M |
 | 09 | [tasks-09-auth-supabase.md](./tasks-09-auth-supabase.md) | Supabase auth (FE + BE JWT verify) | Auth | M |
 | 10 | [tasks-10-runs-api.md](./tasks-10-runs-api.md) | Runs ingest → H3 claim → DB upsert | BE | L |
