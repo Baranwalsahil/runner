@@ -5,6 +5,7 @@ from uuid import UUID
 
 import asyncpg
 
+from app.cache import leaderboard_cache
 from app.schemas.leaderboard import LeaderboardPage, LeaderboardRow
 from app.services.color import color_for_uuid
 
@@ -22,13 +23,49 @@ def _row_to_lb(row: asyncpg.Record) -> LeaderboardRow:
     )
 
 
+async def _hydrate_users(
+    pool: asyncpg.Pool, scored: list[tuple[str, int]], offset: int
+) -> list[LeaderboardRow]:
+    ids = [UUID(uid) for uid, _ in scored]
+    rows = await pool.fetch(
+        "SELECT id, username FROM users WHERE id = ANY($1::uuid[])",
+        ids,
+    )
+    by_id = {row["id"]: row["username"] for row in rows}
+    out: list[LeaderboardRow] = []
+    for i, (uid, score) in enumerate(scored):
+        uuid_obj = UUID(uid)
+        username = by_id.get(uuid_obj)
+        if username is None:
+            continue
+        out.append(
+            LeaderboardRow(
+                user_id=uuid_obj,
+                username=username,
+                total_cells=score,
+                rank=offset + i + 1,
+                color=color_for_uuid(uuid_obj),
+            )
+        )
+    return out
+
+
 async def top(
     pool: asyncpg.Pool,
     *,
     limit: int = 50,
     offset: int = 0,
     period: Period = "all",
+    cache=None,
 ) -> LeaderboardPage:
+    if period == "all" and cache is not None:
+        scored = await leaderboard_cache.top_ids(cache, limit, offset)
+        if scored:
+            total = await leaderboard_cache.total_users(cache)
+            rows = await _hydrate_users(pool, scored, offset)
+            return LeaderboardPage(
+                rows=rows, total=total, limit=limit, offset=offset
+            )
     if period == "all":
         rows = await pool.fetch(
             """

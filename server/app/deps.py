@@ -5,6 +5,7 @@ from uuid import UUID
 import asyncpg
 from fastapi import Depends, Header, HTTPException, status
 
+from app.cache.redis_client import get_cache
 from app.db.pool import get_pool
 from app.schemas.auth import User
 from app.services import auth_service, user_service
@@ -12,6 +13,10 @@ from app.services import auth_service, user_service
 
 async def get_db_pool() -> asyncpg.Pool:
     return await get_pool()
+
+
+async def get_cache_client():
+    return await get_cache()
 
 
 async def get_current_user(

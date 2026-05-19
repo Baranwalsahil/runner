@@ -30,6 +30,9 @@ def _override_dsn(_env, monkeypatch):
 
     get_settings.cache_clear()
     pool_mod._pool = None
+    from app.cache import redis_client
+
+    redis_client._client = None
     yield
 
 
