@@ -123,26 +123,46 @@ export default function RecentBattlesFeed({
         data-testid="battles-list"
         className="flex-grow overflow-y-auto divide-y divide-outline-variant/20 scroll-smooth"
       >
-        {battles.map((b, i) => (
-          <BattleItem
-            key={b.id}
-            battle={b}
-            firstNewRef={loaded && i === initialBattles.length ? firstNewRef : null}
-          />
-        ))}
+        {battles.length === 0 ? (
+          <div
+            data-testid="battles-empty"
+            className="p-md text-center text-on-surface-variant text-xs font-label-bold uppercase tracking-widest"
+          >
+            No activity yet.
+            <br />
+            Start a session to claim territory.
+          </div>
+        ) : (
+          battles.map((b, i) => (
+            <BattleItem
+              key={b.id}
+              battle={b}
+              firstNewRef={
+                loaded && i === initialBattles.length ? firstNewRef : null
+              }
+            />
+          ))
+        )}
       </div>
       <button
         data-testid="load-more"
         onClick={handleClick}
-        disabled={loaded}
+        disabled={loaded || extraBattles.length === 0}
         className={`w-full p-md border-t border-outline-variant/30 flex items-center justify-center gap-base text-xs font-label-bold uppercase tracking-widest text-on-surface-variant hover:text-primary-fixed hover:bg-surface-variant/20 transition-all flex-shrink-0${
-          loaded ? " opacity-60 cursor-not-allowed" : ""
+          loaded || extraBattles.length === 0
+            ? " opacity-60 cursor-not-allowed"
+            : ""
         }`}
       >
         <span data-testid="load-more-label">
-          {loaded ? "End of History" : "View Full History"}
+          {loaded || extraBattles.length === 0
+            ? "End of History"
+            : "View Full History"}
         </span>
-        <Icon name={loaded ? "check" : "arrow_downward"} className="text-base" />
+        <Icon
+          name={loaded || extraBattles.length === 0 ? "check" : "arrow_downward"}
+          className="text-base"
+        />
       </button>
     </div>
   );

@@ -1,18 +1,24 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import PlayersOnline from '../components/battlefield/PlayersOnline.jsx';
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import PlayersOnline from "../components/battlefield/PlayersOnline.jsx";
 
-describe('PlayersOnline', () => {
-  it('renders 3 default players', () => {
+describe("PlayersOnline", () => {
+  it("renders empty-state message when no players provided", () => {
     render(<PlayersOnline />);
-    expect(screen.getAllByTestId('player-row')).toHaveLength(3);
-    expect(screen.getByText('@CYPHER_K')).toBeInTheDocument();
+    expect(screen.queryAllByTestId("player-row")).toHaveLength(0);
+    expect(screen.getByText(/No runners yet/i)).toBeInTheDocument();
   });
 
-  it('accepts custom players prop', () => {
+  it("renders rows from custom players prop", () => {
     render(
-      <PlayersOnline players={[{ id: 'a', handle: '@A', cells: 1 }]} />
+      <PlayersOnline
+        players={[
+          { id: "a", handle: "@A", cells: 1 },
+          { id: "b", handle: "@B", cells: 2 },
+        ]}
+      />
     );
-    expect(screen.getAllByTestId('player-row')).toHaveLength(1);
+    expect(screen.getAllByTestId("player-row")).toHaveLength(2);
+    expect(screen.getByText("@A")).toBeInTheDocument();
   });
 });
