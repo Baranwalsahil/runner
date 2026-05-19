@@ -7,6 +7,7 @@ import Auth from "./routes/Auth.jsx";
 import Dashboard from "./routes/Dashboard.jsx";
 import Battlefield from "./routes/Battlefield.jsx";
 import Leaderboard from "./routes/Leaderboard.jsx";
+import Run from "./routes/Run.jsx";
 
 export default function App() {
   return (
@@ -37,6 +38,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Leaderboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/run"
+              element={
+                <ProtectedRoute>
+                  <Run />
                 </ProtectedRoute>
               }
             />
