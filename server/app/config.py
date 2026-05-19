@@ -11,9 +11,12 @@ class Settings(BaseSettings):
     )
 
     database_url: str = Field(..., alias="DATABASE_URL")
-    supabase_url: str = Field(..., alias="SUPABASE_URL")
-    supabase_anon_key: str = Field(..., alias="SUPABASE_ANON_KEY")
-    supabase_jwt_secret: str = Field(..., alias="SUPABASE_JWT_SECRET")
+    database_url_direct: str | None = Field(default=None, alias="DATABASE_URL_DIRECT")
+
+    # Own-JWT auth (task-09). HS256 with server-held secret.
+    jwt_secret: str = Field(..., alias="JWT_SECRET")
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    jwt_expires_seconds: int = Field(default=604800, alias="JWT_EXPIRES_SECONDS")
 
     redis_url: str | None = Field(default=None, alias="REDIS_URL")
     frontend_url: str | None = Field(default=None, alias="FRONTEND_URL")
