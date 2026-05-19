@@ -9,7 +9,7 @@ from app.db.pool import close_pool, get_pool
 from app.errors import register_exception_handlers
 from app.logging import configure_logging
 from app.middleware.request_logger import RequestLoggerMiddleware
-from app.routers import health
+from app.routers import auth, health
 
 
 @asynccontextmanager
@@ -45,6 +45,7 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
 
     app.include_router(health.router)
+    app.include_router(auth.router)
     return app
 
 

@@ -16,7 +16,7 @@ pytestmark = pytest.mark.skipif(
 
 
 @pytest.fixture(autouse=True)
-def _override_dsn(monkeypatch):
+def _override_dsn(_env, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", os.environ["TEST_DATABASE_URL"])
     from app.config import get_settings
 
