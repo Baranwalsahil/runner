@@ -4,6 +4,7 @@ import MapHud from "../components/battlefield/MapHud.jsx";
 import CellDetailPanel from "../components/battlefield/CellDetailPanel.jsx";
 import PlayersOnline from "../components/battlefield/PlayersOnline.jsx";
 import useTerritoryPolling from "../hooks/useTerritoryPolling.js";
+import useLeaderboardPolling from "../hooks/useLeaderboardPolling.js";
 
 const SEATTLE_DEFAULT_BOUNDS = {
   sw_lat: 47.59,
@@ -12,11 +13,21 @@ const SEATTLE_DEFAULT_BOUNDS = {
   ne_lng: -122.30,
 };
 
+function rowToPlayer(row) {
+  return {
+    id: row.user_id,
+    handle: `@${row.username}`,
+    cells: row.total_cells,
+  };
+}
+
 export default function Battlefield() {
   const [selectedCell, setSelectedCell] = useState(null);
   const [bounds, setBounds] = useState(SEATTLE_DEFAULT_BOUNDS);
   const mapRef = useRef(null);
   const { cells, loading, error } = useTerritoryPolling(bounds);
+  const { rows: lbRows } = useLeaderboardPolling({ limit: 3, offset: 0 });
+  const players = (lbRows ?? []).map(rowToPlayer);
 
   function handleMapReady(map) {
     mapRef.current = map;
@@ -50,7 +61,7 @@ export default function Battlefield() {
         onZoomOut={() => mapRef.current?.zoomOut()}
         onLocate={() => mapRef.current?.flyTo({ center: [-122.3321, 47.6062], zoom: 14 })}
       />
-      <PlayersOnline />
+      <PlayersOnline players={players} />
       <CellDetailPanel
         cell={selectedCell}
         onClose={() => setSelectedCell(null)}
