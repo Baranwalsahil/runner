@@ -19,7 +19,7 @@ export default function AppLayout() {
         <Outlet />
       </main>
       <Footer />
-      <Fab to="/dashboard" />
+      <Fab to="/run" />
     </>
   );
 }
