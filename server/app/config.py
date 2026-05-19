@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     )
 
     database_url: str = Field(..., alias="DATABASE_URL")
+    database_url_direct: str | None = Field(default=None, alias="DATABASE_URL_DIRECT")
     supabase_url: str = Field(..., alias="SUPABASE_URL")
     supabase_anon_key: str = Field(..., alias="SUPABASE_ANON_KEY")
     supabase_jwt_secret: str = Field(..., alias="SUPABASE_JWT_SECRET")
