@@ -90,7 +90,7 @@ We use Uber's H3 library which provides a hierarchical hexagonal grid system wit
 │  Cache: Upstash Redis (free tier, 10K commands/day)         │
 ├─────────────────────────────────────────────────────────────┤
 │  AUTH                                                       │
-│  Provider: Supabase Auth (free tier, 50K MAU)               │
+│  Provider: Own JWT (HS256, server-signed, bcrypt password)  │
 ├─────────────────────────────────────────────────────────────┤
 │  REAL-TIME                                                  │
 │  Provider: Supabase Realtime (Postgres CDC, free, bundled)  │
@@ -104,9 +104,11 @@ We use Uber's H3 library which provides a hierarchical hexagonal grid system wit
 |---------|---------|---------|
 | h3-js | Hexagonal grid indexing | `npm install h3-js` |
 | maplibre-gl | Map rendering (free Mapbox fork) | `npm install maplibre-gl` |
-| @supabase/supabase-js | Authentication | `npm install @supabase/supabase-js` |
-| pg | Postgres client | `npm install pg` |
-| express | API framework | `npm install express` |
+| @supabase/supabase-js | Realtime channel subscription (optional) | `npm install @supabase/supabase-js` |
+| python-jose[cryptography] | JWT encode/decode (HS256) | `pip install "python-jose[cryptography]"` |
+| passlib[bcrypt] | Password hashing | `pip install "passlib[bcrypt]"` |
+| asyncpg | Postgres client (async) | `pip install asyncpg` |
+| fastapi | API framework | `pip install fastapi uvicorn` |
 
 ### Free Tile Providers for MapLibre
 
@@ -271,7 +273,7 @@ GET  /leaderboard/nearby   - Get players near current user's rank
 - Node.js 18+ installed locally (frontend only)
 - Python 3.13+ installed locally (backend)
 
-### Step 1: Set Up Supabase (DB + Auth + Realtime)
+### Step 1: Set Up Supabase (DB + Realtime only — Auth is own JWT)
 
 1. Go to [supabase.com](https://supabase.com) and sign up
 2. Create a new project (region close to Render region)
@@ -279,13 +281,14 @@ GET  /leaderboard/nearby   - Get players near current user's rank
 4. Copy connection strings from dashboard → Settings → Database:
    - **Pooled** (port `6543`, transaction mode) → `DATABASE_URL` (app runtime — required for asyncpg + PgBouncer)
    - **Direct** (port `5432`) → `DATABASE_URL_DIRECT` (migrations only)
-5. Copy auth credentials from dashboard → Settings → API:
+5. Copy Realtime client credentials from dashboard → Settings → API (only needed for browser WebSocket subscription in task-12):
    - `SUPABASE_URL`
    - `SUPABASE_ANON_KEY`
-   - `SUPABASE_JWT_SECRET`
-6. Enable Email auth in Authentication → Providers
+6. Generate JWT secret for own auth: `openssl rand -hex 32` → set as `JWT_SECRET`
 7. Run schema: `python -m scripts.migrate` against `DATABASE_URL_DIRECT`
 8. Enable Realtime on `claimed_cells`: dashboard → Database → Replication → toggle `claimed_cells` in `supabase_realtime` publication
+
+> Auth product (Supabase Auth, Email/OAuth providers, `auth.users` table) is NOT used. Authentication is self-hosted: bcrypt password_hash on `public.users` row, HS256 JWT signed with `JWT_SECRET`. See task-09.
 
 ### Step 3: Deploy Backend (Render)
 
@@ -297,9 +300,11 @@ GET  /leaderboard/nearby   - Get players near current user's rank
    - Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT --app-dir server`
 4. Add environment variables:
    ```
-   DATABASE_URL=postgresql://...
-   SUPABASE_URL=https://...
-   SUPABASE_ANON_KEY=eyJ...
+   DATABASE_URL=postgresql://...           # Supabase pooled (port 6543)
+   DATABASE_URL_DIRECT=postgresql://...    # Supabase direct (port 5432, for migrate)
+   JWT_SECRET=<openssl rand -hex 32>
+   SUPABASE_URL=https://...                # optional, Realtime only
+   SUPABASE_ANON_KEY=eyJ...                # optional, Realtime only
    NODE_ENV=production
    ```
 
@@ -311,8 +316,8 @@ GET  /leaderboard/nearby   - Get players near current user's rank
 4. Add environment variables:
    ```
    VITE_API_URL=https://your-backend.onrender.com
-   VITE_SUPABASE_URL=https://...
-   VITE_SUPABASE_ANON_KEY=eyJ...
+   VITE_SUPABASE_URL=https://...           # optional, Realtime only
+   VITE_SUPABASE_ANON_KEY=eyJ...           # optional, Realtime only
    VITE_MAPTILER_KEY=your_key (optional)
    ```
 
@@ -331,7 +336,7 @@ GET  /leaderboard/nearby   - Get players near current user's rank
 |---------|-------|--------|
 | Vercel | 100GB bandwidth | Monthly |
 | Render | 750 hours | Monthly |
-| Supabase | 500MB DB + 50K MAU + Realtime (200 concurrent) | — |
+| Supabase | 500MB DB + Realtime (200 concurrent) — Auth not used | — |
 | Upstash Redis | 10K commands/day | Daily |
 
 ---
@@ -355,7 +360,7 @@ territory-run/
 │   │   ├── lib/
 │   │   │   ├── api.js         # API client
 │   │   │   ├── h3Utils.js     # H3 helper functions
-│   │   │   └── supabase.js    # Auth client
+│   │   │   └── auth.js        # Own JWT auth helpers (localStorage token)
 │   │   ├── App.jsx
 │   │   └── main.jsx
 │   ├── index.html
@@ -449,8 +454,14 @@ npm run dev
 
 # Database
 DATABASE_URL=postgresql://user:pass@localhost:5432/territory_run
+DATABASE_URL_DIRECT=postgresql://user:pass@localhost:5432/territory_run
 
-# Supabase Auth
+# Own JWT auth (required)
+JWT_SECRET=<openssl rand -hex 32>
+JWT_ALGORITHM=HS256
+JWT_EXPIRES_SECONDS=604800
+
+# Supabase Realtime (optional — only if subscribing to claimed_cells CDC)
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 
@@ -589,7 +600,8 @@ function filterGpsTrace(points) {
 - [H3 Documentation](https://h3geo.org/docs/)
 - [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/)
 - [PostGIS Documentation](https://postgis.net/documentation/)
-- [Supabase Auth Docs](https://supabase.com/docs/guides/auth)
+- [python-jose JWT](https://python-jose.readthedocs.io/)
+- [passlib bcrypt](https://passlib.readthedocs.io/en/stable/lib/passlib.hash.bcrypt.html)
 - [Supabase Docs](https://supabase.com/docs)
 - [Supabase Realtime](https://supabase.com/docs/guides/realtime)
 - [Render Deployment](https://render.com/docs)
