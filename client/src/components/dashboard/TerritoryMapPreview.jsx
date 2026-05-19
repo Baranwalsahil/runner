@@ -4,9 +4,10 @@ const MAP_IMG =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuBHR4w0XSEUpj8b0rma3P3j6NmQrzEBnlWRrgbw_AQ-AsSTeoZ4nrMOQYfjUM5YNP1P9sqPvC6nfriR_fckIFsxnzHarQ_k6RSegCfifSvz8gGMKcnlbNRNKsaQBkOjLdkHodGFVG2ye7hDTyNUmu1vy87v5Q5Z7HqbkT76eLm8BQ2RzItMYyuIgJeTTgUb0WnOCc5MneuDWs7dbvqyYw1xozmuIoQXI6u-mFeZ8plQt_aXQK04-NYd9rZhT46RaJDWY6m2MavhU3fD";
 
 export default function TerritoryMapPreview({
-  liveBattles = 14,
-  district = "CAPITOL HILL DISTRICT",
-  ownership = 92,
+  liveBattles = 0,
+  district = "NO TERRITORY YET",
+  ownership = 0,
+  liveLabel = "YOUR CELLS",
   onZoomIn,
   onZoomOut,
 }) {
@@ -26,7 +27,7 @@ export default function TerritoryMapPreview({
       <div className="absolute top-md left-md p-sm glass-panel neon-border-cyan rounded-lg">
         <div className="flex items-center gap-base">
           <div className="w-3 h-3 rounded-full bg-secondary-fixed animate-pulse" />
-          <span className="font-label-bold text-xs">LIVE BATTLES: {liveBattles}</span>
+          <span className="font-label-bold text-xs">{liveLabel}: {liveBattles}</span>
         </div>
       </div>
       <div className="absolute bottom-md right-md flex flex-col gap-base">
@@ -47,7 +48,9 @@ export default function TerritoryMapPreview({
       </div>
       <div className="absolute top-1/2 left-1/3 -translate-y-1/2 glass-panel p-md rounded-xl neon-border-lime max-w-[200px]">
         <p className="font-label-bold text-[10px] text-primary-fixed mb-1">{district}</p>
-        <p className="font-body-md font-bold mb-2 text-white">{ownership}% OWNERSHIP</p>
+        <p className="font-body-md font-bold mb-2 text-white">
+          {ownership > 0 ? `${ownership}% OWNERSHIP` : "0 CELLS"}
+        </p>
         <div className="w-full bg-surface-container h-1 rounded-full overflow-hidden">
           <div
             className="bg-primary-fixed h-full shadow-[0_0_8px_#c3f400]"

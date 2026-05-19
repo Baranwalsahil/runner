@@ -1,12 +1,6 @@
 import Icon from "../Icon.jsx";
 
-const DEFAULT_PLAYERS = [
-  { id: "p1", handle: "@CYPHER_K", cells: 128 },
-  { id: "p2", handle: "@VOID_WALKER", cells: 94 },
-  { id: "p3", handle: "@SIGNAL_LOST", cells: 82 },
-];
-
-export default function PlayersOnline({ players = DEFAULT_PLAYERS }) {
+export default function PlayersOnline({ players = [] }) {
   return (
     <aside
       data-testid="players-online"
@@ -16,6 +10,11 @@ export default function PlayersOnline({ players = DEFAULT_PLAYERS }) {
         Group Intel
       </h3>
       <div className="flex flex-col gap-base overflow-y-auto pr-xs">
+        {players.length === 0 && (
+          <div className="text-[10px] text-on-surface-variant italic">
+            No runners yet.
+          </div>
+        )}
         {players.map((p) => (
           <div
             key={p.id}
