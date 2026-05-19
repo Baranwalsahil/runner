@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
+from app.db.pool import close_pool, get_pool
 from app.errors import register_exception_handlers
 from app.logging import configure_logging
 from app.middleware.request_logger import RequestLoggerMiddleware
@@ -14,7 +15,12 @@ from app.routers import health
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.started_at = time.time()
+    try:
+        app.state.db_pool = await get_pool()
+    except Exception:
+        app.state.db_pool = None
     yield
+    await close_pool()
 
 
 def create_app() -> FastAPI:
