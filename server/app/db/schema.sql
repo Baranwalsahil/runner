@@ -9,12 +9,18 @@ CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
     username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
     avatar_url TEXT,
     total_cells INTEGER DEFAULT 0,
     total_area_m2 DECIMAL(12,2) DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Idempotent guard for environments where 001_init was applied pre-amendment.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
+UPDATE users SET password_hash = '!disabled' WHERE password_hash IS NULL;
+ALTER TABLE users ALTER COLUMN password_hash SET NOT NULL;
 
 -- Runs table (stores GPS traces)
 CREATE TABLE IF NOT EXISTS runs (
