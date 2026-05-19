@@ -95,7 +95,8 @@ Wire to FastAPI lifespan: open on startup, close on shutdown.
 
 ## Schema additions beyond CLAUDE.md
 
-None for MVP. Strict copy.
+- `users.password_hash VARCHAR(255) NOT NULL` — bcrypt hash for own-JWT auth (task-09). CLAUDE.md schema predates the decision to drop Supabase Auth; password storage is now ours.
+- Idempotent guard in `001_init.sql`: `ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash`, then backfill `'!disabled'` on legacy rows, then `SET NOT NULL`. Lets the migration rerun cleanly on environments that applied the pre-amendment version.
 
 ## Realtime prep (for task 12)
 

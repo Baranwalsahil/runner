@@ -6,9 +6,7 @@ from httpx import ASGITransport, AsyncClient
 
 REQUIRED_ENV = {
     "DATABASE_URL": "postgresql://test:test@localhost:5432/test",
-    "SUPABASE_URL": "https://test.supabase.co",
-    "SUPABASE_ANON_KEY": "test-anon",
-    "SUPABASE_JWT_SECRET": "test-secret",
+    "JWT_SECRET": "test-jwt-secret-do-not-use-in-prod",
 }
 
 
