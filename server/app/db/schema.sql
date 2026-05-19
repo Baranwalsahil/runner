@@ -1,4 +1,4 @@
--- Territory Run schema (Supabase Postgres + PostGIS)
+-- Territory Run schema (Postgres + PostGIS).
 -- Mirrors migrations/001_init.sql verbatim. Idempotent.
 
 CREATE EXTENSION IF NOT EXISTS postgis;
@@ -49,16 +49,3 @@ CREATE INDEX IF NOT EXISTS idx_cells_claimed_at ON claimed_cells(claimed_at);
 CREATE INDEX IF NOT EXISTS idx_runs_user ON runs(user_id);
 CREATE INDEX IF NOT EXISTS idx_runs_started ON runs(started_at);
 CREATE INDEX IF NOT EXISTS idx_runs_trace ON runs USING GIST(gps_trace);
-
--- Realtime publication: harmless on local PG where publication doesn't exist.
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
-        IF NOT EXISTS (
-            SELECT 1 FROM pg_publication_tables
-            WHERE pubname = 'supabase_realtime' AND tablename = 'claimed_cells'
-        ) THEN
-            EXECUTE 'ALTER PUBLICATION supabase_realtime ADD TABLE claimed_cells';
-        END IF;
-    END IF;
-END $$;

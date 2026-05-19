@@ -20,7 +20,7 @@ Tasks run strictly in order — later tasks depend on earlier scaffolding.
 | 10 | [tasks-10-runs-api.md](./tasks-10-runs-api.md) | Runs ingest → H3 claim → DB upsert | BE | L |
 | 11 | [tasks-11-territory-leaderboard-api.md](./tasks-11-territory-leaderboard-api.md) | Territory + Leaderboard GET endpoints | BE | M |
 | 12 | [tasks-12-realtime-cache.md](./tasks-12-realtime-cache.md) | Redis cache + polling/real-time updates | Infra | M |
-| 13 | [tasks-13-deploy.md](./tasks-13-deploy.md) | Vercel + Render + Supabase deploy | DevOps | M |
+| 13 | [tasks-13-deploy.md](./tasks-13-deploy.md) | Vercel + Render + managed Postgres deploy | DevOps | M |
 
 ## Rules
 

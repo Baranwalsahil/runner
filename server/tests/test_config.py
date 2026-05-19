@@ -40,4 +40,3 @@ def test_defaults(monkeypatch):
     assert s.redis_url is None
     assert s.jwt_algorithm == "HS256"
     assert s.jwt_expires_seconds == 604800
-    assert s.supabase_url is None
