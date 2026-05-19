@@ -1,29 +1,40 @@
-# Task 13 — Deploy (Vercel + Render Python + Supabase)
+# Task 13 — Deploy (Vercel + Render Python + Managed Postgres)
 
 ## Goal
 
-Ship full stack to free-tier infra per CLAUDE.md § Free Deployment Guide. Production envs configured. CI builds pass.
+Ship full stack to free-tier infra. Production envs configured. CI builds
+pass. Auth is own JWT (task-09); DB host is any managed Postgres with
+PostGIS; cache is Upstash Redis (or unset for fall-through).
 
 ## Prereqs
 
 - All prior tasks done
 - GitHub repo created + pushed
+- Postgres host picked (Render Postgres, Neon, self-hosted, etc.) with
+  `postgis` + `pgcrypto` extensions enabled
 
 ## Steps
 
-### 1. Database + Auth + Realtime (Supabase)
+### 1. Database
 
-- Project already created in task 09 (used for auth)
-- Enable PostGIS: dashboard → Database → Extensions → enable `postgis` and `pgcrypto`
-- Copy connection strings from dashboard → Settings → Database:
-  - **Pooled / transaction-mode** (port `6543`) → `DATABASE_URL` (app runtime)
-  - **Direct** (port `5432`) → `DATABASE_URL_DIRECT` (migrations only)
-- Copy prod project URL + anon key + JWT secret (Settings → API)
-- Run `python -m scripts.migrate` against prod direct URL once (or `psql $DATABASE_URL_DIRECT < server/app/db/schema.sql`)
+Pick a managed Postgres provider. Requirements:
+
+- PostGIS extension available
+- `pgcrypto` extension available (for `gen_random_uuid()`)
+- Optional: transaction-mode pooler URL for runtime
+
+Provision steps (vendor-agnostic):
+
+- Create database
+- Enable extensions: `CREATE EXTENSION postgis; CREATE EXTENSION pgcrypto;`
+- Capture two URLs:
+  - `DATABASE_URL` — runtime DSN (pooler if available)
+  - `DATABASE_URL_DIRECT` — direct DSN (no proxy; optional, falls back)
+- Run `python -m scripts.migrate` against the direct URL once
+  (or `psql $DATABASE_URL_DIRECT < server/app/db/schema.sql`)
 - Verify: `\dt` shows tables, `\dx` shows postgis + pgcrypto
-- Verify Realtime publication includes `claimed_cells`: dashboard → Database → Replication
 
-### 3. Backend (Render)
+### 2. Backend (Render)
 
 `render.yaml` in repo root:
 
@@ -39,15 +50,15 @@ services:
     pythonVersion: "3.13"
     envVars:
       - key: DATABASE_URL
-        sync: false              # Supabase pooled URL (port 6543)
+        sync: false              # runtime DSN (pooler if available)
       - key: DATABASE_URL_DIRECT
-        sync: false              # Supabase direct URL (port 5432, for migrations)
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_ANON_KEY
-        sync: false
-      - key: SUPABASE_JWT_SECRET
-        sync: false
+        sync: false              # direct DSN (migrations); optional, falls back
+      - key: JWT_SECRET
+        sync: false              # openssl rand -hex 32
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRES_SECONDS
+        value: "604800"
       - key: REDIS_URL
         sync: false
       - key: NODE_ENV
@@ -61,7 +72,7 @@ services:
 - Connect GitHub repo → Render auto-deploys on push to `main`
 - Set `sync: false` env vars manually in Render dashboard
 
-### 4. Frontend (Vercel)
+### 3. Frontend (Vercel)
 
 `client/vercel.json`:
 
@@ -75,18 +86,18 @@ services:
 ```
 
 - Import repo at vercel.com, root dir = `client`
-- Env vars: `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- Env vars: `VITE_API_URL` only
 
-### 5. Cache (Upstash) — optional
+### 4. Cache (Upstash) — optional
 
 - Create Redis at upstash.com, copy URL → Render env
-- App degrades gracefully if unset
+- App degrades gracefully if unset (NullCache fallback in task-12)
 
-### 6. Wire it up
+### 5. Wire it up
 
 - After deploy: set Render `FRONTEND_URL` = Vercel prod URL
 - Set Vercel `VITE_API_URL` = Render prod URL (e.g., `https://territory-run-api.onrender.com`)
-- Hit `<vercel-url>/`, sign up, run a session, verify cell appears in prod Supabase DB
+- Hit `<vercel-url>/`, sign up, run a session, verify cell appears in DB
 
 ## Files to create
 
@@ -129,8 +140,8 @@ jobs:
 
 - Production Vercel URL serves landing + dashboard + battlefield + leaderboard
 - Production API on Render returns 200 on `/health`
-- Sign up + login works end-to-end against prod Supabase
-- Running a session (phone w/ real GPS) claims cells visible in prod Supabase DB
+- Sign up + login works end-to-end against prod Postgres
+- Running a session (phone w/ real GPS) claims cells visible in prod DB
 - No CORS errors in browser console
 - CI green on PR
 
