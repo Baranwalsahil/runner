@@ -1,0 +1,84 @@
+name: territory-run
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: territory_run
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d territory_run"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  migrate:
+    build:
+      context: ./server
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/territory_run
+      DATABASE_URL_DIRECT: postgresql://postgres:postgres@db:5432/territory_run
+      JWT_SECRET: dev-only-not-a-secret
+    command: python -m scripts.migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  server:
+    build:
+      context: ./server
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/territory_run
+      DATABASE_URL_DIRECT: postgresql://postgres:postgres@db:5432/territory_run
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-only-not-a-secret
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRES_SECONDS: "604800"
+      FRONTEND_URL: http://localhost:5173
+      NODE_ENV: development
+      PORT: "8000"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./server:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --app-dir .
+
+  client:
+    build:
+      context: ./client
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    depends_on:
+      - server
+    command: npm run dev -- --host 0.0.0.0
+
+volumes:
+  db_data:
