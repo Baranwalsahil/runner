@@ -5,6 +5,7 @@ from uuid import UUID
 import asyncpg
 import h3
 
+from app.cache import territory_cache
 from app.constants import H3_RESOLUTION
 from app.schemas.territory import Bounds, CellOut, TerritoryStats
 from app.services.color import color_for_uuid
@@ -35,21 +36,35 @@ def _row_to_cell(row: asyncpg.Record) -> CellOut:
     )
 
 
-async def cells_in_bounds(pool: asyncpg.Pool, bounds: Bounds) -> list[CellOut]:
+async def cells_in_bounds(
+    pool: asyncpg.Pool,
+    bounds: Bounds,
+    cache=None,
+) -> list[CellOut]:
+    if cache is not None:
+        hit = await territory_cache.get_bbox(cache, bounds)
+        if hit is not None:
+            return hit
+
     candidates = _candidate_cells(bounds, H3_RESOLUTION)
     if not candidates:
-        return []
-    rows = await pool.fetch(
-        """
-        SELECT c.h3_index, c.user_id, c.resolution, c.claim_count, c.claimed_at,
-               u.username
-        FROM claimed_cells c
-        LEFT JOIN users u ON u.id = c.user_id
-        WHERE c.h3_index = ANY($1::text[])
-        """,
-        candidates,
-    )
-    return [_row_to_cell(r) for r in rows]
+        result: list[CellOut] = []
+    else:
+        rows = await pool.fetch(
+            """
+            SELECT c.h3_index, c.user_id, c.resolution, c.claim_count, c.claimed_at,
+                   u.username
+            FROM claimed_cells c
+            LEFT JOIN users u ON u.id = c.user_id
+            WHERE c.h3_index = ANY($1::text[])
+            """,
+            candidates,
+        )
+        result = [_row_to_cell(r) for r in rows]
+
+    if cache is not None:
+        await territory_cache.set_bbox(cache, bounds, result)
+    return result
 
 
 async def cells_for_user(

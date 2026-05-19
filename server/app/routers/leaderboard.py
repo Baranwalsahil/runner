@@ -5,7 +5,7 @@ from typing import Literal
 import asyncpg
 from fastapi import APIRouter, Depends, Query
 
-from app.deps import get_current_user, get_db_pool
+from app.deps import get_cache_client, get_current_user, get_db_pool
 from app.schemas.auth import User
 from app.schemas.leaderboard import LeaderboardPage, LeaderboardRow
 from app.services import leaderboard_service
@@ -19,10 +19,11 @@ async def get_leaderboard(
     offset: int = Query(0, ge=0),
     period: Literal["all", "weekly", "daily"] = Query("all"),
     pool: asyncpg.Pool = Depends(get_db_pool),
+    cache=Depends(get_cache_client),
     _: User = Depends(get_current_user),
 ) -> LeaderboardPage:
     return await leaderboard_service.top(
-        pool, limit=limit, offset=offset, period=period
+        pool, limit=limit, offset=offset, period=period, cache=cache
     )
 
 

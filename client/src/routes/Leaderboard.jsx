@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Podium from "../components/leaderboard/Podium.jsx";
 import RankTable from "../components/leaderboard/RankTable.jsx";
 import FilterChips from "../components/leaderboard/FilterChips.jsx";
-import { leaderboard as lbApi } from "../lib/api.js";
 import useAuth from "../hooks/useAuth.js";
+import useLeaderboardPolling from "../hooks/useLeaderboardPolling.js";
 
 const REGION_FILTERS = ["Global", "Regional", "Friends"];
 const TIME_FILTERS = ["All-time", "Weekly", "Daily"];
@@ -32,30 +32,12 @@ export default function Leaderboard() {
   const { user } = useAuth();
   const [region, setRegion] = useState("Global");
   const [time, setTime] = useState("All-time");
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    lbApi
-      .top({ limit: 50, offset: 0, period: TIME_TO_PERIOD[time] })
-      .then((page) => {
-        if (cancelled) return;
-        setRows(page.rows.map(adapt));
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message || "Fetch failed");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [time]);
+  const { rows: rawRows, loading, error } = useLeaderboardPolling({
+    limit: 50,
+    offset: 0,
+    period: TIME_TO_PERIOD[time],
+  });
+  const rows = (rawRows ?? []).map(adapt);
 
   return (
     <div className="px-margin-safe max-w-7xl mx-auto w-full">

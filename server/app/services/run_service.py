@@ -5,6 +5,7 @@ from uuid import UUID
 import asyncpg
 from fastapi import HTTPException, status
 
+from app.cache import leaderboard_cache, territory_cache
 from app.constants import H3_RESOLUTION, MAX_CELLS_PER_RUN
 from app.schemas.run import RunCreate, RunResult, RunSummary
 from app.services.gps_filter import filter_trace, trace_distance_m
@@ -29,6 +30,7 @@ async def ingest_run(
     pool: asyncpg.Pool,
     user_id: UUID,
     payload: RunCreate,
+    cache=None,
 ) -> RunResult:
     cleaned = filter_trace(payload.gps_trace)
     if len(cleaned) < 2:
@@ -45,8 +47,24 @@ async def ingest_run(
     # Build LINESTRING WKT (lng lat order per WKT spec)
     wkt = "LINESTRING(" + ", ".join(f"{p.lng} {p.lat}" for p in cleaned) + ")"
 
+    cell_list = list(cells)
+
     async with pool.acquire() as conn:
         async with conn.transaction():
+            # Capture displaced owners before the upsert; their totals must
+            # also be recomputed once ownership transfers.
+            displaced_rows = await conn.fetch(
+                """
+                SELECT DISTINCT user_id FROM claimed_cells
+                WHERE h3_index = ANY($1::text[])
+                  AND user_id IS NOT NULL
+                  AND user_id <> $2
+                """,
+                cell_list,
+                user_id,
+            )
+            displaced: list[UUID] = [r["user_id"] for r in displaced_rows]
+
             run_row = await conn.fetchrow(
                 """
                 INSERT INTO runs (user_id, started_at, ended_at, distance_meters,
@@ -65,21 +83,35 @@ async def ingest_run(
 
             await conn.executemany(
                 CLAIM_SQL,
-                [(idx, user_id, H3_RESOLUTION) for idx in cells],
+                [(idx, user_id, H3_RESOLUTION) for idx in cell_list],
             )
 
-            new_total_row = await conn.fetchrow(
+            affected_ids: list[UUID] = [user_id, *displaced]
+            updated = await conn.fetch(
                 """
-                UPDATE users
-                SET total_cells = (SELECT COUNT(*) FROM claimed_cells WHERE user_id = $1),
+                UPDATE users u
+                SET total_cells = (
+                      SELECT COUNT(*) FROM claimed_cells WHERE user_id = u.id
+                    ),
                     updated_at = NOW()
-                WHERE id = $1
-                RETURNING total_cells
+                WHERE u.id = ANY($1::uuid[])
+                RETURNING u.id, u.total_cells
                 """,
-                user_id,
+                affected_ids,
             )
 
-    new_total = new_total_row["total_cells"] if new_total_row else 0
+    new_total = 0
+    totals_by_id: dict[UUID, int] = {}
+    for row in updated:
+        totals_by_id[row["id"]] = row["total_cells"]
+        if row["id"] == user_id:
+            new_total = row["total_cells"]
+
+    if cache is not None:
+        for uid, total in totals_by_id.items():
+            await leaderboard_cache.upsert_user_total(cache, uid, total)
+        await territory_cache.flush_all(cache)
+
     return RunResult(
         run_id=run_id,
         cells_claimed=len(cells),
