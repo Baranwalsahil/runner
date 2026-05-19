@@ -42,12 +42,16 @@ services:
         sync: false              # Supabase pooled URL (port 6543)
       - key: DATABASE_URL_DIRECT
         sync: false              # Supabase direct URL (port 5432, for migrations)
+      - key: JWT_SECRET
+        sync: false              # openssl rand -hex 32
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRES_SECONDS
+        value: "604800"
       - key: SUPABASE_URL
-        sync: false
+        sync: false              # optional, Realtime only
       - key: SUPABASE_ANON_KEY
-        sync: false
-      - key: SUPABASE_JWT_SECRET
-        sync: false
+        sync: false              # optional, Realtime only
       - key: REDIS_URL
         sync: false
       - key: NODE_ENV
