@@ -40,7 +40,18 @@ describe("Leaderboard route", () => {
     vi.stubGlobal("fetch", fetchMock);
   });
 
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    // Replace fetch with a quiet stub before unstubbing so any in-flight
+    // polling timers don't blow up after the test ends.
+    globalThis.fetch = () =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({ rows: [], total: 0, limit: 50, offset: 0 }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      );
+    vi.unstubAllGlobals();
+  });
 
   it("renders Territory Lords heading immediately", () => {
     fetchMock.mockResolvedValue(mockTopResponse([]));
