@@ -5,7 +5,7 @@ from uuid import UUID
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.deps import get_current_user, get_db_pool
+from app.deps import get_cache_client, get_current_user, get_db_pool
 from app.schemas.auth import User
 from app.schemas.territory import Bounds, CellOut, TerritoryStats
 from app.services import territory_service
@@ -17,13 +17,14 @@ router = APIRouter(prefix="/territory", tags=["territory"])
 async def list_cells(
     bounds: str = Query(..., description="sw_lat,sw_lng,ne_lat,ne_lng"),
     pool: asyncpg.Pool = Depends(get_db_pool),
+    cache=Depends(get_cache_client),
     _: User = Depends(get_current_user),
 ) -> list[CellOut]:
     try:
         parsed = Bounds.parse_csv(bounds)
     except ValueError as e:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e))
-    return await territory_service.cells_in_bounds(pool, parsed)
+    return await territory_service.cells_in_bounds(pool, parsed, cache)
 
 
 @router.get("/stats", response_model=TerritoryStats)

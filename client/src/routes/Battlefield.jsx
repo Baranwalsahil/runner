@@ -3,7 +3,7 @@ import MapCanvas from "../components/battlefield/MapCanvas.jsx";
 import MapHud from "../components/battlefield/MapHud.jsx";
 import CellDetailPanel from "../components/battlefield/CellDetailPanel.jsx";
 import PlayersOnline from "../components/battlefield/PlayersOnline.jsx";
-import useTerritory from "../hooks/useTerritory.js";
+import useTerritoryPolling from "../hooks/useTerritoryPolling.js";
 
 const SEATTLE_DEFAULT_BOUNDS = {
   sw_lat: 47.59,
@@ -16,7 +16,7 @@ export default function Battlefield() {
   const [selectedCell, setSelectedCell] = useState(null);
   const [bounds, setBounds] = useState(SEATTLE_DEFAULT_BOUNDS);
   const mapRef = useRef(null);
-  const { cells, loading, error } = useTerritory(bounds);
+  const { cells, loading, error } = useTerritoryPolling(bounds);
 
   function handleMapReady(map) {
     mapRef.current = map;

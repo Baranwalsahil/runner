@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.cache.redis_client import close_cache
 from app.config import get_settings
 from app.db.pool import close_pool, get_pool
 from app.errors import register_exception_handlers
@@ -21,6 +22,7 @@ async def lifespan(app: FastAPI):
         app.state.db_pool = None
     yield
     await close_pool()
+    await close_cache()
 
 
 def create_app() -> FastAPI:

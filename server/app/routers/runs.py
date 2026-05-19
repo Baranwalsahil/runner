@@ -5,7 +5,7 @@ from uuid import UUID
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.deps import get_current_user, get_db_pool
+from app.deps import get_cache_client, get_current_user, get_db_pool
 from app.schemas.auth import User
 from app.schemas.run import RunCreate, RunResult, RunSummary
 from app.services import run_service
@@ -17,9 +17,10 @@ router = APIRouter(prefix="/runs", tags=["runs"])
 async def submit_run(
     payload: RunCreate,
     pool: asyncpg.Pool = Depends(get_db_pool),
+    cache=Depends(get_cache_client),
     current_user: User = Depends(get_current_user),
 ) -> RunResult:
-    return await run_service.ingest_run(pool, current_user.id, payload)
+    return await run_service.ingest_run(pool, current_user.id, payload, cache)
 
 
 @router.get("", response_model=list[RunSummary])
