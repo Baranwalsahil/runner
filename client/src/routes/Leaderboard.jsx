@@ -1,34 +1,61 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Podium from "../components/leaderboard/Podium.jsx";
 import RankTable from "../components/leaderboard/RankTable.jsx";
 import FilterChips from "../components/leaderboard/FilterChips.jsx";
-import {
-  mockLeaderboard,
-  REGION_FILTERS,
-  TIME_FILTERS,
-  CURRENT_USER_ID,
-} from "../data/mockLeaderboard.js";
+import { leaderboard as lbApi } from "../lib/api.js";
+import useAuth from "../hooks/useAuth.js";
 
-const CURRENT_USER_REGION = "New York North";
+const REGION_FILTERS = ["Global", "Regional", "Friends"];
+const TIME_FILTERS = ["All-time", "Weekly", "Daily"];
+
+const TIME_TO_PERIOD = {
+  "All-time": "all",
+  Weekly: "weekly",
+  Daily: "daily",
+};
+
+function adapt(row) {
+  return {
+    id: row.user_id,
+    rank: row.rank,
+    username: `@${row.username}`,
+    avatar: null,
+    color: row.color,
+    cells: row.total_cells,
+    areaM2: row.total_cells * 110_000,
+    streak: 0,
+    region: "Global",
+  };
+}
 
 export default function Leaderboard() {
+  const { user } = useAuth();
   const [region, setRegion] = useState("Global");
   const [time, setTime] = useState("All-time");
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filtered = useMemo(() => {
-    let arr = mockLeaderboard;
-    if (region === "Regional") {
-      arr = arr.filter((p) => p.region === CURRENT_USER_REGION);
-    } else if (region === "Friends") {
-      arr = arr.filter((p, i) => i < 8 || p.id === CURRENT_USER_ID);
-    }
-    if (time === "Weekly") {
-      arr = arr.filter((p) => p.streak >= 7);
-    } else if (time === "Daily") {
-      arr = arr.filter((p) => p.streak >= 14);
-    }
-    return arr.map((p, i) => ({ ...p, rank: i + 1 }));
-  }, [region, time]);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    lbApi
+      .top({ limit: 50, offset: 0, period: TIME_TO_PERIOD[time] })
+      .then((page) => {
+        if (cancelled) return;
+        setRows(page.rows.map(adapt));
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || "Fetch failed");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [time]);
 
   return (
     <div className="px-margin-safe max-w-7xl mx-auto w-full">
@@ -50,8 +77,27 @@ export default function Leaderboard() {
           onTimeChange={setTime}
         />
       </div>
-      <Podium players={filtered} />
-      <RankTable players={filtered} currentUserId={CURRENT_USER_ID} />
+      {loading && (
+        <p data-testid="lb-loading" className="text-on-surface-variant font-mono uppercase">
+          Loading leaderboard…
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="text-red-400">
+          {error}
+        </p>
+      )}
+      {!loading && !error && rows.length === 0 && (
+        <p className="text-on-surface-variant font-mono uppercase">
+          No runners yet. Be the first to claim territory.
+        </p>
+      )}
+      {!loading && !error && rows.length > 0 && (
+        <>
+          <Podium players={rows} />
+          <RankTable players={rows} currentUserId={user?.id} />
+        </>
+      )}
     </div>
   );
 }
