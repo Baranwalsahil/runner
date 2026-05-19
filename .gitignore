@@ -30,3 +30,8 @@ dist/
 # Logs / tmp
 *.log
 /tmp/
+
+# Banyan session logs (generated, may contain sensitive info)
+.agent-logs/sessions/
+.agent-logs/claude/
+.claude-logs/
