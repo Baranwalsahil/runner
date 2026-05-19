@@ -30,7 +30,7 @@ Optional: use `uv` or `poetry` instead. Keep `requirements.txt` authoritative fo
 |------|---------|
 | `server/app/__init__.py` | empty |
 | `server/app/main.py` | FastAPI app: load settings, register middleware (CORS + logging), mount `/health` router, register exception handlers |
-| `server/app/config.py` | `pydantic_settings.BaseSettings` reading `.env`. Required: `DATABASE_URL`, `JWT_SECRET` (auth is own HS256 JWT — task-09). Optional: `DATABASE_URL_DIRECT` (migrations), `JWT_ALGORITHM=HS256`, `JWT_EXPIRES_SECONDS=604800`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` (Realtime client only — task-12), `REDIS_URL`, `FRONTEND_URL`, `PORT=8000`, `H3_RESOLUTION=9`, `NODE_ENV=development`. Required fields raise on missing. |
+| `server/app/config.py` | `pydantic_settings.BaseSettings` reading `.env`. Required: `DATABASE_URL`, `JWT_SECRET` (auth is own HS256 JWT — task-09). Optional: `DATABASE_URL_DIRECT` (migrations), `JWT_ALGORITHM=HS256`, `JWT_EXPIRES_SECONDS=604800`, `REDIS_URL`, `FRONTEND_URL`, `PORT=8000`, `H3_RESOLUTION=9`, `NODE_ENV=development`. Required fields raise on missing. |
 | `server/app/logging.py` | structlog config: JSON in production, pretty in dev |
 | `server/app/middleware/request_logger.py` | ASGI middleware that logs method, path, status, duration |
 | `server/app/errors.py` | Exception handlers: `RequestValidationError` → 422 JSON, `HTTPException` passthrough, generic `Exception` → 500 `{error, message}` w/ traceback only in dev |

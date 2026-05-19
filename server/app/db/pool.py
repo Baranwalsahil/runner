@@ -10,8 +10,10 @@ _pool: asyncpg.Pool | None = None
 async def get_pool() -> asyncpg.Pool:
     """Lazy singleton asyncpg pool.
 
-    `statement_cache_size=0` is required for Supabase's pooled (transaction-mode
-    PgBouncer) connection on port 6543, which forbids prepared statements.
+    `statement_cache_size=0` is required when the DSN points at a
+    transaction-mode PgBouncer pool (or any session-state-less proxy):
+    those modes forbid prepared statements that span connections.
+    Harmless against a direct Postgres connection.
     """
     global _pool
     if _pool is None:

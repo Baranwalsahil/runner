@@ -18,11 +18,6 @@ class Settings(BaseSettings):
     jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
     jwt_expires_seconds: int = Field(default=604800, alias="JWT_EXPIRES_SECONDS")
 
-    # Supabase used only for managed Postgres + Realtime channel; optional.
-    # Not used for authentication.
-    supabase_url: str | None = Field(default=None, alias="SUPABASE_URL")
-    supabase_anon_key: str | None = Field(default=None, alias="SUPABASE_ANON_KEY")
-
     redis_url: str | None = Field(default=None, alias="REDIS_URL")
     frontend_url: str | None = Field(default=None, alias="FRONTEND_URL")
 

@@ -11,5 +11,5 @@
 - [ ] pending: tasks-09-auth-jwt
 - [ ] pending: tasks-10-runs-api
 - [ ] pending: tasks-11-territory-leaderboard-api
-- [ ] pending: tasks-12-realtime-cache
+- [ ] pending: tasks-12-realtime-cache (rewritten: poll-only, no Realtime)
 - [ ] pending: tasks-13-deploy
