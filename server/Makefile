@@ -19,3 +19,6 @@ test:
 
 freeze:
 	$(PIP) freeze > requirements.txt
+
+migrate:
+	$(PY) -m scripts.migrate

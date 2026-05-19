@@ -16,11 +16,11 @@ Tasks run strictly in order — later tasks depend on earlier scaffolding.
 | 06 | [tasks-06-global-leaderboard.md](./tasks-06-global-leaderboard.md) | Port Global Leaderboard | FE | M |
 | 07 | [tasks-07-backend-scaffold.md](./tasks-07-backend-scaffold.md) | Backend scaffold (FastAPI, env, healthcheck) | BE | S |
 | 08 | [tasks-08-db-schema.md](./tasks-08-db-schema.md) | Postgres + PostGIS schema + migrations | DB | M |
-| 09 | [tasks-09-auth-supabase.md](./tasks-09-auth-supabase.md) | Supabase auth (FE + BE JWT verify) | Auth | M |
+| 09 | [tasks-09-auth-jwt.md](./tasks-09-auth-jwt.md) | Own JWT auth (bcrypt + python-jose, no IdP) | Auth | M |
 | 10 | [tasks-10-runs-api.md](./tasks-10-runs-api.md) | Runs ingest → H3 claim → DB upsert | BE | L |
 | 11 | [tasks-11-territory-leaderboard-api.md](./tasks-11-territory-leaderboard-api.md) | Territory + Leaderboard GET endpoints | BE | M |
 | 12 | [tasks-12-realtime-cache.md](./tasks-12-realtime-cache.md) | Redis cache + polling/real-time updates | Infra | M |
-| 13 | [tasks-13-deploy.md](./tasks-13-deploy.md) | Vercel + Render + Supabase deploy | DevOps | M |
+| 13 | [tasks-13-deploy.md](./tasks-13-deploy.md) | Vercel + Render + managed Postgres deploy | DevOps | M |
 
 ## Rules
 

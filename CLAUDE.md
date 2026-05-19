@@ -85,16 +85,17 @@ We use Uber's H3 library which provides a hierarchical hexagonal grid system wit
 │  Hosting: Render (free tier, 750 hrs/mo)                    │
 ├─────────────────────────────────────────────────────────────┤
 │  DATABASE                                                   │
-│  Primary: Supabase Postgres (free tier, 500MB)              │
+│  Primary: Managed Postgres (host deferred; Render / Neon /  │
+│           self-hosted — pick at deploy time)                │
 │  Extensions: PostGIS + pgcrypto (h3 done app-side via h3-py)│
 │  Cache: Upstash Redis (free tier, 10K commands/day)         │
 ├─────────────────────────────────────────────────────────────┤
 │  AUTH                                                       │
-│  Provider: Supabase Auth (free tier, 50K MAU)               │
+│  Provider: Own JWT (HS256, server-signed, bcrypt password)  │
 ├─────────────────────────────────────────────────────────────┤
 │  REAL-TIME                                                  │
-│  Provider: Supabase Realtime (Postgres CDC, free, bundled)  │
-│  Fallback: Poll every 30 seconds when channel unavailable   │
+│  Poll-based (territory 15s, leaderboard 30s, paused on hide)│
+│  No WebSocket / CDC at MVP — revisit when concurrency needs │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -104,9 +105,11 @@ We use Uber's H3 library which provides a hierarchical hexagonal grid system wit
 |---------|---------|---------|
 | h3-js | Hexagonal grid indexing | `npm install h3-js` |
 | maplibre-gl | Map rendering (free Mapbox fork) | `npm install maplibre-gl` |
-| @supabase/supabase-js | Authentication | `npm install @supabase/supabase-js` |
-| pg | Postgres client | `npm install pg` |
-| express | API framework | `npm install express` |
+| python-jose[cryptography] | JWT encode/decode (HS256) | `pip install "python-jose[cryptography]"` |
+| passlib[bcrypt] | Password hashing | `pip install "passlib[bcrypt]"` |
+| asyncpg | Postgres client (async) | `pip install asyncpg` |
+| fastapi | API framework | `pip install fastapi uvicorn` |
+| redis | Cache + leaderboard ZSET | `pip install "redis[hiredis]"` |
 
 ### Free Tile Providers for MapLibre
 
@@ -271,21 +274,23 @@ GET  /leaderboard/nearby   - Get players near current user's rank
 - Node.js 18+ installed locally (frontend only)
 - Python 3.13+ installed locally (backend)
 
-### Step 1: Set Up Supabase (DB + Auth + Realtime)
+### Step 1: Provision Postgres (host deferred)
 
-1. Go to [supabase.com](https://supabase.com) and sign up
-2. Create a new project (region close to Render region)
-3. Enable required extensions: dashboard → Database → Extensions → enable `postgis` and `pgcrypto`
-4. Copy connection strings from dashboard → Settings → Database:
-   - **Pooled** (port `6543`, transaction mode) → `DATABASE_URL` (app runtime — required for asyncpg + PgBouncer)
-   - **Direct** (port `5432`) → `DATABASE_URL_DIRECT` (migrations only)
-5. Copy auth credentials from dashboard → Settings → API:
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
-   - `SUPABASE_JWT_SECRET`
-6. Enable Email auth in Authentication → Providers
-7. Run schema: `python -m scripts.migrate` against `DATABASE_URL_DIRECT`
-8. Enable Realtime on `claimed_cells`: dashboard → Database → Replication → toggle `claimed_cells` in `supabase_realtime` publication
+Pick any managed Postgres provider with PostGIS support, or self-host.
+Candidates: Render Postgres, Neon, Crunchy Bridge, raw VPS. Local dev
+runs `postgis/postgis:16-3.4` in docker.
+
+1. Create database; enable extensions: `CREATE EXTENSION postgis; CREATE EXTENSION pgcrypto;`
+2. Capture connection strings:
+   - `DATABASE_URL` — runtime DSN. If the host fronts Postgres with a
+     transaction-mode pooler (PgBouncer), this is the pooler URL.
+   - `DATABASE_URL_DIRECT` — direct Postgres DSN (no proxy). Optional;
+     migrations fall back to `DATABASE_URL` when unset.
+3. Generate JWT secret: `openssl rand -hex 32` → set as `JWT_SECRET`
+4. Run schema: `python -m scripts.migrate` against `DATABASE_URL_DIRECT`
+5. Verify: `\dt` shows `users`, `runs`, `claimed_cells`, `schema_migrations`; `\dx` shows `postgis` + `pgcrypto`
+
+> Authentication is self-hosted: bcrypt `password_hash` on `users` row, HS256 JWT signed with `JWT_SECRET`. See task-09. Realtime / CDC is not used at MVP — client polls (task-12).
 
 ### Step 3: Deploy Backend (Render)
 
@@ -297,9 +302,11 @@ GET  /leaderboard/nearby   - Get players near current user's rank
    - Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT --app-dir server`
 4. Add environment variables:
    ```
-   DATABASE_URL=postgresql://...
-   SUPABASE_URL=https://...
-   SUPABASE_ANON_KEY=eyJ...
+   DATABASE_URL=postgresql://...           # runtime DSN
+   DATABASE_URL_DIRECT=postgresql://...    # direct DSN (migrations)
+   JWT_SECRET=<openssl rand -hex 32>
+   JWT_ALGORITHM=HS256
+   JWT_EXPIRES_SECONDS=604800
    NODE_ENV=production
    ```
 
@@ -311,8 +318,6 @@ GET  /leaderboard/nearby   - Get players near current user's rank
 4. Add environment variables:
    ```
    VITE_API_URL=https://your-backend.onrender.com
-   VITE_SUPABASE_URL=https://...
-   VITE_SUPABASE_ANON_KEY=eyJ...
    VITE_MAPTILER_KEY=your_key (optional)
    ```
 
@@ -330,8 +335,8 @@ GET  /leaderboard/nearby   - Get players near current user's rank
 | Service | Limit | Resets |
 |---------|-------|--------|
 | Vercel | 100GB bandwidth | Monthly |
-| Render | 750 hours | Monthly |
-| Supabase | 500MB DB + 50K MAU + Realtime (200 concurrent) | — |
+| Render | 750 hours web service | Monthly |
+| Postgres host | varies (Render Postgres 90-day free trial, Neon free 0.5 GB, etc.) | — |
 | Upstash Redis | 10K commands/day | Daily |
 
 ---
@@ -355,7 +360,7 @@ territory-run/
 │   │   ├── lib/
 │   │   │   ├── api.js         # API client
 │   │   │   ├── h3Utils.js     # H3 helper functions
-│   │   │   └── supabase.js    # Auth client
+│   │   │   └── auth.js        # Own JWT auth helpers (localStorage token)
 │   │   ├── App.jsx
 │   │   └── main.jsx
 │   ├── index.html
@@ -449,12 +454,14 @@ npm run dev
 
 # Database
 DATABASE_URL=postgresql://user:pass@localhost:5432/territory_run
+DATABASE_URL_DIRECT=postgresql://user:pass@localhost:5432/territory_run
 
-# Supabase Auth
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
+# Own JWT auth (required)
+JWT_SECRET=<openssl rand -hex 32>
+JWT_ALGORITHM=HS256
+JWT_EXPIRES_SECONDS=604800
 
-# Redis (optional)
+# Redis (optional — task-12 cache)
 REDIS_URL=redis://localhost:6379
 
 # App config
@@ -589,9 +596,10 @@ function filterGpsTrace(points) {
 - [H3 Documentation](https://h3geo.org/docs/)
 - [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/)
 - [PostGIS Documentation](https://postgis.net/documentation/)
-- [Supabase Auth Docs](https://supabase.com/docs/guides/auth)
-- [Supabase Docs](https://supabase.com/docs)
-- [Supabase Realtime](https://supabase.com/docs/guides/realtime)
+- [python-jose JWT](https://python-jose.readthedocs.io/)
+- [passlib bcrypt](https://passlib.readthedocs.io/en/stable/lib/passlib.hash.bcrypt.html)
+- [Render Postgres](https://render.com/docs/databases)
+- [Neon Postgres](https://neon.tech/docs/introduction)
 - [Render Deployment](https://render.com/docs)
 
 ---
