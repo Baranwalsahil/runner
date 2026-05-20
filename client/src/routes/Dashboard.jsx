@@ -144,6 +144,7 @@ export default function Dashboard() {
               : "NO TERRITORY YET"
           }
           ownership={totalCells > 0 ? Math.min(100, totalCells) : 0}
+          cells={cells}
         />
         <RecentBattlesFeed {...battles} />
       </div>
