@@ -638,39 +638,49 @@ When user says **"implement tasks list in folder tasks"** (or variants: "continu
 
 ---
 
-## Workflow: Per-task feat branch (mandatory)
+## Workflow: Branch + PR (mandatory, no local merges)
 
-For **every** task implementation (any `tasks/tasks-NN-*.md`):
+For **every** code change — task implementation, bug fix, polish, refactor — follow this flow:
 
-1. **Before any code edits**, create + checkout a feature branch off the current `main`:
+1. **Before any code edits**, branch off latest `main`:
    ```bash
    git checkout main
    git pull origin main
-   git checkout -b feat/task-NN-<short-slug>
+   git checkout -b <prefix>/<short-slug>
    ```
-   Slug examples: `feat/task-07-backend-scaffold`, `feat/task-08-db-schema`.
-2. Implement task on the branch. Commit incrementally — small logical commits beat one giant commit.
-3. Run full test suite (`npm test` for FE, `pytest -v` for BE). Run curl checks per task acceptance. Update `progress.md` to `complete` on the branch.
+   Prefixes:
+   - `feat/task-NN-...` — task implementation (e.g. `feat/task-07-backend-scaffold`)
+   - `fix/<area>-<bug>` — bug fix (e.g. `fix/battlefield-legend-empty`)
+   - `chore/...`, `refactor/...`, `docs/...` — other categories
+2. Implement on the branch. Commit incrementally — small logical commits beat one giant commit.
+3. Run full test suite (`npm test` for FE, `pytest -v` for BE). Run curl checks for acceptance. Update `progress.md` if the change tracks against a `tasks/` file.
 4. Push the branch:
    ```bash
-   git push -u origin feat/task-NN-<short-slug>
+   git push -u origin <prefix>/<short-slug>
    ```
-5. Merge to `main` (fast-forward or `--no-ff` based on git config), then delete branch locally + remotely:
+5. Open a Pull Request via `gh pr create`:
    ```bash
-   git checkout main
-   git pull origin main
-   git merge --no-ff feat/task-NN-<short-slug> -m "Merge task-NN: <title>"
-   git push origin main
-   git branch -d feat/task-NN-<short-slug>
-   git push origin --delete feat/task-NN-<short-slug>
+   gh pr create --title "<concise title>" --body "$(cat <<'EOF'
+   ## Summary
+   <1-3 bullets>
+
+   ## Test plan
+   - [ ] <step>
+
+   🤖 Generated with [Claude Code](https://claude.com/claude-code)
+   EOF
+   )"
    ```
+   Return the PR URL to the user.
 
-**Why:** Per-task branches keep `main` always green, give a clean revert point per task, and let CI run isolated checks per scope. Deletion after merge keeps the branch list tidy.
+**Hard rules:**
+- **Never merge locally.** No `git merge` into `main`, no `git push origin main`, no branch deletion. PRs are the only path to `main`.
+- **Never commit on `main`.** Even for typo fixes — open a tiny PR.
+- **Never `--force` push** unless the user explicitly asks for it.
+- If a task / bug fix is incomplete, leave the branch + PR open as draft. Update `progress.md` to `paused` with reason. Do not close.
 
-**How to apply:** Triggers automatically on any "implement task NN" / "continue tasks" / "resume tasks" prompt. Never edit code directly on `main`. The only exception: tiny doc-only fixes (typo, broken link) — those may go on `main` directly with explicit user OK.
+**Why:** Every change reviewed via PR, GitHub history is the source of truth, `main` only updates through the PR workflow. Local merges hide review.
 
-**Confirm before pushing to `main`:** Always ask user for approval before the final `git push origin main` and before deleting the remote branch.
-
-**If task fails mid-way:** Leave the branch open. Update `progress.md` to `paused` with reason. Do NOT merge a partial task.
+**How to apply:** Triggers on any "implement task NN", "fix bug", "continue tasks", "resume tasks", or any other code-change prompt — including small follow-ups. After pushing the branch and opening the PR, stop. Do not merge.
 
 
