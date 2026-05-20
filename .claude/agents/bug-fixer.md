@@ -13,9 +13,15 @@ Fix one reported bug per invocation. Both frontend (`client/`) and backend (`ser
 
 ## Workflow (every invocation)
 
-1. **Reproduce / locate** — Read the failing code path. Confirm the bug with `grep` / `git log` / running the existing test if one exists. If unable to reproduce after a brief investigation, report back and stop.
+1. **Authenticate GitHub CLI first** — Before any other step:
+   ```bash
+   gh auth status 2>&1 | head -3
+   ```
+   If not logged in, run `gh auth login` and wait for completion. `gh auth login` is interactive (web/device flow); print the instructions to the user and let them complete the browser handshake. Do **not** proceed until `gh auth status` reports an active account.
 
-2. **Branch off main** — Before any edit:
+2. **Reproduce / locate** — Read the failing code path. Confirm the bug with `grep` / `git log` / running the existing test if one exists. If unable to reproduce after a brief investigation, report back, run the cleanup step (`gh auth logout`), and stop.
+
+3. **Branch off main** — Before any edit:
    ```bash
    git checkout main
    git pull origin main
@@ -23,15 +29,15 @@ Fix one reported bug per invocation. Both frontend (`client/`) and backend (`ser
    ```
    Examples: `fix/battlefield-legend-empty`, `fix/auth-401-on-expired-token`, `fix/runs-claim-double-count`.
 
-3. **Minimal fix** — Smallest diff that resolves the bug. Do not "while I'm here" refactor surrounding code. Do not add unrelated tests. Do not bump dependencies.
+4. **Minimal fix** — Smallest diff that resolves the bug. Do not "while I'm here" refactor surrounding code. Do not add unrelated tests. Do not bump dependencies.
 
-4. **Unit tests around the fix** — Mandatory:
+5. **Unit tests around the fix** — Mandatory:
    - **Frontend:** add or extend a Vitest test (`client/src/**/__tests__/*.test.{js,jsx}` or `src/test/*.test.{js,jsx}`) that fails before the fix and passes after. Run `cd client && npx vitest run` — all green required.
    - **Backend:** add or extend a pytest case (`server/tests/test_*.py`) that fails before the fix and passes after. Run `cd server && pytest -v` — all green required.
    - **Bug in both layers:** test on both sides.
    - If the bug is in a code path with no realistic unit-test seam (e.g. CSS-only, image asset), state that explicitly and skip — but only after trying.
 
-5. **Commit + push + PR** — Per project rule: no local merges.
+6. **Commit + push + PR** — Per project rule: no local merges.
    ```bash
    git add <files>
    git commit -m "fix(<area>): <one-line description>"
@@ -53,11 +59,17 @@ Fix one reported bug per invocation. Both frontend (`client/`) and backend (`ser
    ```
    Return the PR URL.
 
-6. **Browser verification** — After tests + PR, manually verify in a real browser:
+7. **Browser verification** — After tests + PR, manually verify in a real browser:
    - Ensure the local stack is up: `docker compose ps` — if not, `docker compose up -d` and wait for `:8000/health` to return 200.
    - Use Chrome browser automation tools (`mcp__claude-in-chrome__*`) — load via `ToolSearch` first per MCP convention. Open `http://localhost:5173`, navigate to the affected route, reproduce the original repro steps, confirm the bug is gone.
    - If browser-automation tools are unavailable, instruct the user with exact click-by-click steps to verify.
    - Record a short GIF (`mcp__claude-in-chrome__gif_creator`) when the bug had a visible UI symptom — name it `<area>-<bug>.gif` and reference it in the PR body if useful.
+
+8. **Logout GitHub CLI** — Last step, every time, regardless of success/failure earlier:
+   ```bash
+   gh auth logout --hostname github.com
+   ```
+   Confirm with `gh auth status 2>&1 | head -3` — must report "not logged in" before reporting the task complete to the user. Run this even if the fix was aborted, the bug couldn't be reproduced, or the PR failed to open.
 
 ## Hard rules
 
@@ -66,6 +78,7 @@ Fix one reported bug per invocation. Both frontend (`client/`) and backend (`ser
 - **No silent scope creep.** Drive-by typo fixes / format nits inside the changed file are OK; new abstractions, renames, or unrelated cleanup are not.
 - **Tests are mandatory, not optional.** If you cannot write a test for the fix, justify it in the PR body — don't quietly skip.
 - **Stop at the PR.** Do not merge, do not delete the branch.
+- **Always `gh auth logout` last.** Even on failure paths. The session is not closed until logout is confirmed.
 
 ## When to refuse / escalate
 
