@@ -3,10 +3,12 @@
 Usage from host (stack via docker compose up):
 
     python server/scripts/seed_demo.py
-    python server/scripts/seed_demo.py --base http://localhost:8000 --users 6
+    python server/scripts/seed_demo.py --users 4
+    python server/scripts/seed_demo.py --center 21.9974,79.0011
+    python server/scripts/seed_demo.py --base http://localhost:8000 --users 6 --center 21.9974,79.0011
 
 Each user signs up (or logs in if email already exists), then submits one
-synthetic Seattle-area trace through `/runs`. Speeds stay below
+synthetic trace around `--center` through `/runs`. Speeds stay below
 `MAX_SPEED_MPS=12` so the GPS filter accepts them.
 """
 
@@ -14,20 +16,23 @@ from __future__ import annotations
 
 import argparse
 import json
-import random
 import time
 import urllib.error
 import urllib.request
 from typing import Any
 
+# (username, email, lat_offset_deg, lng_offset_deg, steps).
+# Offsets are added to --center so the cohort clusters around it.
 DEMO_USERS = [
-    ("demo_alpha", "demo_a@test.com", 47.612, -122.339, 12),
-    ("demo_bravo", "demo_b@test.com", 47.608, -122.341, 8),
-    ("demo_charlie", "demo_c@test.com", 47.620, -122.350, 18),
-    ("demo_delta", "demo_d@test.com", 47.604, -122.327, 6),
-    ("demo_echo", "demo_e@test.com", 47.616, -122.331, 10),
-    ("demo_foxtrot", "demo_f@test.com", 47.601, -122.335, 14),
+    ("demo_alpha",   "demo_a@test.com",  0.0058, -0.0069, 12),
+    ("demo_bravo",   "demo_b@test.com",  0.0018, -0.0089,  8),
+    ("demo_charlie", "demo_c@test.com",  0.0138, -0.0179, 18),
+    ("demo_delta",   "demo_d@test.com", -0.0022,  0.0051,  6),
+    ("demo_echo",    "demo_e@test.com",  0.0098,  0.0011, 10),
+    ("demo_foxtrot", "demo_f@test.com", -0.0052, -0.0029, 14),
 ]
+
+DEFAULT_CENTER = (47.6062, -122.3321)  # Seattle
 
 
 def post(base: str, path: str, body: dict, token: str | None = None) -> dict[str, Any]:
@@ -59,8 +64,8 @@ def trace(start_lat: float, start_lng: float, steps: int) -> list[dict]:
     )
     pts = []
     for i in range(steps):
-        lat = start_lat + i * 0.0003
-        lng = start_lng + i * 0.0001
+        lat = start_lat + i * 0.0003   # ~33 m/step latitude
+        lng = start_lng + i * 0.0001   # small lng drift
         ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(base_ts + i * 5))
         pts.append({"lat": lat, "lng": lng, "timestamp": ts, "accuracy": 10})
     return pts
@@ -75,6 +80,15 @@ def login_or_signup(base: str, username: str, email: str) -> str | None:
     return out.get("token")
 
 
+def parse_center(raw: str) -> tuple[float, float]:
+    parts = raw.split(",")
+    if len(parts) != 2:
+        raise argparse.ArgumentTypeError(
+            "--center must be 'lat,lng' (e.g. 21.9974,79.0011)"
+        )
+    return float(parts[0]), float(parts[1])
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://localhost:8000")
@@ -82,18 +96,24 @@ def main() -> None:
         "--users", type=int, default=len(DEMO_USERS),
         help="how many demo users to seed (max %d)" % len(DEMO_USERS),
     )
+    ap.add_argument(
+        "--center", type=parse_center,
+        default=DEFAULT_CENTER,
+        help="lat,lng to anchor the cohort (default: Seattle %.4f,%.4f)" % DEFAULT_CENTER,
+    )
     args = ap.parse_args()
-    random.seed(42)
+    c_lat, c_lng = args.center
+    print(f"seeding around lat={c_lat} lng={c_lng}\n")
 
     selected = DEMO_USERS[: args.users]
     last_token = None
-    for username, email, lat, lng, steps in selected:
+    for username, email, dlat, dlng, steps in selected:
         token = login_or_signup(args.base, username, email)
         if token is None:
             print(f"{username:13} → AUTH FAILED")
             continue
         last_token = token
-        pts = trace(lat, lng, steps)
+        pts = trace(c_lat + dlat, c_lng + dlng, steps)
         body = {
             "gps_trace": pts,
             "started_at": pts[0]["timestamp"],
