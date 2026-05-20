@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MapCanvas from "../components/battlefield/MapCanvas.jsx";
 import MapHud from "../components/battlefield/MapHud.jsx";
 import CellDetailPanel from "../components/battlefield/CellDetailPanel.jsx";
@@ -25,6 +25,37 @@ export default function Battlefield() {
   const [selectedCell, setSelectedCell] = useState(null);
   const [bounds, setBounds] = useState(SEATTLE_DEFAULT_BOUNDS);
   const mapRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        mapRef.current?.flyTo?.({
+          center: [longitude, latitude],
+          zoom: 14,
+          essential: true,
+        });
+      },
+      () => { /* permission denied / unavailable — keep default */ },
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: 60_000 }
+    );
+  }, []);
+
+  function flyToMyLocation() {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        mapRef.current?.flyTo?.({
+          center: [longitude, latitude],
+          zoom: 14,
+          essential: true,
+        });
+      },
+      () => {}
+    );
+  }
   const { cells, loading, error } = useTerritoryPolling(bounds);
   const { rows: lbRows } = useLeaderboardPolling({ limit: 3, offset: 0 });
   const players = (lbRows ?? []).map(rowToPlayer);
@@ -79,7 +110,7 @@ export default function Battlefield() {
         legend={legend}
         onZoomIn={() => mapRef.current?.zoomIn()}
         onZoomOut={() => mapRef.current?.zoomOut()}
-        onLocate={() => mapRef.current?.flyTo({ center: [-122.3321, 47.6062], zoom: 14 })}
+        onLocate={flyToMyLocation}
       />
       <PlayersOnline players={players} />
       <CellDetailPanel
