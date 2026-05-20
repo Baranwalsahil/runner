@@ -3,9 +3,14 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import TerritoryMapPreview from '../components/dashboard/TerritoryMapPreview.jsx';
 
 describe('TerritoryMapPreview', () => {
-  it('renders live battles count', () => {
+  it('renders live count with default label', () => {
     render(<TerritoryMapPreview liveBattles={14} />);
-    expect(screen.getByText(/LIVE BATTLES: 14/)).toBeInTheDocument();
+    expect(screen.getByText(/YOUR CELLS: 14/)).toBeInTheDocument();
+  });
+
+  it('honors custom liveLabel prop', () => {
+    render(<TerritoryMapPreview liveBattles={5} liveLabel="LIVE BATTLES" />);
+    expect(screen.getByText(/LIVE BATTLES: 5/)).toBeInTheDocument();
   });
 
   it('renders district ownership', () => {
