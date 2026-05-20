@@ -24,11 +24,26 @@ describe('MapHud', () => {
     expect(lay).toHaveBeenCalledOnce();
   });
 
-  it('legend has 3 swatches', () => {
+  it('legend shows empty state when no claims in view', () => {
     render(<MapHud />);
     const legend = screen.getByTestId('hud-legend');
-    expect(legend.textContent).toMatch(/You/);
-    expect(legend.textContent).toMatch(/Rival/);
-    expect(legend.textContent).toMatch(/Contested/);
+    expect(legend.textContent).toMatch(/No claims in view/i);
+  });
+
+  it('legend renders one entry per owner with count', () => {
+    render(
+      <MapHud
+        legend={[
+          { ownerId: 'a', owner: '@alpha', color: '#c3f400', count: 3 },
+          { ownerId: 'b', owner: '@bravo', color: '#00dbe9', count: 1 },
+        ]}
+      />
+    );
+    const entries = screen.getAllByTestId('legend-entry');
+    expect(entries).toHaveLength(2);
+    expect(entries[0].textContent).toMatch(/@alpha/);
+    expect(entries[0].textContent).toMatch(/×3/);
+    expect(entries[1].textContent).toMatch(/@bravo/);
+    expect(entries[1].textContent).toMatch(/×1/);
   });
 });

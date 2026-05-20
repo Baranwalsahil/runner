@@ -29,6 +29,25 @@ export default function Battlefield() {
   const { rows: lbRows } = useLeaderboardPolling({ limit: 3, offset: 0 });
   const players = (lbRows ?? []).map(rowToPlayer);
 
+  const legend = (() => {
+    const byOwner = new Map();
+    for (const c of cells) {
+      const key = c.ownerId ?? c.owner;
+      const existing = byOwner.get(key);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        byOwner.set(key, {
+          ownerId: c.ownerId,
+          owner: c.owner,
+          color: c.color,
+          count: 1,
+        });
+      }
+    }
+    return [...byOwner.values()].sort((a, b) => b.count - a.count);
+  })();
+
   function handleMapReady(map) {
     mapRef.current = map;
     const updateBounds = () => {
@@ -57,6 +76,7 @@ export default function Battlefield() {
       />
       <MapHud
         liveBattles={cells.length}
+        legend={legend}
         onZoomIn={() => mapRef.current?.zoomIn()}
         onZoomOut={() => mapRef.current?.zoomOut()}
         onLocate={() => mapRef.current?.flyTo({ center: [-122.3321, 47.6062], zoom: 14 })}

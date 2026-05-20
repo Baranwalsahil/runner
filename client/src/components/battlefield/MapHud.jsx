@@ -1,6 +1,13 @@
 import Icon from "../Icon.jsx";
 
-export default function MapHud({ liveBattles = 14, onZoomIn, onZoomOut, onLocate, onLayers }) {
+export default function MapHud({
+  liveBattles = 0,
+  legend = [],
+  onZoomIn,
+  onZoomOut,
+  onLocate,
+  onLayers,
+}) {
   return (
     <>
       <div
@@ -44,20 +51,28 @@ export default function MapHud({ liveBattles = 14, onZoomIn, onZoomOut, onLocate
       </div>
       <div
         data-testid="hud-legend"
-        className="absolute bottom-md left-md z-30 glass-panel p-sm rounded-lg flex gap-md text-[10px] font-label-bold uppercase"
+        className="absolute bottom-md left-md z-30 glass-panel p-sm rounded-lg flex flex-wrap gap-md text-[10px] font-label-bold uppercase max-w-[80%]"
       >
-        <span className="flex items-center gap-base">
-          <span className="w-3 h-3 rounded-sm" style={{ background: "#c3f400" }} />
-          You
-        </span>
-        <span className="flex items-center gap-base">
-          <span className="w-3 h-3 rounded-sm" style={{ background: "#00dbe9" }} />
-          Rival
-        </span>
-        <span className="flex items-center gap-base">
-          <span className="w-3 h-3 rounded-sm" style={{ background: "#ffb4ab" }} />
-          Contested
-        </span>
+        {legend.length === 0 ? (
+          <span className="text-on-surface-variant italic">No claims in view</span>
+        ) : (
+          legend.map((entry) => (
+            <span
+              key={entry.ownerId ?? entry.owner}
+              data-testid="legend-entry"
+              className="flex items-center gap-base"
+            >
+              <span
+                className="w-3 h-3 rounded-sm"
+                style={{ background: entry.color }}
+              />
+              {entry.owner}
+              <span className="text-on-surface-variant">
+                ×{entry.count}
+              </span>
+            </span>
+          ))
+        )}
       </div>
     </>
   );
