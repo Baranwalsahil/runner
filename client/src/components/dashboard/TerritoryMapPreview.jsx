@@ -91,18 +91,6 @@ export default function TerritoryMapPreview({
           <Icon name="zoom_out" />
         </button>
       </div>
-      <div className="absolute top-1/2 left-1/3 -translate-y-1/2 glass-panel p-md rounded-xl neon-border-lime max-w-[200px] pointer-events-none z-10">
-        <p className="font-label-bold text-[10px] text-primary-fixed mb-1">{district}</p>
-        <p className="font-body-md font-bold mb-2 text-white">
-          {ownership > 0 ? `${ownership}% OWNERSHIP` : "0 CELLS"}
-        </p>
-        <div className="w-full bg-surface-container h-1 rounded-full overflow-hidden">
-          <div
-            className="bg-primary-fixed h-full shadow-[0_0_8px_#c3f400]"
-            style={{ width: `${ownership}%` }}
-          />
-        </div>
-      </div>
     </div>
   );
 }

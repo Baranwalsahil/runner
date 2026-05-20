@@ -16,10 +16,10 @@ describe('TerritoryMapPreview', () => {
     expect(screen.getByText(/LIVE BATTLES: 5/)).toBeInTheDocument();
   });
 
-  it('renders district ownership', () => {
+  it('does not render the ownership overlay box', () => {
     render(<TerritoryMapPreview district="CAPITOL HILL DISTRICT" ownership={92} />);
-    expect(screen.getByText('CAPITOL HILL DISTRICT')).toBeInTheDocument();
-    expect(screen.getByText('92% OWNERSHIP')).toBeInTheDocument();
+    expect(screen.queryByText('CAPITOL HILL DISTRICT')).not.toBeInTheDocument();
+    expect(screen.queryByText('92% OWNERSHIP')).not.toBeInTheDocument();
   });
 
   it('falls back to placeholder image when no cells passed', () => {
