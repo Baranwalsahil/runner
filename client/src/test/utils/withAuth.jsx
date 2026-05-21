@@ -2,7 +2,15 @@ import { AuthContext } from "../../components/auth/AuthProvider.jsx";
 
 const NOOP = () => {};
 
-export function withAuth(children, { user = null, loading = false } = {}) {
+export function withAuth(
+  children,
+  {
+    user = null,
+    loading = false,
+    signOut = NOOP,
+    updateProfile = NOOP,
+  } = {}
+) {
   return (
     <AuthContext.Provider
       value={{
@@ -11,7 +19,8 @@ export function withAuth(children, { user = null, loading = false } = {}) {
         loading,
         signIn: NOOP,
         signUp: NOOP,
-        signOut: NOOP,
+        signOut,
+        updateProfile,
       }}
     >
       {children}

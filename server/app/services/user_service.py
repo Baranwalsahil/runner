@@ -12,7 +12,8 @@ class UserAlreadyExists(Exception):
 
 
 _SELECT_COLUMNS = (
-    "id, email, username, avatar_url, total_cells, total_area_m2, created_at"
+    "id, email, username, first_name, last_name, "
+    "avatar_url, total_cells, total_area_m2, created_at"
 )
 
 
@@ -21,6 +22,8 @@ def _row_to_user(row: asyncpg.Record) -> User:
         id=row["id"],
         email=row["email"],
         username=row["username"],
+        first_name=row["first_name"],
+        last_name=row["last_name"],
         avatar_url=row["avatar_url"],
         total_cells=row["total_cells"],
         total_area_m2=float(row["total_area_m2"]),
@@ -61,6 +64,42 @@ async def get_user_by_id(pool: asyncpg.Pool, user_id: UUID) -> User | None:
         f"SELECT {_SELECT_COLUMNS} FROM users WHERE id = $1",
         user_id,
     )
+    if row is None:
+        return None
+    return _row_to_user(row)
+
+
+async def update_user(
+    pool: asyncpg.Pool,
+    user_id: UUID,
+    *,
+    username: str | None = None,
+    first_name: str | None = None,
+    last_name: str | None = None,
+) -> User | None:
+    fields: list[str] = []
+    values: list = []
+    if username is not None:
+        fields.append(f"username = ${len(values) + 1}")
+        values.append(username)
+    if first_name is not None:
+        fields.append(f"first_name = ${len(values) + 1}")
+        values.append(first_name)
+    if last_name is not None:
+        fields.append(f"last_name = ${len(values) + 1}")
+        values.append(last_name)
+    if not fields:
+        return await get_user_by_id(pool, user_id)
+    fields.append("updated_at = NOW()")
+    values.append(user_id)
+    query = (
+        f"UPDATE users SET {', '.join(fields)} "
+        f"WHERE id = ${len(values)} RETURNING {_SELECT_COLUMNS}"
+    )
+    try:
+        row = await pool.fetchrow(query, *values)
+    except asyncpg.UniqueViolationError as e:
+        raise UserAlreadyExists(str(e)) from e
     if row is None:
         return None
     return _row_to_user(row)

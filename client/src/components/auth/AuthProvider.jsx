@@ -71,8 +71,19 @@ export default function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const updateProfile = useCallback(async (patch) => {
+    const updated = await apiJson("/users/me", {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
+    setUser(updated);
+    return updated;
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider
+      value={{ user, token, loading, signIn, signUp, signOut, updateProfile }}
+    >
       {children}
     </AuthContext.Provider>
   );

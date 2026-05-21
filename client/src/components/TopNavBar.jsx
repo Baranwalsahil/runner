@@ -46,12 +46,13 @@ export default function TopNavBar() {
         >
           <Icon name="notifications" className="text-primary-fixed" />
         </button>
-        <button
+        <Link
+          to="/profile"
           aria-label="account"
-          className="p-base hover:bg-surface-variant/50 transition-all duration-200 rounded-full active:scale-95 opacity-80"
+          className="p-base hover:bg-surface-variant/50 transition-all duration-200 rounded-full active:scale-95 opacity-80 inline-flex"
         >
           <Icon name="account_circle" className="text-primary-fixed" />
-        </button>
+        </Link>
       </div>
     </nav>
   );

@@ -41,4 +41,9 @@ describe('TopNavBar', () => {
     expect(screen.getByLabelText('notifications')).toBeInTheDocument();
     expect(screen.getByLabelText('account')).toBeInTheDocument();
   });
+
+  it('account icon links to /profile', () => {
+    renderAt('/');
+    expect(screen.getByLabelText('account')).toHaveAttribute('href', '/profile');
+  });
 });
