@@ -33,7 +33,7 @@ async def _hydrate_users(
     )
     by_id = {row["id"]: row["username"] for row in rows}
     out: list[LeaderboardRow] = []
-    for i, (uid, score) in enumerate(scored):
+    for uid, score in scored:
         uuid_obj = UUID(uid)
         username = by_id.get(uuid_obj)
         if username is None:
@@ -43,7 +43,7 @@ async def _hydrate_users(
                 user_id=uuid_obj,
                 username=username,
                 total_cells=score,
-                rank=offset + i + 1,
+                rank=offset + len(out) + 1,
                 color=color_for_uuid(uuid_obj),
             )
         )

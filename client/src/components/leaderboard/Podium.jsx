@@ -28,11 +28,12 @@ const TIERS = {
   },
 };
 
-function PodiumCard({ player }) {
-  const tier = TIERS[player.rank];
+function PodiumCard({ player, displayRank }) {
+  const tier = TIERS[displayRank];
+  if (!tier) return null;
   return (
     <div
-      data-testid={`podium-rank-${player.rank}`}
+      data-testid={`podium-rank-${displayRank}`}
       className={`glass-panel rounded-xl flex flex-col items-center justify-center ${tier.container}`}
     >
       <div className="relative mb-md">
@@ -41,23 +42,23 @@ function PodiumCard({ player }) {
           className={`${tier.size} rounded-full object-cover border-2 ${tier.border}`}
           src={player.avatar ?? `https://i.pravatar.cc/128?u=${player.username}`}
         />
-        {player.rank === 1 && (
+        {displayRank === 1 && (
           <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary-fixed text-on-primary-fixed font-black text-headline-md px-4 py-1 rounded-full shadow-[0_0_20px_#c3f400]">
             CHAMPION
           </div>
         )}
         <div className={`absolute -bottom-2 -right-2 font-black ${tier.badge}`}>
-          {player.rank}
+          {displayRank}
         </div>
       </div>
-      <h3 className={`font-headline-md text-primary uppercase ${player.rank === 1 ? "font-headline-lg" : ""}`}>
+      <h3 className={`font-headline-md text-primary uppercase ${displayRank === 1 ? "font-headline-lg" : ""}`}>
         {player.username}
       </h3>
       <p className={`${tier.text} font-label-bold mb-md`}>{player.region}</p>
-      <div className={`w-full ${player.rank === 1 ? "h-2" : "h-1"} bg-surface-variant rounded-full mb-base`}>
+      <div className={`w-full ${displayRank === 1 ? "h-2" : "h-1"} bg-surface-variant rounded-full mb-base`}>
         <div className={`h-full ${tier.bar} rounded-full`} style={{ width: `${tier.pct}%` }} />
       </div>
-      <p className={`${player.rank === 1 ? "text-primary font-stats-display" : "text-on-surface-variant"} text-label-bold`}>
+      <p className={`${displayRank === 1 ? "text-primary font-stats-display" : "text-on-surface-variant"} text-label-bold`}>
         {player.cells.toLocaleString()} CELLS
       </p>
     </div>
@@ -69,9 +70,9 @@ export default function Podium({ players }) {
   if (top3.length < 3) return null;
   return (
     <div data-testid="podium" className="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-xl">
-      <PodiumCard player={top3[1]} />
-      <PodiumCard player={top3[0]} />
-      <PodiumCard player={top3[2]} />
+      <PodiumCard player={top3[1]} displayRank={2} />
+      <PodiumCard player={top3[0]} displayRank={1} />
+      <PodiumCard player={top3[2]} displayRank={3} />
     </div>
   );
 }

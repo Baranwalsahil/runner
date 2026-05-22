@@ -179,6 +179,39 @@ async def test_subsequent_claim_flushes_territory_cache(app_client, fake_cache):
 
 
 @pytest.mark.asyncio
+async def test_leaderboard_ranks_contiguous_when_zset_has_ghost_ids(
+    app_client, fake_cache
+):
+    """If the ZSET contains user_ids that no longer exist in DB (stale entries
+    from wiped users), the rendered leaderboard rows must still carry
+    contiguous rank values starting from offset+1 — no gaps.
+    """
+    # Two real users
+    token_a, user_a = await _signup(app_client, suffix="reaal")
+    await _submit_run(app_client, token_a)
+    _, user_b = await _signup(app_client, suffix="reaal2")
+    await _submit_run(app_client, token_a)  # use A's token, just need ZSET entries
+
+    # Inject ghost user_ids into ZSET (high score, so they sort to the top)
+    ghost_1 = str(uuid.uuid4())
+    ghost_2 = str(uuid.uuid4())
+    await leaderboard_cache.upsert_user_total(fake_cache, ghost_1, 999)
+    await leaderboard_cache.upsert_user_total(fake_cache, ghost_2, 998)
+
+    resp = await app_client.get(
+        "/leaderboard", headers={"Authorization": f"Bearer {token_a}"}
+    )
+    assert resp.status_code == 200
+    rows = resp.json()["rows"]
+    # Only the 2 real users are hydrated; ghosts dropped
+    assert len(rows) >= 1
+    assert all(r["user_id"] not in {ghost_1, ghost_2} for r in rows)
+    # Ranks must be contiguous 1, 2, 3, ...
+    ranks = [r["rank"] for r in rows]
+    assert ranks == list(range(1, len(rows) + 1))
+
+
+@pytest.mark.asyncio
 async def test_leaderboard_endpoint_reads_from_cache(app_client, fake_cache):
     token, user_id = await _signup(app_client)
     await _submit_run(app_client, token)

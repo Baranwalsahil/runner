@@ -37,4 +37,18 @@ describe('Podium', () => {
     const { container } = render(<Podium players={PLAYERS.slice(0, 2)} />);
     expect(container.firstChild).toBeNull();
   });
+
+  it('renders 3 cards even when player.rank values have gaps (e.g. 7, 8, 10)', () => {
+    const gapPlayers = [
+      { id: 'a', rank: 7,  username: '@A', avatar: null, cells: 4, region: 'X' },
+      { id: 'b', rank: 8,  username: '@B', avatar: null, cells: 4, region: 'X' },
+      { id: 'c', rank: 10, username: '@C', avatar: null, cells: 2, region: 'X' },
+    ];
+    render(<Podium players={gapPlayers} />);
+    // Visual rank derives from position, not player.rank
+    expect(screen.getByTestId('podium-rank-1')).toBeInTheDocument();
+    expect(screen.getByTestId('podium-rank-2')).toBeInTheDocument();
+    expect(screen.getByTestId('podium-rank-3')).toBeInTheDocument();
+    expect(screen.getByText('CHAMPION')).toBeInTheDocument();
+  });
 });
