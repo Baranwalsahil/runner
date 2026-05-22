@@ -38,3 +38,8 @@ export const leaderboard = {
   nearby: ({ window = 5 } = {}) =>
     apiJson(`/leaderboard/nearby?window=${window}`),
 };
+
+export const runs = {
+  feed: ({ limit = 12 } = {}) =>
+    apiJson(`/runs/feed?limit=${limit}`),
+};

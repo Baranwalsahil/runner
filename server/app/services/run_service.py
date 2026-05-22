@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from uuid import UUID
 
 import asyncpg
@@ -7,9 +8,26 @@ from fastapi import HTTPException, status
 
 from app.cache import leaderboard_cache, territory_cache
 from app.constants import H3_RESOLUTION, MAX_CELLS_PER_RUN
-from app.schemas.run import RunCreate, RunResult, RunSummary
+from app.schemas.run import RunCreate, RunFeedItem, RunResult, RunSummary
 from app.services.gps_filter import filter_trace, trace_distance_m
 from app.services.h3_service import trace_to_cells
+
+
+def _time_ago(dt: datetime) -> str:
+    """Return a human-readable relative time string for a UTC datetime."""
+    now = datetime.now(timezone.utc)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    diff_s = max(0, int((now - dt).total_seconds()))
+    if diff_s < 60:
+        return "just now"
+    m = diff_s // 60
+    if m < 60:
+        return f"{m}m ago"
+    h = m // 60
+    if h < 24:
+        return f"{h}h ago"
+    return f"{h // 24}d ago"
 
 CLAIM_SQL = """
 INSERT INTO claimed_cells (h3_index, user_id, resolution, claim_count)
@@ -159,3 +177,35 @@ async def get_run(pool: asyncpg.Pool, user_id: UUID, run_id: UUID) -> RunSummary
         cells_claimed=row["cells_claimed"],
         created_at=row["created_at"],
     )
+
+
+async def feed_runs(pool: asyncpg.Pool, limit: int = 12) -> list[RunFeedItem]:
+    """Return the most recent run activity across all users as feed items."""
+    rows = await pool.fetch(
+        """
+        SELECT r.id, r.cells_claimed, r.started_at, u.username
+        FROM runs r
+        JOIN users u ON u.id = r.user_id
+        ORDER BY r.started_at DESC
+        LIMIT $1
+        """,
+        limit,
+    )
+    items: list[RunFeedItem] = []
+    for i, row in enumerate(rows):
+        cells = row["cells_claimed"] or 0
+        username = row["username"] or "unknown"
+        items.append(
+            RunFeedItem(
+                id=f"run-{row['id']}",
+                type="gained",
+                label="Territory Gained",
+                time=_time_ago(row["started_at"]),
+                title=f"{cells} cell{'s' if cells != 1 else ''} claimed",
+                subject_label="by",
+                user=f"@{username}",
+                accent=i == 0,
+                challengeable=False,
+            )
+        )
+    return items

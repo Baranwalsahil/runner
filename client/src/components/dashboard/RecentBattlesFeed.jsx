@@ -1,60 +1,7 @@
 import { useRef, useState } from "react";
 import Icon from "../Icon.jsx";
 
-const INITIAL_BATTLES = [
-  {
-    id: "b1",
-    type: "lost",
-    label: "Territory Lost",
-    time: "2m ago",
-    title: "Sector D-9 Overrun",
-    subjectLabel: "by",
-    user: "@GhostRunner",
-    accent: false,
-    challengeable: true,
-  },
-  {
-    id: "b2",
-    type: "gained",
-    label: "Territory Gained",
-    time: "1h ago",
-    title: "Central Park East",
-    subjectLabel: "Claimed from",
-    user: "@StreetKing",
-    accent: true,
-  },
-  {
-    id: "b3",
-    type: "defended",
-    label: "Defended",
-    time: "3h ago",
-    title: "Interbay Hub",
-    subjectLabel: "3 cells held vs",
-    user: "@Apex",
-    accent: false,
-  },
-  {
-    id: "b4",
-    type: "lost",
-    label: "Territory Lost",
-    time: "5h ago",
-    title: "Queen Anne Stairway",
-    subjectLabel: "by",
-    user: "@MountainGoat",
-    accent: false,
-  },
-];
-
-const EXTRA_BATTLES = [
-  { id: "x1", type: "lost", label: "Territory Lost", time: "8h ago", title: "Beacon Hill Loop", subjectLabel: "by", user: "@NightOwl", accent: false },
-  { id: "x2", type: "gained", label: "Territory Gained", time: "11h ago", title: "Pike Place Market", subjectLabel: "Claimed from", user: "@SunsetDash", accent: true },
-  { id: "x3", type: "defended", label: "Defended", time: "14h ago", title: "Fremont Bridge", subjectLabel: "5 cells held vs", user: "@TrailBlaze", accent: false },
-  { id: "x4", type: "gained", label: "Territory Gained", time: "1d ago", title: "Gas Works Park", subjectLabel: "Claimed from", user: "@LakeRunner", accent: true },
-  { id: "x5", type: "lost", label: "Territory Lost", time: "1d ago", title: "Ballard Locks", subjectLabel: "by", user: "@WaveCrest", accent: false },
-  { id: "x6", type: "defended", label: "Defended", time: "2d ago", title: "Discovery Park", subjectLabel: "2 cells held vs", user: "@WindRunner", accent: false },
-  { id: "x7", type: "gained", label: "Territory Gained", time: "2d ago", title: "Green Lake Path", subjectLabel: "Claimed from", user: "@PaceMaker", accent: true },
-  { id: "x8", type: "lost", label: "Territory Lost", time: "3d ago", title: "Magnolia Bluff", subjectLabel: "by", user: "@CliffHanger", accent: false },
-];
+const PAGE_SIZE = 4;
 
 function labelClass(type) {
   if (type === "lost") return "text-error";
@@ -80,7 +27,8 @@ function BattleItem({ battle, firstNewRef }) {
       </div>
       <p className="text-sm font-medium mb-1">{battle.title}</p>
       <p className="text-xs text-on-surface-variant">
-        {battle.subjectLabel} <span className="text-secondary-fixed">{battle.user}</span>
+        {battle.subject_label ?? battle.subjectLabel}{" "}
+        <span className="text-secondary-fixed">{battle.user}</span>
       </p>
       {battle.challengeable && (
         <button className="mt-base text-xs font-label-bold text-primary-fixed border border-primary-fixed/30 px-2 py-1 rounded hover:bg-primary-fixed hover:text-on-primary-fixed transition-all">
@@ -92,8 +40,9 @@ function BattleItem({ battle, firstNewRef }) {
 }
 
 export default function RecentBattlesFeed({
-  initialBattles = INITIAL_BATTLES,
-  extraBattles = EXTRA_BATTLES,
+  initialBattles = [],
+  extraBattles = [],
+  loading = false,
 }) {
   const [loaded, setLoaded] = useState(false);
   const firstNewRef = useRef(null);
@@ -123,7 +72,14 @@ export default function RecentBattlesFeed({
         data-testid="battles-list"
         className="flex-grow overflow-y-auto divide-y divide-outline-variant/20 scroll-smooth"
       >
-        {battles.length === 0 ? (
+        {loading ? (
+          <div
+            data-testid="battles-loading"
+            className="p-md text-center text-on-surface-variant text-xs font-label-bold uppercase tracking-widest"
+          >
+            Loading activity...
+          </div>
+        ) : battles.length === 0 ? (
           <div
             data-testid="battles-empty"
             className="p-md text-center text-on-surface-variant text-xs font-label-bold uppercase tracking-widest"
