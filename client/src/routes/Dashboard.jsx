@@ -10,6 +10,7 @@ import { runs as runsApi, territory } from "../lib/api.js";
 
 const PAGE_SIZE = 4;
 const FEED_POLL_MS = 15_000;
+const HEX_AREA_M2 = 105_332.353; // H3 resolution 9 average hex area
 
 function build7DayChart(runs) {
   const buckets = new Array(7).fill(0);
@@ -92,20 +93,22 @@ export default function Dashboard() {
   usePolling(user?.id ? fetchFeed : null, user?.id ? FEED_POLL_MS : 0);
 
   const totalCells = me?.total_cells ?? 0;
-  const totalAreaM2 = me?.total_area_m2 ?? 0;
   const chartData = build7DayChart(runs);
 
-  const weeklyDistanceM = runs
-    .filter(
-      (r) =>
-        Date.now() - new Date(r.started_at).getTime() < 7 * 86_400_000
-    )
-    .reduce((acc, r) => acc + (Number(r.distance_meters) || 0), 0);
+  const bestCells = runs.reduce(
+    (acc, r) => Math.max(acc, Number(r.cells_claimed) || 0),
+    0,
+  );
+  const bestDistanceM = runs.reduce(
+    (acc, r) => Math.max(acc, Number(r.distance_meters) || 0),
+    0,
+  );
+  const bestAreaM2 = bestCells * HEX_AREA_M2;
 
   const stats = [
-    { label: "RUNS", value: String(runs.length), suffix: "TOTAL" },
-    { label: "DIST", value: formatKm(weeklyDistanceM), suffix: "KM/WK" },
-    { label: "AREA", value: formatAreaKm2(totalAreaM2), suffix: "KM²" },
+    { label: "CELLS", value: String(bestCells), suffix: "BEST" },
+    { label: "DIST", value: formatKm(bestDistanceM), suffix: "KM BEST" },
+    { label: "AREA", value: formatAreaKm2(bestAreaM2), suffix: "KM² BEST" },
   ];
 
   const battles = {

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import QuickRunStats from '../components/dashboard/QuickRunStats.jsx';
 
 describe('QuickRunStats', () => {
@@ -17,10 +17,21 @@ describe('QuickRunStats', () => {
     expect(screen.getByText(/3,450/)).toBeInTheDocument();
   });
 
-  it('LOG SESSION click fires callback', () => {
-    const cb = vi.fn();
-    render(<QuickRunStats onLogSession={cb} />);
-    fireEvent.click(screen.getByTestId('log-session'));
-    expect(cb).toHaveBeenCalledOnce();
+  it('does not render LOG SESSION button', () => {
+    render(<QuickRunStats />);
+    expect(screen.queryByTestId('log-session')).toBeNull();
+  });
+
+  it('renders custom stats with BEST suffix', () => {
+    const stats = [
+      { label: 'CELLS', value: '6', suffix: 'BEST' },
+      { label: 'DIST', value: '1.23', suffix: 'KM BEST' },
+      { label: 'AREA', value: '0.63', suffix: 'KM² BEST' },
+    ];
+    render(<QuickRunStats stats={stats} />);
+    expect(screen.getByText('CELLS')).toBeInTheDocument();
+    expect(screen.getByText(/1\.23/)).toBeInTheDocument();
+    expect(screen.getByText(/0\.63/)).toBeInTheDocument();
+    expect(screen.getAllByText(/BEST/).length).toBeGreaterThanOrEqual(3);
   });
 });
