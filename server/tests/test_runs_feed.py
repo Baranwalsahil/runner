@@ -55,7 +55,7 @@ async def test_feed_runs_empty_when_no_rows():
     mock_pool = AsyncMock()
     mock_pool.fetch = AsyncMock(return_value=[])
 
-    result = await feed_runs(mock_pool, limit=12)
+    result = await feed_runs(mock_pool, uuid4(), limit=12)
 
     assert result == []
 
@@ -74,7 +74,7 @@ async def test_feed_runs_returns_feed_items():
     mock_pool = AsyncMock()
     mock_pool.fetch = AsyncMock(return_value=[fake_row])
 
-    result = await feed_runs(mock_pool, limit=12)
+    result = await feed_runs(mock_pool, uuid4(), limit=12)
 
     assert len(result) == 1
     item = result[0]
@@ -102,7 +102,7 @@ async def test_feed_runs_only_first_item_accented():
     mock_pool = AsyncMock()
     mock_pool.fetch = AsyncMock(return_value=fake_rows)
 
-    result = await feed_runs(mock_pool, limit=12)
+    result = await feed_runs(mock_pool, uuid4(), limit=12)
 
     assert result[0].accent is True
     assert result[1].accent is False
@@ -123,23 +123,26 @@ async def test_feed_runs_singular_cell_title():
     mock_pool = AsyncMock()
     mock_pool.fetch = AsyncMock(return_value=[fake_row])
 
-    result = await feed_runs(mock_pool, limit=12)
+    result = await feed_runs(mock_pool, uuid4(), limit=12)
 
     assert result[0].title == "1 cell claimed"
 
 
 @pytest.mark.asyncio
-async def test_feed_runs_passes_limit_to_query():
-    """feed_runs passes the limit arg to the DB query."""
+async def test_feed_runs_passes_user_id_and_limit_to_query():
+    """feed_runs passes user_id and limit to the DB query."""
     mock_pool = AsyncMock()
     mock_pool.fetch = AsyncMock(return_value=[])
 
-    await feed_runs(mock_pool, limit=7)
+    uid = uuid4()
+    await feed_runs(mock_pool, uid, limit=7)
 
     call_args = mock_pool.fetch.call_args
-    # Second positional arg (after SQL) is the limit
-    actual_limit = call_args[0][1]
-    assert actual_limit == 7
+    # Positional args after SQL: ($1=user_id, $2=limit)
+    assert call_args[0][1] == uid
+    assert call_args[0][2] == 7
+    sql = call_args[0][0]
+    assert "WHERE r.user_id = $1" in sql
 
 
 # ---------------------------------------------------------------------------

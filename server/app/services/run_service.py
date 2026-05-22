@@ -179,16 +179,20 @@ async def get_run(pool: asyncpg.Pool, user_id: UUID, run_id: UUID) -> RunSummary
     )
 
 
-async def feed_runs(pool: asyncpg.Pool, limit: int = 12) -> list[RunFeedItem]:
-    """Return the most recent run activity across all users as feed items."""
+async def feed_runs(
+    pool: asyncpg.Pool, user_id: UUID, limit: int = 12
+) -> list[RunFeedItem]:
+    """Return the current user's most recent run activity as feed items."""
     rows = await pool.fetch(
         """
         SELECT r.id, r.cells_claimed, r.started_at, u.username
         FROM runs r
         JOIN users u ON u.id = r.user_id
+        WHERE r.user_id = $1
         ORDER BY r.started_at DESC
-        LIMIT $1
+        LIMIT $2
         """,
+        user_id,
         limit,
     )
     items: list[RunFeedItem] = []

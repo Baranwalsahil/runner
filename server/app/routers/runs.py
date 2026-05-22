@@ -37,7 +37,7 @@ async def get_runs_feed(
     pool: asyncpg.Pool = Depends(get_db_pool),
     current_user: User = Depends(get_current_user),
 ) -> list[RunFeedItem]:
-    return await run_service.feed_runs(pool, limit=min(limit, 50))
+    return await run_service.feed_runs(pool, current_user.id, limit=min(limit, 50))
 
 
 @router.get("/{run_id}", response_model=RunSummary)
