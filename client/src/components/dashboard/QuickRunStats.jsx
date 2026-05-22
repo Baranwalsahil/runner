@@ -10,7 +10,7 @@ export default function QuickRunStats({ stats = DEFAULT_STATS }) {
   return (
     <div
       data-testid="quick-run-stats"
-      className="glass-panel p-md rounded-xl flex flex-col justify-between"
+      className="glass-panel p-md rounded-xl flex flex-col gap-md"
     >
       <div className="flex items-center gap-base mb-base">
         <Icon name="sprint" className="text-secondary-fixed-dim" />
