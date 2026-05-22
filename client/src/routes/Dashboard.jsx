@@ -40,6 +40,17 @@ function formatAreaKm2(m2) {
   return (m2 / 1_000_000).toFixed(2);
 }
 
+function formatDuration(ms) {
+  if (!ms || ms <= 0) return "0:00";
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const mm = String(m).padStart(h > 0 ? 2 : 1, "0");
+  const ss = String(s).padStart(2, "0");
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [me, setMe] = useState(null);
@@ -99,16 +110,26 @@ export default function Dashboard() {
     (acc, r) => Math.max(acc, Number(r.cells_claimed) || 0),
     0,
   );
-  const bestDistanceM = runs.reduce(
-    (acc, r) => Math.max(acc, Number(r.distance_meters) || 0),
-    0,
+  const bestDistanceRun = runs.reduce(
+    (best, r) =>
+      (Number(r.distance_meters) || 0) > (Number(best?.distance_meters) || 0)
+        ? r
+        : best,
+    null,
   );
+  const bestDistanceM = Number(bestDistanceRun?.distance_meters) || 0;
   const bestAreaM2 = bestCells * HEX_AREA_M2;
+  const bestDistanceDurationMs =
+    bestDistanceRun?.started_at && bestDistanceRun?.ended_at
+      ? new Date(bestDistanceRun.ended_at).getTime() -
+        new Date(bestDistanceRun.started_at).getTime()
+      : 0;
 
   const stats = [
     { label: "CELLS", value: String(bestCells), suffix: "BEST" },
     { label: "DIST", value: formatKm(bestDistanceM), suffix: "KM BEST" },
     { label: "AREA", value: formatAreaKm2(bestAreaM2), suffix: "KM² BEST" },
+    { label: "TIME", value: formatDuration(bestDistanceDurationMs), suffix: "BEST RUN" },
   ];
 
   const battles = {
