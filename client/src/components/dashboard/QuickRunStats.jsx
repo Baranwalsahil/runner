@@ -6,11 +6,11 @@ const DEFAULT_STATS = [
   { label: "CALORIES", value: "3,450", suffix: "KCAL" },
 ];
 
-export default function QuickRunStats({ stats = DEFAULT_STATS, onLogSession }) {
+export default function QuickRunStats({ stats = DEFAULT_STATS }) {
   return (
     <div
       data-testid="quick-run-stats"
-      className="glass-panel p-md rounded-xl flex flex-col justify-between"
+      className="glass-panel p-md rounded-xl flex flex-col gap-md"
     >
       <div className="flex items-center gap-base mb-base">
         <Icon name="sprint" className="text-secondary-fixed-dim" />
@@ -29,14 +29,6 @@ export default function QuickRunStats({ stats = DEFAULT_STATS, onLogSession }) {
           </div>
         ))}
       </div>
-      <button
-        data-testid="log-session"
-        onClick={onLogSession}
-        className="mt-base w-full bg-secondary-fixed text-on-secondary-fixed font-label-bold py-3 rounded-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-base"
-      >
-        <Icon name="add_circle" />
-        LOG SESSION
-      </button>
     </div>
   );
 }

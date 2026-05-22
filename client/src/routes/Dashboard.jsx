@@ -10,6 +10,7 @@ import { runs as runsApi, territory } from "../lib/api.js";
 
 const PAGE_SIZE = 4;
 const FEED_POLL_MS = 15_000;
+const HEX_AREA_M2 = 105_332.353; // H3 resolution 9 average hex area
 
 function build7DayChart(runs) {
   const buckets = new Array(7).fill(0);
@@ -37,6 +38,17 @@ function formatKm(meters) {
 function formatAreaKm2(m2) {
   if (!m2 || m2 <= 0) return "0.00";
   return (m2 / 1_000_000).toFixed(2);
+}
+
+function formatDuration(ms) {
+  if (!ms || ms <= 0) return "0:00";
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const mm = String(m).padStart(h > 0 ? 2 : 1, "0");
+  const ss = String(s).padStart(2, "0");
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
 export default function Dashboard() {
@@ -92,20 +104,32 @@ export default function Dashboard() {
   usePolling(user?.id ? fetchFeed : null, user?.id ? FEED_POLL_MS : 0);
 
   const totalCells = me?.total_cells ?? 0;
-  const totalAreaM2 = me?.total_area_m2 ?? 0;
   const chartData = build7DayChart(runs);
 
-  const weeklyDistanceM = runs
-    .filter(
-      (r) =>
-        Date.now() - new Date(r.started_at).getTime() < 7 * 86_400_000
-    )
-    .reduce((acc, r) => acc + (Number(r.distance_meters) || 0), 0);
+  const bestCells = runs.reduce(
+    (acc, r) => Math.max(acc, Number(r.cells_claimed) || 0),
+    0,
+  );
+  const bestDistanceRun = runs.reduce(
+    (best, r) =>
+      (Number(r.distance_meters) || 0) > (Number(best?.distance_meters) || 0)
+        ? r
+        : best,
+    null,
+  );
+  const bestDistanceM = Number(bestDistanceRun?.distance_meters) || 0;
+  const bestAreaM2 = bestCells * HEX_AREA_M2;
+  const bestDistanceDurationMs =
+    bestDistanceRun?.started_at && bestDistanceRun?.ended_at
+      ? new Date(bestDistanceRun.ended_at).getTime() -
+        new Date(bestDistanceRun.started_at).getTime()
+      : 0;
 
   const stats = [
-    { label: "RUNS", value: String(runs.length), suffix: "TOTAL" },
-    { label: "DIST", value: formatKm(weeklyDistanceM), suffix: "KM/WK" },
-    { label: "AREA", value: formatAreaKm2(totalAreaM2), suffix: "KM²" },
+    { label: "CELLS", value: String(bestCells), suffix: "BEST" },
+    { label: "DIST", value: formatKm(bestDistanceM), suffix: "KM BEST" },
+    { label: "AREA", value: formatAreaKm2(bestAreaM2), suffix: "KM² BEST" },
+    { label: "TIME", value: formatDuration(bestDistanceDurationMs), suffix: "BEST RUN" },
   ];
 
   const battles = {
