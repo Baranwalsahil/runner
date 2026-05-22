@@ -43,3 +43,15 @@ class RunSummary(BaseModel):
     distance_meters: float | None
     cells_claimed: int
     created_at: datetime
+
+
+class RunFeedItem(BaseModel):
+    id: str
+    type: str          # "gained" | "lost" | "defended"
+    label: str
+    time: str          # human-readable relative time, e.g. "2m ago"
+    title: str
+    subject_label: str
+    user: str          # "@username"
+    accent: bool
+    challengeable: bool

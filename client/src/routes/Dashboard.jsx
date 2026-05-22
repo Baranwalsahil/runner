@@ -1,37 +1,15 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import TerritoryDominance from "../components/dashboard/TerritoryDominance.jsx";
 import QuickRunStats from "../components/dashboard/QuickRunStats.jsx";
 import TerritoryMapPreview from "../components/dashboard/TerritoryMapPreview.jsx";
 import RecentBattlesFeed from "../components/dashboard/RecentBattlesFeed.jsx";
 import useAuth from "../hooks/useAuth.js";
+import usePolling from "../hooks/usePolling.js";
 import { apiJson } from "../lib/auth.js";
-import { territory } from "../lib/api.js";
+import { runs as runsApi, territory } from "../lib/api.js";
 
 const PAGE_SIZE = 4;
-
-function timeAgo(iso) {
-  if (!iso) return "—";
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diffMs / 60_000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-}
-
-function cellToBattle(c, accent = false) {
-  return {
-    id: `cell-${c.h3Index}`,
-    type: "gained",
-    label: "Territory Held",
-    time: timeAgo(c.claimedAt),
-    title: `Cell ${c.h3Index.slice(0, 8)}`,
-    subjectLabel: "Claim count",
-    user: String(c.ownership ?? 1),
-    accent,
-  };
-}
+const FEED_POLL_MS = 15_000;
 
 function build7DayChart(runs) {
   const buckets = new Array(7).fill(0);
@@ -66,7 +44,10 @@ export default function Dashboard() {
   const [me, setMe] = useState(null);
   const [runs, setRuns] = useState([]);
   const [cells, setCells] = useState([]);
+  const [feedItems, setFeedItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [feedLoading, setFeedLoading] = useState(true);
+  const feedLoadedOnceRef = useRef(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -91,6 +72,25 @@ export default function Dashboard() {
     };
   }, [user?.id]);
 
+  useEffect(() => {
+    feedLoadedOnceRef.current = false;
+    setFeedLoading(true);
+  }, [user?.id]);
+
+  const fetchFeed = useCallback(async () => {
+    try {
+      const items = await runsApi.feed({ limit: 12 });
+      setFeedItems(Array.isArray(items) ? items : []);
+    } catch {
+      if (!feedLoadedOnceRef.current) setFeedItems([]);
+    } finally {
+      feedLoadedOnceRef.current = true;
+      setFeedLoading(false);
+    }
+  }, []);
+
+  usePolling(user?.id ? fetchFeed : null, user?.id ? FEED_POLL_MS : 0);
+
   const totalCells = me?.total_cells ?? 0;
   const totalAreaM2 = me?.total_area_m2 ?? 0;
   const chartData = build7DayChart(runs);
@@ -108,15 +108,10 @@ export default function Dashboard() {
     { label: "AREA", value: formatAreaKm2(totalAreaM2), suffix: "KM²" },
   ];
 
-  const battles =
-    cells.length > 0
-      ? {
-          initialBattles: cells
-            .slice(0, PAGE_SIZE)
-            .map((c, i) => cellToBattle(c, i === 0)),
-          extraBattles: cells.slice(PAGE_SIZE).map((c) => cellToBattle(c)),
-        }
-      : { initialBattles: [], extraBattles: [] };
+  const battles = {
+    initialBattles: feedItems.slice(0, PAGE_SIZE),
+    extraBattles: feedItems.slice(PAGE_SIZE),
+  };
 
   const region =
     totalCells === 0
@@ -146,7 +141,7 @@ export default function Dashboard() {
           ownership={totalCells > 0 ? Math.min(100, totalCells) : 0}
           cells={cells}
         />
-        <RecentBattlesFeed {...battles} />
+        <RecentBattlesFeed {...battles} loading={feedLoading} />
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.deps import get_cache_client, get_current_user, get_db_pool
 from app.schemas.auth import User
-from app.schemas.run import RunCreate, RunResult, RunSummary
+from app.schemas.run import RunCreate, RunFeedItem, RunResult, RunSummary
 from app.services import run_service
 
 router = APIRouter(prefix="/runs", tags=["runs"])
@@ -29,6 +29,15 @@ async def list_runs(
     current_user: User = Depends(get_current_user),
 ) -> list[RunSummary]:
     return await run_service.list_runs(pool, current_user.id)
+
+
+@router.get("/feed", response_model=list[RunFeedItem])
+async def get_runs_feed(
+    limit: int = 12,
+    pool: asyncpg.Pool = Depends(get_db_pool),
+    current_user: User = Depends(get_current_user),
+) -> list[RunFeedItem]:
+    return await run_service.feed_runs(pool, current_user.id, limit=min(limit, 50))
 
 
 @router.get("/{run_id}", response_model=RunSummary)
