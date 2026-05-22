@@ -28,6 +28,8 @@ class User(BaseModel):
     id: UUID
     email: EmailStr
     username: str
+    first_name: str | None = None
+    last_name: str | None = None
     avatar_url: str | None = None
     total_cells: int = 0
     total_area_m2: float = 0.0
@@ -37,3 +39,18 @@ class User(BaseModel):
 class AuthResponse(BaseModel):
     user: User
     token: str
+
+
+class UserUpdate(BaseModel):
+    username: str | None = Field(default=None, min_length=3, max_length=50)
+    first_name: str | None = Field(default=None, max_length=50)
+    last_name: str | None = Field(default=None, max_length=50)
+
+    @field_validator("username")
+    @classmethod
+    def _username_chars(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        if not all(c.isalnum() or c in "-_" for c in v):
+            raise ValueError("username must be alphanumeric, dash, or underscore")
+        return v
