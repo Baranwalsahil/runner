@@ -3,6 +3,9 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
 vi.mock('maplibre-gl', () => import('./__mocks__/maplibre-gl.js'));
+vi.mock('../hooks/useCurrentLocation.js', () => ({
+  default: () => ({ position: { lat: 47.6062, lng: -122.3321 }, error: null, loading: false }),
+}));
 
 const { default: AppLayout } = await import('../components/AppLayout.jsx');
 const { default: Battlefield } = await import('../routes/Battlefield.jsx');
