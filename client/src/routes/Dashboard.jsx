@@ -3,7 +3,9 @@ import TerritoryDominance from "../components/dashboard/TerritoryDominance.jsx";
 import QuickRunStats from "../components/dashboard/QuickRunStats.jsx";
 import TerritoryMapPreview from "../components/dashboard/TerritoryMapPreview.jsx";
 import RecentBattlesFeed from "../components/dashboard/RecentBattlesFeed.jsx";
+import { cellToLatLng } from "h3-js";
 import useAuth from "../hooks/useAuth.js";
+import useCurrentLocation from "../hooks/useCurrentLocation.js";
 import usePolling from "../hooks/usePolling.js";
 import { apiJson } from "../lib/auth.js";
 import { runs as runsApi, territory } from "../lib/api.js";
@@ -11,6 +13,30 @@ import { runs as runsApi, territory } from "../lib/api.js";
 const PAGE_SIZE = 4;
 const FEED_POLL_MS = 15_000;
 const HEX_AREA_M2 = 105_332.353; // H3 resolution 9 average hex area
+const NEARBY_RADIUS_KM = 50;
+
+function haversineKm(a, b) {
+  const R = 6371;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+
+function filterCellsNearLocation(cells, position, radiusKm) {
+  if (!position || !cells?.length) return cells || [];
+  return cells.filter((c) => {
+    try {
+      const [lat, lng] = cellToLatLng(c.h3Index);
+      return haversineKm(position, { lat, lng }) <= radiusKm;
+    } catch {
+      return false;
+    }
+  });
+}
 
 function build7DayChart(runs) {
   const buckets = new Array(7).fill(0);
@@ -53,6 +79,7 @@ function formatDuration(ms) {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { position: currentLocation, loading: locLoading } = useCurrentLocation();
   const [me, setMe] = useState(null);
   const [runs, setRuns] = useState([]);
   const [cells, setCells] = useState([]);
@@ -163,7 +190,9 @@ export default function Dashboard() {
               : "NO TERRITORY YET"
           }
           ownership={totalCells > 0 ? Math.min(100, totalCells) : 0}
-          cells={cells}
+          cells={filterCellsNearLocation(cells, currentLocation, NEARBY_RADIUS_KM)}
+          currentLocation={currentLocation}
+          locationLoading={locLoading}
         />
         <RecentBattlesFeed {...battles} loading={feedLoading} />
       </div>

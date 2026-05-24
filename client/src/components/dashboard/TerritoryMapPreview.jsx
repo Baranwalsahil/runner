@@ -26,6 +26,11 @@ function boundsFromCells(cells) {
   }
   if (count === 0) return null;
   const spread = Math.max(maxLat - minLat, maxLng - minLng);
+  // Expand a degenerate (single-point) bounds so fitBounds picks a sane zoom.
+  if (spread < 0.002) {
+    const pad = 0.005;
+    return { sw: [minLng - pad, minLat - pad], ne: [maxLng + pad, maxLat + pad] };
+  }
   if (spread > MAX_SPREAD_DEG) {
     // Cells are geographically scattered — focus on the most-recent cell
     // (cells list is ordered claimed_at DESC by the API).
@@ -46,12 +51,19 @@ export default function TerritoryMapPreview({
   ownership = 0,
   liveLabel = "YOUR CELLS",
   cells = [],
+  currentLocation = null,
+  locationLoading = false,
   onZoomIn,
   onZoomOut,
 }) {
   const mapRef = useRef(null);
   const hasCells = cells.length > 0;
   const bounds = hasCells ? boundsFromCells(cells) : null;
+  const fallbackCenter = currentLocation
+    ? { lat: currentLocation.lat, lng: currentLocation.lng, zoom: 14 }
+    : null;
+  const showMap = (hasCells && bounds) || fallbackCenter;
+  const showNoCellsOverlay = !hasCells && fallbackCenter && !locationLoading;
 
   function handleZoomIn() {
     if (mapRef.current?.zoomIn) mapRef.current.zoomIn();
@@ -67,10 +79,12 @@ export default function TerritoryMapPreview({
       data-testid="territory-map-preview"
       className="lg:col-span-3 glass-panel rounded-xl overflow-hidden relative group h-[500px]"
     >
-      {hasCells && bounds ? (
+      {showMap ? (
         <MapCanvas
-          cells={cells}
-          bounds={bounds}
+          cells={hasCells ? cells : []}
+          bounds={hasCells ? bounds : undefined}
+          center={hasCells ? undefined : fallbackCenter}
+          zoom={hasCells ? undefined : fallbackCenter?.zoom}
           onMapReady={(map) => { mapRef.current = map; }}
         />
       ) : (
@@ -80,6 +94,16 @@ export default function TerritoryMapPreview({
             alt="Tactical HUD map placeholder"
             src={MAP_IMG}
           />
+        </div>
+      )}
+      {showNoCellsOverlay && (
+        <div
+          data-testid="no-cells-overlay"
+          className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
+        >
+          <div className="glass-panel neon-border-cyan rounded-lg px-md py-sm text-center font-label-bold uppercase tracking-widest text-sm pointer-events-auto">
+            No cells claimed near you
+          </div>
         </div>
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent pointer-events-none" />

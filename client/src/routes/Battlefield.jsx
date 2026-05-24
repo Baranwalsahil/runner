@@ -5,13 +5,9 @@ import CellDetailPanel from "../components/battlefield/CellDetailPanel.jsx";
 import PlayersOnline from "../components/battlefield/PlayersOnline.jsx";
 import useTerritoryPolling from "../hooks/useTerritoryPolling.js";
 import useLeaderboardPolling from "../hooks/useLeaderboardPolling.js";
+import useCurrentLocation from "../hooks/useCurrentLocation.js";
 
-const SEATTLE_DEFAULT_BOUNDS = {
-  sw_lat: 47.59,
-  sw_lng: -122.36,
-  ne_lat: 47.63,
-  ne_lng: -122.30,
-};
+const VIEWPORT_HALF_DEG = 0.02; // ~2.2km radius initial bounds
 
 function rowToPlayer(row) {
   return {
@@ -23,24 +19,35 @@ function rowToPlayer(row) {
 
 export default function Battlefield() {
   const [selectedCell, setSelectedCell] = useState(null);
-  const [bounds, setBounds] = useState(SEATTLE_DEFAULT_BOUNDS);
+  const { position: currentLocation, loading: locLoading, error: locError } =
+    useCurrentLocation();
+  const initialBounds = currentLocation
+    ? {
+        sw_lat: currentLocation.lat - VIEWPORT_HALF_DEG,
+        sw_lng: currentLocation.lng - VIEWPORT_HALF_DEG,
+        ne_lat: currentLocation.lat + VIEWPORT_HALF_DEG,
+        ne_lng: currentLocation.lng + VIEWPORT_HALF_DEG,
+      }
+    : null;
+  const [bounds, setBounds] = useState(initialBounds);
   const mapRef = useRef(null);
 
+  // Once we get location, seed bounds + recenter map.
   useEffect(() => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        mapRef.current?.flyTo?.({
-          center: [longitude, latitude],
-          zoom: 14,
-          essential: true,
-        });
-      },
-      () => { /* permission denied / unavailable — keep default */ },
-      { enableHighAccuracy: false, timeout: 5000, maximumAge: 60_000 }
-    );
-  }, []);
+    if (!currentLocation) return;
+    const next = {
+      sw_lat: currentLocation.lat - VIEWPORT_HALF_DEG,
+      sw_lng: currentLocation.lng - VIEWPORT_HALF_DEG,
+      ne_lat: currentLocation.lat + VIEWPORT_HALF_DEG,
+      ne_lng: currentLocation.lng + VIEWPORT_HALF_DEG,
+    };
+    setBounds((prev) => prev ?? next);
+    mapRef.current?.flyTo?.({
+      center: [currentLocation.lng, currentLocation.lat],
+      zoom: 14,
+      essential: true,
+    });
+  }, [currentLocation?.lat, currentLocation?.lng]);
 
   function flyToMyLocation() {
     if (typeof navigator === "undefined" || !navigator.geolocation) return;
@@ -100,11 +107,28 @@ export default function Battlefield() {
       data-testid="battlefield"
       className="relative w-full h-[calc(100vh-7rem)] -mt-28 pt-28 overflow-hidden"
     >
-      <MapCanvas
-        cells={cells}
-        onMapReady={handleMapReady}
-        onCellClick={(props) => setSelectedCell(props)}
-      />
+      {currentLocation ? (
+        <MapCanvas
+          cells={cells}
+          center={{ lat: currentLocation.lat, lng: currentLocation.lng, zoom: 14 }}
+          zoom={14}
+          onMapReady={handleMapReady}
+          onCellClick={(props) => setSelectedCell(props)}
+        />
+      ) : (
+        <div
+          data-testid="battlefield-location-status"
+          className="absolute inset-0 flex items-center justify-center bg-surface-container-low"
+        >
+          <div className="glass-panel neon-border-cyan rounded-lg px-md py-md text-center font-label-bold uppercase tracking-widest text-sm max-w-md">
+            {locLoading
+              ? "Locating you…"
+              : locError
+                ? `Location unavailable: ${locError}. Enable GPS to view the battlefield.`
+                : "Awaiting location"}
+          </div>
+        </div>
+      )}
       <MapHud
         liveBattles={cells.length}
         legend={legend}
