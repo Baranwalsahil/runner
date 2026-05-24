@@ -7,7 +7,7 @@ const SRC_ID = "claimed-cells";
 const FILL_ID = "claimed-cells-fill";
 const LINE_ID = "claimed-cells-line";
 
-export default function MapCanvas({ cells = [], center = SEATTLE, zoom, onCellClick, onMapReady }) {
+export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, onCellClick, onMapReady }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
 
@@ -63,6 +63,29 @@ export default function MapCanvas({ cells = [], center = SEATTLE, zoom, onCellCl
     const src = map.getSource?.(SRC_ID);
     if (src) src.setData(cellsToGeoJSON(cells));
   }, [cells]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    let apply;
+    if (bounds && Array.isArray(bounds.sw) && Array.isArray(bounds.ne)) {
+      apply = () =>
+        map.fitBounds?.([bounds.sw, bounds.ne], { padding: 40, maxZoom: 15, animate: false });
+    } else if (center) {
+      const lng = Number(center.lng);
+      const lat = Number(center.lat);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      const targetZoom = zoom ?? center.zoom ?? 13;
+      apply = () => map.jumpTo?.({ center: [lng, lat], zoom: targetZoom });
+    } else {
+      return;
+    }
+    if (map.isStyleLoaded?.()) apply();
+    else map.once?.("load", apply);
+  }, [
+    bounds?.sw?.[0], bounds?.sw?.[1], bounds?.ne?.[0], bounds?.ne?.[1],
+    center?.lat, center?.lng, center?.zoom, zoom,
+  ]);
 
   return <div data-testid="map-canvas" ref={containerRef} className="absolute inset-0 z-0" />;
 }

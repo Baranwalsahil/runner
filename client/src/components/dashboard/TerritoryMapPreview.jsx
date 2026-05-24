@@ -6,23 +6,38 @@ import MapCanvas from "../battlefield/MapCanvas.jsx";
 const MAP_IMG =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuBHR4w0XSEUpj8b0rma3P3j6NmQrzEBnlWRrgbw_AQ-AsSTeoZ4nrMOQYfjUM5YNP1P9sqPvC6nfriR_fckIFsxnzHarQ_k6RSegCfifSvz8gGMKcnlbNRNKsaQBkOjLdkHodGFVG2ye7hDTyNUmu1vy87v5Q5Z7HqbkT76eLm8BQ2RzItMYyuIgJeTTgUb0WnOCc5MneuDWs7dbvqyYw1xozmuIoQXI6u-mFeZ8plQt_aXQK04-NYd9rZhT46RaJDWY6m2MavhU3fD";
 
-function centerFromCells(cells) {
+const MAX_SPREAD_DEG = 1.0; // ~110 km — beyond this we focus on most-recent cell
+
+function boundsFromCells(cells) {
   if (!cells || cells.length === 0) return null;
-  let sumLat = 0;
-  let sumLng = 0;
+  let minLat = Infinity, minLng = Infinity, maxLat = -Infinity, maxLng = -Infinity;
   let count = 0;
   for (const c of cells) {
     try {
       const [lat, lng] = cellToLatLng(c.h3Index);
-      sumLat += lat;
-      sumLng += lng;
+      if (lat < minLat) minLat = lat;
+      if (lat > maxLat) maxLat = lat;
+      if (lng < minLng) minLng = lng;
+      if (lng > maxLng) maxLng = lng;
       count += 1;
     } catch {
       // skip invalid h3 indexes
     }
   }
   if (count === 0) return null;
-  return { lat: sumLat / count, lng: sumLng / count, zoom: 14 };
+  const spread = Math.max(maxLat - minLat, maxLng - minLng);
+  if (spread > MAX_SPREAD_DEG) {
+    // Cells are geographically scattered — focus on the most-recent cell
+    // (cells list is ordered claimed_at DESC by the API).
+    try {
+      const [lat, lng] = cellToLatLng(cells[0].h3Index);
+      const pad = 0.005;
+      return { sw: [lng - pad, lat - pad], ne: [lng + pad, lat + pad] };
+    } catch {
+      return null;
+    }
+  }
+  return { sw: [minLng, minLat], ne: [maxLng, maxLat] };
 }
 
 export default function TerritoryMapPreview({
@@ -36,7 +51,7 @@ export default function TerritoryMapPreview({
 }) {
   const mapRef = useRef(null);
   const hasCells = cells.length > 0;
-  const center = hasCells ? centerFromCells(cells) : null;
+  const bounds = hasCells ? boundsFromCells(cells) : null;
 
   function handleZoomIn() {
     if (mapRef.current?.zoomIn) mapRef.current.zoomIn();
@@ -52,11 +67,10 @@ export default function TerritoryMapPreview({
       data-testid="territory-map-preview"
       className="lg:col-span-3 glass-panel rounded-xl overflow-hidden relative group h-[500px]"
     >
-      {hasCells && center ? (
+      {hasCells && bounds ? (
         <MapCanvas
           cells={cells}
-          center={center}
-          zoom={center.zoom}
+          bounds={bounds}
           onMapReady={(map) => { mapRef.current = map; }}
         />
       ) : (
