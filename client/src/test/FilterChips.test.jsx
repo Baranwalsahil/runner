@@ -7,7 +7,7 @@ function harness(regionVal = 'Global', timeVal = 'All-time') {
   const onTime = vi.fn();
   render(
     <FilterChips
-      regionOptions={['Global', 'Regional', 'Friends']}
+      regionOptions={['Global']}
       region={regionVal}
       onRegionChange={onRegion}
       timeOptions={['All-time', 'Weekly', 'Daily']}
@@ -19,23 +19,22 @@ function harness(regionVal = 'Global', timeVal = 'All-time') {
 }
 
 describe('FilterChips', () => {
-  it('renders 3 region + 3 time chips', () => {
+  it('renders Global region chip + 3 time chips', () => {
     harness();
-    ['Global', 'Regional', 'Friends', 'All-time', 'Weekly', 'Daily'].forEach((l) => {
+    ['Global', 'All-time', 'Weekly', 'Daily'].forEach((l) => {
       expect(screen.getByText(l)).toBeInTheDocument();
     });
   });
 
-  it('active chip has aria-pressed=true', () => {
-    harness('Regional');
-    expect(screen.getByTestId('chip-regional')).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('chip-global')).toHaveAttribute('aria-pressed', 'false');
+  it('does not render Regional or Friends chips', () => {
+    harness();
+    expect(screen.queryByTestId('chip-regional')).toBeNull();
+    expect(screen.queryByTestId('chip-friends')).toBeNull();
   });
 
-  it('clicking region chip fires onRegionChange', () => {
-    const { onRegion } = harness();
-    fireEvent.click(screen.getByTestId('chip-friends'));
-    expect(onRegion).toHaveBeenCalledWith('Friends');
+  it('Global chip is active by default', () => {
+    harness();
+    expect(screen.getByTestId('chip-global')).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('clicking time chip fires onTimeChange', () => {

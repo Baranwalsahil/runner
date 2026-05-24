@@ -68,7 +68,7 @@ describe("Leaderboard route", () => {
     );
   });
 
-  it("renders podium + table after fetch succeeds", async () => {
+  it("renders rank table after fetch succeeds, no podium", async () => {
     fetchMock.mockResolvedValue(
       mockTopResponse([
         { user_id: "u1", username: "alpha", total_cells: 100, rank: 1, color: "#c3f400" },
@@ -77,9 +77,18 @@ describe("Leaderboard route", () => {
       ])
     );
     setup();
-    await waitFor(() => expect(screen.getByTestId("podium")).toBeInTheDocument());
-    expect(screen.getByTestId("rank-table")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("rank-table")).toBeInTheDocument());
+    expect(screen.queryByTestId("podium")).toBeNull();
     expect(screen.getByTestId("filter-chips")).toBeInTheDocument();
+  });
+
+  it("does not render Regional or Friends region chips", async () => {
+    fetchMock.mockResolvedValue(mockTopResponse([]));
+    setup();
+    await waitFor(() => expect(screen.getByTestId("filter-chips")).toBeInTheDocument());
+    expect(screen.queryByTestId("chip-regional")).toBeNull();
+    expect(screen.queryByTestId("chip-friends")).toBeNull();
+    expect(screen.getByTestId("chip-global")).toBeInTheDocument();
   });
 
   it("requests period=weekly when Weekly chip clicked", async () => {

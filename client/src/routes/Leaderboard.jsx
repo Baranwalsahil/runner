@@ -1,11 +1,10 @@
 import { useState } from "react";
-import Podium from "../components/leaderboard/Podium.jsx";
 import RankTable from "../components/leaderboard/RankTable.jsx";
 import FilterChips from "../components/leaderboard/FilterChips.jsx";
 import useAuth from "../hooks/useAuth.js";
 import useLeaderboardPolling from "../hooks/useLeaderboardPolling.js";
 
-const REGION_FILTERS = ["Global", "Regional", "Friends"];
+const REGION_FILTERS = ["Global"];
 const TIME_FILTERS = ["All-time", "Weekly", "Daily"];
 
 const TIME_TO_PERIOD = {
@@ -75,10 +74,7 @@ export default function Leaderboard() {
         </p>
       )}
       {!loading && !error && rows.length > 0 && (
-        <>
-          <Podium players={rows} />
-          <RankTable players={rows} currentUserId={user?.id} />
-        </>
+        <RankTable players={rows} currentUserId={user?.id} />
       )}
     </div>
   );
