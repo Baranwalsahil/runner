@@ -64,5 +64,14 @@ export default function MapCanvas({ cells = [], center = SEATTLE, zoom, onCellCl
     if (src) src.setData(cellsToGeoJSON(cells));
   }, [cells]);
 
+  // Fly to new center/zoom when props change after the map is already mounted.
+  // This handles the case where MapCanvas mounts before the correct center is
+  // known (e.g. StrictMode double-invoke, or parent re-render after data loads).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !center) return;
+    map.flyTo({ center: [center.lng, center.lat], zoom: zoom ?? center.zoom ?? 13 });
+  }, [center, zoom]);
+
   return <div data-testid="map-canvas" ref={containerRef} className="absolute inset-0 z-0" />;
 }
