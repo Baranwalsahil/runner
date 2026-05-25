@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import TopNavBar from '../components/TopNavBar.jsx';
 
@@ -45,5 +45,38 @@ describe('TopNavBar', () => {
   it('account icon links to /profile', () => {
     renderAt('/');
     expect(screen.getByLabelText('account')).toHaveAttribute('href', '/profile');
+  });
+
+  it('mobile menu hidden by default and overlay absent', () => {
+    renderAt('/');
+    const btn = screen.getByTestId('mobile-menu-btn');
+    expect(btn).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByTestId('mobile-menu-overlay')).toBeNull();
+  });
+
+  it('clicking burger opens drawer with nav links', () => {
+    renderAt('/');
+    fireEvent.click(screen.getByTestId('mobile-menu-btn'));
+    expect(screen.getByTestId('mobile-menu-overlay')).toBeInTheDocument();
+    const drawer = screen.getByTestId('mobile-menu');
+    expect(drawer).toHaveTextContent('BATTLEFIELD');
+    expect(drawer).toHaveTextContent('DASHBOARD');
+    expect(drawer).toHaveTextContent('LEADERBOARD');
+  });
+
+  it('clicking overlay closes drawer', () => {
+    renderAt('/');
+    fireEvent.click(screen.getByTestId('mobile-menu-btn'));
+    fireEvent.click(screen.getByTestId('mobile-menu-overlay'));
+    expect(screen.queryByTestId('mobile-menu-overlay')).toBeNull();
+  });
+
+  it('burger toggles aria-expanded', () => {
+    renderAt('/');
+    const btn = screen.getByTestId('mobile-menu-btn');
+    fireEvent.click(btn);
+    expect(btn).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(btn);
+    expect(btn).toHaveAttribute('aria-expanded', 'false');
   });
 });
