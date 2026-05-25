@@ -32,7 +32,7 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Territory Run API", version=settings.version, lifespan=lifespan)
     app.state.started_at = time.time()
 
-    allowed_origins = ["http://localhost:5173"]
+    allowed_origins = ["http://localhost:5173", "https://runner-dun-seven.vercel.app"]
     if settings.frontend_url:
         allowed_origins.append(settings.frontend_url)
 
