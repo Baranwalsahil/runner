@@ -1,4 +1,5 @@
-import { NavLink, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, Link, useLocation } from "react-router-dom";
 import Icon from "./Icon.jsx";
 
 const NAV_LINKS = [
@@ -8,52 +9,112 @@ const NAV_LINKS = [
 ];
 
 export default function TopNavBar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { pathname } = useLocation();
+
+  // Close drawer on route change.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  // Lock body scroll while drawer open.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen]);
+
   return (
-    <nav
-      data-testid="top-nav"
-      className="fixed top-0 left-0 right-0 z-50 bg-surface/60 backdrop-blur-lg border-b border-outline-variant/30 shadow-[0_0_15px_rgba(195,244,0,0.1)] flex justify-between items-center w-full px-margin-safe h-16"
-    >
-      <div className="flex items-center gap-md">
-        <Link
-          to="/"
-          className="font-headline-md text-primary-fixed tracking-tighter italic font-black"
-        >
-          TERRITORY RUN
-        </Link>
-        <div className="hidden md:flex gap-md">
-          {NAV_LINKS.map(({ to, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                [
-                  "font-label-bold transition-colors pb-1",
-                  isActive
-                    ? "text-primary-fixed border-b-2 border-primary-fixed"
-                    : "text-on-surface-variant hover:text-primary",
-                ].join(" ")
-              }
-            >
-              {label}
-            </NavLink>
-          ))}
+    <>
+      <nav
+        data-testid="top-nav"
+        className="fixed top-0 left-0 right-0 z-50 bg-surface/60 backdrop-blur-lg border-b border-outline-variant/30 shadow-[0_0_15px_rgba(195,244,0,0.1)] flex justify-between items-center w-full px-margin-safe h-16"
+      >
+        <div className="flex items-center gap-md">
+          <button
+            data-testid="mobile-menu-btn"
+            aria-label={menuOpen ? "close menu" : "open menu"}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((v) => !v)}
+            className="md:hidden p-base hover:bg-surface-variant/50 rounded-full transition-all"
+          >
+            <Icon name={menuOpen ? "close" : "menu"} className="text-primary-fixed" />
+          </button>
+          <Link
+            to="/"
+            className="font-headline-md text-primary-fixed tracking-tighter italic font-black"
+          >
+            TERRITORY RUN
+          </Link>
+          <div className="hidden md:flex gap-md">
+            {NAV_LINKS.map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  [
+                    "font-label-bold transition-colors pb-1",
+                    isActive
+                      ? "text-primary-fixed border-b-2 border-primary-fixed"
+                      : "text-on-surface-variant hover:text-primary",
+                  ].join(" ")
+                }
+              >
+                {label}
+              </NavLink>
+            ))}
+          </div>
         </div>
-      </div>
-      <div className="flex items-center gap-base">
-        <button
-          aria-label="notifications"
-          className="p-base hover:bg-surface-variant/50 transition-all duration-200 rounded-full active:scale-95 opacity-80"
+        <div className="flex items-center gap-base">
+          <button
+            aria-label="notifications"
+            className="p-base hover:bg-surface-variant/50 transition-all duration-200 rounded-full active:scale-95 opacity-80"
+          >
+            <Icon name="notifications" className="text-primary-fixed" />
+          </button>
+          <Link
+            to="/profile"
+            aria-label="account"
+            className="p-base hover:bg-surface-variant/50 transition-all duration-200 rounded-full active:scale-95 opacity-80 inline-flex"
+          >
+            <Icon name="account_circle" className="text-primary-fixed" />
+          </Link>
+        </div>
+      </nav>
+
+      {menuOpen && (
+        <div
+          data-testid="mobile-menu-overlay"
+          className="md:hidden fixed inset-0 top-16 z-40 bg-surface/95 backdrop-blur-lg"
+          onClick={() => setMenuOpen(false)}
         >
-          <Icon name="notifications" className="text-primary-fixed" />
-        </button>
-        <Link
-          to="/profile"
-          aria-label="account"
-          className="p-base hover:bg-surface-variant/50 transition-all duration-200 rounded-full active:scale-95 opacity-80 inline-flex"
-        >
-          <Icon name="account_circle" className="text-primary-fixed" />
-        </Link>
-      </div>
-    </nav>
+          <div
+            data-testid="mobile-menu"
+            className="flex flex-col p-md gap-base"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {NAV_LINKS.map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  [
+                    "block font-label-bold text-lg py-md px-md rounded-lg transition-all",
+                    isActive
+                      ? "text-primary-fixed bg-primary-fixed/10 border-l-4 border-primary-fixed"
+                      : "text-on-surface hover:bg-surface-variant/50",
+                  ].join(" ")
+                }
+              >
+                {label}
+              </NavLink>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
