@@ -88,6 +88,7 @@ export function cellsToWedgeGeoJSON(cells) {
     const sharesJson = JSON.stringify(shares);
     const wedges = cellToWedges(c.h3Index, shares);
     wedges.forEach((w, i) => {
+      const count = w.share?.count ?? null;
       features.push({
         type: "Feature",
         id: `${c.h3Index}:${w.share?.userId ?? i}`,
@@ -98,6 +99,9 @@ export function cellsToWedgeGeoJSON(cells) {
           color: w.share?.color ?? c.color,
           claimedAt: c.claimedAt ?? null,
           ownership: c.ownership ?? 100,
+          count,
+          // Strength badge rendered on the cell (e.g. "×2"). Empty => no label.
+          strengthLabel: count != null ? `×${count}` : "",
           sharesJson,
         },
         geometry: { type: "Polygon", coordinates: [w.coords] },

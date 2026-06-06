@@ -82,5 +82,8 @@ describe('h3Utils', () => {
     expect(gj.features[1].properties.color).toBe('#bbb');
     const parsed = JSON.parse(gj.features[0].properties.sharesJson);
     expect(parsed).toHaveLength(2);
+    // Each wedge carries a ×N strength badge label.
+    expect(gj.features[0].properties.strengthLabel).toBe("×2");
+    expect(gj.features[1].properties.strengthLabel).toBe("×1");
   });
 });
