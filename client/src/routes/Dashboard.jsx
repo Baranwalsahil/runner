@@ -171,6 +171,7 @@ export default function Dashboard() {
   }, [activeRunId]);
 
   const totalCells = me?.total_cells ?? 0;
+  const totalStrength = me?.total_strength ?? 0;
   const chartData = build7DayChart(runs);
 
   const bestCells = runs.reduce(
@@ -245,6 +246,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
         <TerritoryDominance
           cells={totalCells}
+          strength={totalStrength}
           region={region}
           chartData={chartData}
         />

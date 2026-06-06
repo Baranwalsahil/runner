@@ -71,8 +71,8 @@ async def top(
             """
             SELECT user_id, username, total_cells, rank
             FROM (
-              SELECT id AS user_id, username, total_cells,
-                     ROW_NUMBER() OVER (ORDER BY total_cells DESC, username ASC) AS rank
+              SELECT id AS user_id, username, total_strength AS total_cells,
+                     ROW_NUMBER() OVER (ORDER BY total_strength DESC, username ASC) AS rank
               FROM users
             ) ranked
             ORDER BY rank
@@ -128,8 +128,8 @@ async def nearby(
     rows = await pool.fetch(
         """
         WITH ranked AS (
-          SELECT id AS user_id, username, total_cells,
-                 ROW_NUMBER() OVER (ORDER BY total_cells DESC, username ASC) AS rank
+          SELECT id AS user_id, username, total_strength AS total_cells,
+                 ROW_NUMBER() OVER (ORDER BY total_strength DESC, username ASC) AS rank
           FROM users
         ),
         me AS (

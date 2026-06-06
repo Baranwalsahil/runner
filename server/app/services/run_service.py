@@ -142,31 +142,35 @@ async def ingest_run(
             await conn.execute(PRUNE_SQL, cell_list)
             await conn.execute(OWNER_SQL, cell_list, H3_RESOLUTION)
 
-            # total_cells is now total strength = SUM(count) of a user's shares.
+            # total_cells = cells owned; total_strength = SUM(count) of shares.
             affected_ids: list[UUID] = [user_id, *displaced]
             updated = await conn.fetch(
                 """
                 UPDATE users u
                 SET total_cells = COALESCE((
+                      SELECT COUNT(*) FROM claimed_cells WHERE user_id = u.id
+                    ), 0),
+                    total_strength = COALESCE((
                       SELECT SUM(count) FROM claimed_cell_users WHERE user_id = u.id
                     ), 0),
                     updated_at = NOW()
                 WHERE u.id = ANY($1::uuid[])
-                RETURNING u.id, u.total_cells
+                RETURNING u.id, u.total_cells, u.total_strength
                 """,
                 affected_ids,
             )
 
+    # Leaderboard ranks by strength; new_total reports the runner's strength.
     new_total = 0
-    totals_by_id: dict[UUID, int] = {}
+    strength_by_id: dict[UUID, int] = {}
     for row in updated:
-        totals_by_id[row["id"]] = row["total_cells"]
+        strength_by_id[row["id"]] = row["total_strength"]
         if row["id"] == user_id:
-            new_total = row["total_cells"]
+            new_total = row["total_strength"]
 
     if cache is not None:
-        for uid, total in totals_by_id.items():
-            await leaderboard_cache.upsert_user_total(cache, uid, total)
+        for uid, strength in strength_by_id.items():
+            await leaderboard_cache.upsert_user_total(cache, uid, strength)
         await territory_cache.flush_all(cache)
 
     return RunResult(

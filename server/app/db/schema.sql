@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     avatar_url TEXT,
     total_cells INTEGER DEFAULT 0,
+    total_strength INTEGER DEFAULT 0,
     total_area_m2 DECIMAL(12,2) DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()

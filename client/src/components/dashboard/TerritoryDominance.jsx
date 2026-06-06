@@ -10,6 +10,7 @@ const DEFAULT_CHART = [
 
 export default function TerritoryDominance({
   cells = 1284,
+  strength = null,
   region = "TOP 5% IN SEATTLE",
   chartData = DEFAULT_CHART,
 }) {
@@ -27,6 +28,15 @@ export default function TerritoryDominance({
               {cells.toLocaleString()}{" "}
               <span className="text-headline-md font-normal text-on-surface-variant">HEX</span>
             </h1>
+            {strength != null && (
+              <p
+                data-testid="total-strength"
+                className="font-label-bold text-secondary-fixed mt-1"
+              >
+                {strength.toLocaleString()}{" "}
+                <span className="text-on-surface-variant font-normal">STRENGTH</span>
+              </p>
+            )}
           </div>
           <div className="bg-primary-container text-on-primary-container font-label-bold px-3 py-1 rounded-full text-xs">
             {region}

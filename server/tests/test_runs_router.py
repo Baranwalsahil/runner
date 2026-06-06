@@ -234,11 +234,18 @@ async def test_chip_reduces_prior_owner_strength(app_client):
     assert owner["user_id"] == uuid.UUID(user_a)
     assert owner["claim_count"] == 2
 
-    # Totals: A sum strength dropped, B gained.
-    ta = await pool.fetchval("SELECT total_cells FROM users WHERE id = $1", uuid.UUID(user_a))
-    tb = await pool.fetchval("SELECT total_cells FROM users WHERE id = $1", uuid.UUID(user_b))
-    assert ta == 2 * len(a_cells)
-    assert tb == len(a_cells)
+    # total_cells = cells owned; total_strength = SUM(count).
+    # A still owns every shared cell (x2 > x1); B owns none (loses ties).
+    ta = await pool.fetchrow(
+        "SELECT total_cells, total_strength FROM users WHERE id = $1", uuid.UUID(user_a)
+    )
+    tb = await pool.fetchrow(
+        "SELECT total_cells, total_strength FROM users WHERE id = $1", uuid.UUID(user_b)
+    )
+    assert ta["total_cells"] == len(a_cells)
+    assert ta["total_strength"] == 2 * len(a_cells)
+    assert tb["total_cells"] == 0
+    assert tb["total_strength"] == len(a_cells)
 
 
 @pytest.mark.asyncio
