@@ -143,13 +143,19 @@ export default function Dashboard() {
     setSelectedRunId((prev) => (prev === feedId ? null : feedId));
   }, []);
 
-  // Fetch the selected run's trace + claimed cells.
+  // The most recent run (runs are ordered started_at DESC). Feed item ids are
+  // prefixed "run-", so match that format for highlight/selection parity.
+  const latestRunId = runs[0]?.id ? `run-${runs[0].id}` : null;
+  // With no explicit selection, default the map to the latest run's cells.
+  const activeRunId = selectedRunId ?? latestRunId;
+
+  // Fetch the active run's claimed cells (selected run, else latest run).
   useEffect(() => {
-    if (!selectedRunId) {
+    if (!activeRunId) {
       setSelectedRun(null);
       return;
     }
-    const runId = selectedRunId.replace(/^run-/, "");
+    const runId = activeRunId.replace(/^run-/, "");
     let cancelled = false;
     runsApi
       .detail(runId)
@@ -162,7 +168,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [selectedRunId]);
+  }, [activeRunId]);
 
   const totalCells = me?.total_cells ?? 0;
   const chartData = build7DayChart(runs);
@@ -227,8 +233,9 @@ export default function Dashboard() {
           year: "numeric",
         })
       : null;
+  const isExplicitSelection = Boolean(selectedRunId);
   const mapDistrict = viewingRun
-    ? `RUN · ${runDate ?? ""}`.trim()
+    ? `${isExplicitSelection ? "RUN" : "LATEST RUN"} · ${runDate ?? ""}`.trim()
     : totalCells > 0
       ? `${(me?.username ?? user?.username ?? "YOUR").toUpperCase()} TERRITORY`
       : "NO TERRITORY YET";
@@ -257,7 +264,7 @@ export default function Dashboard() {
           {...battles}
           loading={feedLoading}
           onSelectRun={handleSelectRun}
-          selectedRunId={selectedRunId}
+          selectedRunId={activeRunId}
         />
       </div>
     </div>
