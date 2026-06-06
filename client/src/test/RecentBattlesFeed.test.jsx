@@ -103,4 +103,32 @@ describe('RecentBattlesFeed', () => {
     expect(screen.queryByTestId('battle-item')).toBeNull();
     expect(screen.getByTestId('battles-empty')).toBeInTheDocument();
   });
+
+  it('clicking an item calls onSelectRun with the run id', () => {
+    const onSelectRun = vi.fn();
+    render(
+      <RecentBattlesFeed initialBattles={MOCK_INITIAL} onSelectRun={onSelectRun} />,
+    );
+    fireEvent.click(screen.getAllByTestId('battle-item')[1]);
+    expect(onSelectRun).toHaveBeenCalledWith('r2');
+  });
+
+  it('marks the selected item via data-selected', () => {
+    render(
+      <RecentBattlesFeed
+        initialBattles={MOCK_INITIAL}
+        onSelectRun={vi.fn()}
+        selectedRunId="r3"
+      />,
+    );
+    const items = screen.getAllByTestId('battle-item');
+    expect(items[2].getAttribute('data-selected')).toBe('true');
+    expect(items[0].getAttribute('data-selected')).toBeNull();
+  });
+
+  it('items are not clickable without onSelectRun', () => {
+    render(<RecentBattlesFeed initialBattles={MOCK_INITIAL} />);
+    const item = screen.getAllByTestId('battle-item')[0];
+    expect(item.getAttribute('role')).toBeNull();
+  });
 });

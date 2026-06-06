@@ -9,15 +9,34 @@ function labelClass(type) {
   return "text-on-surface-variant";
 }
 
-function BattleItem({ battle, firstNewRef }) {
+function BattleItem({ battle, firstNewRef, onSelect, selected }) {
+  const clickable = typeof onSelect === "function";
   return (
     <div
       ref={firstNewRef}
       data-testid="battle-item"
       data-battle-id={battle.id}
-      className={`p-md hover:bg-surface-variant/20 transition-all${
-        battle.accent ? " bg-primary-fixed/5 border-l-2 border-primary-fixed" : ""
-      }`}
+      data-selected={selected ? "true" : undefined}
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={clickable ? () => onSelect(battle.id) : undefined}
+      onKeyDown={
+        clickable
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelect(battle.id);
+              }
+            }
+          : undefined
+      }
+      className={`p-md transition-all${clickable ? " cursor-pointer" : ""}${
+        selected
+          ? " bg-primary-fixed/10 border-l-2 border-primary-fixed"
+          : battle.accent
+            ? " bg-primary-fixed/5 border-l-2 border-primary-fixed"
+            : ""
+      } hover:bg-surface-variant/20`}
     >
       <div className="flex justify-between items-start mb-base">
         <span className={`${labelClass(battle.type)} font-label-bold text-xs uppercase`}>
@@ -43,6 +62,8 @@ export default function RecentBattlesFeed({
   initialBattles = [],
   extraBattles = [],
   loading = false,
+  onSelectRun,
+  selectedRunId = null,
 }) {
   const [loaded, setLoaded] = useState(false);
   const firstNewRef = useRef(null);
@@ -93,6 +114,8 @@ export default function RecentBattlesFeed({
             <BattleItem
               key={b.id}
               battle={b}
+              onSelect={onSelectRun}
+              selected={selectedRunId === b.id}
               firstNewRef={
                 loaded && i === initialBattles.length ? firstNewRef : null
               }

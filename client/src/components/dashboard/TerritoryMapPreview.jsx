@@ -51,6 +51,7 @@ export default function TerritoryMapPreview({
   ownership = 0,
   liveLabel = "YOUR CELLS",
   cells = [],
+  trace = [],
   currentLocation = null,
   locationLoading = false,
   onZoomIn,
@@ -82,6 +83,7 @@ export default function TerritoryMapPreview({
       {showMap ? (
         <MapCanvas
           cells={hasCells ? cells : []}
+          trace={trace}
           bounds={hasCells ? bounds : undefined}
           center={hasCells ? undefined : fallbackCenter}
           zoom={hasCells ? undefined : fallbackCenter?.zoom}

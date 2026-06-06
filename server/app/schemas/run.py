@@ -45,6 +45,22 @@ class RunSummary(BaseModel):
     created_at: datetime
 
 
+class TracePoint(BaseModel):
+    lat: float
+    lng: float
+
+
+class RunDetail(BaseModel):
+    id: UUID
+    started_at: datetime
+    ended_at: datetime | None
+    distance_meters: float | None
+    cells_claimed: int
+    created_at: datetime
+    trace: list[TracePoint]
+    cells: list[str]  # H3 cell indices claimed by this run
+
+
 class RunFeedItem(BaseModel):
     id: str
     type: str          # "gained" | "lost" | "defended"

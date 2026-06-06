@@ -14,6 +14,7 @@ const PAGE_SIZE = 4;
 const FEED_POLL_MS = 15_000;
 const HEX_AREA_M2 = 105_332.353; // H3 resolution 9 average hex area
 const NEARBY_RADIUS_KM = 50;
+const RUN_CELL_COLOR = "#c3f400"; // lime fill for a selected run's claimed cells
 
 function haversineKm(a, b) {
   const R = 6371;
@@ -84,6 +85,8 @@ export default function Dashboard() {
   const [runs, setRuns] = useState([]);
   const [cells, setCells] = useState([]);
   const [feedItems, setFeedItems] = useState([]);
+  const [selectedRunId, setSelectedRunId] = useState(null);
+  const [selectedRun, setSelectedRun] = useState(null);
   const [loading, setLoading] = useState(true);
   const [feedLoading, setFeedLoading] = useState(true);
   const feedLoadedOnceRef = useRef(false);
@@ -130,6 +133,37 @@ export default function Dashboard() {
 
   usePolling(user?.id ? fetchFeed : null, user?.id ? FEED_POLL_MS : 0);
 
+  // Reset run selection when the signed-in user changes.
+  useEffect(() => {
+    setSelectedRunId(null);
+    setSelectedRun(null);
+  }, [user?.id]);
+
+  const handleSelectRun = useCallback((feedId) => {
+    setSelectedRunId((prev) => (prev === feedId ? null : feedId));
+  }, []);
+
+  // Fetch the selected run's trace + claimed cells.
+  useEffect(() => {
+    if (!selectedRunId) {
+      setSelectedRun(null);
+      return;
+    }
+    const runId = selectedRunId.replace(/^run-/, "");
+    let cancelled = false;
+    runsApi
+      .detail(runId)
+      .then((detail) => {
+        if (!cancelled) setSelectedRun(detail);
+      })
+      .catch(() => {
+        if (!cancelled) setSelectedRun(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedRunId]);
+
   const totalCells = me?.total_cells ?? 0;
   const chartData = build7DayChart(runs);
 
@@ -171,6 +205,35 @@ export default function Dashboard() {
         : "NEW RUNNER"
       : `${totalCells} CELL${totalCells === 1 ? "" : "S"} CLAIMED`;
 
+  const viewingRun = Boolean(selectedRun);
+  const selectedCells = viewingRun
+    ? (selectedRun.cells ?? []).map((h3Index) => ({
+        h3Index,
+        ownerId: user?.id,
+        owner: `@${me?.username ?? user?.username ?? "you"}`,
+        color: RUN_CELL_COLOR,
+        ownership: 100,
+      }))
+    : [];
+  const selectedTrace = viewingRun ? selectedRun.trace ?? [] : [];
+  const mapCells = viewingRun
+    ? selectedCells
+    : filterCellsNearLocation(cells, currentLocation, NEARBY_RADIUS_KM);
+  const mapLiveBattles = viewingRun ? selectedRun.cells_claimed ?? 0 : totalCells;
+  const runDate =
+    viewingRun && selectedRun.started_at
+      ? new Date(selectedRun.started_at).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : null;
+  const mapDistrict = viewingRun
+    ? `RUN · ${runDate ?? ""}`.trim()
+    : totalCells > 0
+      ? `${(me?.username ?? user?.username ?? "YOUR").toUpperCase()} TERRITORY`
+      : "NO TERRITORY YET";
+
   return (
     <div className="px-margin-safe max-w-7xl mx-auto w-full">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
@@ -183,18 +246,21 @@ export default function Dashboard() {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-gutter h-full">
         <TerritoryMapPreview
-          liveBattles={totalCells}
-          district={
-            totalCells > 0
-              ? `${(me?.username ?? user?.username ?? "YOUR").toUpperCase()} TERRITORY`
-              : "NO TERRITORY YET"
-          }
-          ownership={totalCells > 0 ? Math.min(100, totalCells) : 0}
-          cells={filterCellsNearLocation(cells, currentLocation, NEARBY_RADIUS_KM)}
+          liveBattles={mapLiveBattles}
+          liveLabel={viewingRun ? "RUN CELLS" : "YOUR CELLS"}
+          district={mapDistrict}
+          ownership={mapLiveBattles > 0 ? Math.min(100, mapLiveBattles) : 0}
+          cells={mapCells}
+          trace={selectedTrace}
           currentLocation={currentLocation}
           locationLoading={locLoading}
         />
-        <RecentBattlesFeed {...battles} loading={feedLoading} />
+        <RecentBattlesFeed
+          {...battles}
+          loading={feedLoading}
+          onSelectRun={handleSelectRun}
+          selectedRunId={selectedRunId}
+        />
       </div>
     </div>
   );

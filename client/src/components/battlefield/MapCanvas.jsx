@@ -6,8 +6,21 @@ import { cellsToGeoJSON } from "../../lib/h3Utils.js";
 const SRC_ID = "claimed-cells";
 const FILL_ID = "claimed-cells-fill";
 const LINE_ID = "claimed-cells-line";
+const TRACE_SRC_ID = "run-trace";
+const TRACE_LINE_ID = "run-trace-line";
 
-export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, onCellClick, onMapReady }) {
+function traceToGeoJSON(trace) {
+  const coords = (trace || [])
+    .filter((p) => Number.isFinite(p?.lng) && Number.isFinite(p?.lat))
+    .map((p) => [p.lng, p.lat]);
+  return {
+    type: "Feature",
+    geometry: { type: "LineString", coordinates: coords },
+    properties: {},
+  };
+}
+
+export default function MapCanvas({ cells = [], trace = [], center = SEATTLE, zoom, bounds, onCellClick, onMapReady }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
 
@@ -43,6 +56,18 @@ export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, 
           "line-width": 1.5,
         },
       });
+      map.addSource(TRACE_SRC_ID, { type: "geojson", data: traceToGeoJSON(trace) });
+      map.addLayer({
+        id: TRACE_LINE_ID,
+        type: "line",
+        source: TRACE_SRC_ID,
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": "#00e5ff",
+          "line-width": 3,
+          "line-opacity": 0.9,
+        },
+      });
       map.on("click", FILL_ID, (e) => {
         const f = e.features?.[0];
         if (f) onCellClick?.(f.properties);
@@ -63,6 +88,13 @@ export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, 
     const src = map.getSource?.(SRC_ID);
     if (src) src.setData(cellsToGeoJSON(cells));
   }, [cells]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const src = map.getSource?.(TRACE_SRC_ID);
+    if (src) src.setData(traceToGeoJSON(trace));
+  }, [trace]);
 
   useEffect(() => {
     const map = mapRef.current;
