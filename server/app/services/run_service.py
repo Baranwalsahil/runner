@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -8,7 +9,14 @@ from fastapi import HTTPException, status
 
 from app.cache import leaderboard_cache, territory_cache
 from app.constants import H3_RESOLUTION, MAX_CELLS_PER_RUN
-from app.schemas.run import RunCreate, RunFeedItem, RunResult, RunSummary
+from app.schemas.run import (
+    RunCreate,
+    RunDetail,
+    RunFeedItem,
+    RunResult,
+    RunSummary,
+    TracePoint,
+)
 from app.services.gps_filter import filter_trace, trace_distance_m
 from app.services.h3_service import trace_to_cells
 
@@ -176,6 +184,48 @@ async def get_run(pool: asyncpg.Pool, user_id: UUID, run_id: UUID) -> RunSummary
         distance_meters=float(row["distance_meters"]) if row["distance_meters"] is not None else None,
         cells_claimed=row["cells_claimed"],
         created_at=row["created_at"],
+    )
+
+
+async def get_run_detail(
+    pool: asyncpg.Pool, user_id: UUID, run_id: UUID
+) -> RunDetail | None:
+    """Return a single run with its GPS trace and the H3 cells it claimed.
+
+    Cells are recomputed from the stored trace (claimed_cells is not linked to
+    runs), so the result reflects the cells this run originally covered
+    regardless of subsequent ownership changes.
+    """
+    row = await pool.fetchrow(
+        """
+        SELECT id, started_at, ended_at, distance_meters, cells_claimed, created_at,
+               ST_AsGeoJSON(gps_trace) AS trace_geojson
+        FROM runs WHERE id = $1 AND user_id = $2
+        """,
+        run_id,
+        user_id,
+    )
+    if row is None:
+        return None
+
+    coords: list[list[float]] = []
+    if row["trace_geojson"]:
+        geo = json.loads(row["trace_geojson"])
+        coords = geo.get("coordinates") or []  # [[lng, lat], ...]
+
+    trace = [TracePoint(lat=lat, lng=lng) for lng, lat in coords]
+    cells = sorted(
+        trace_to_cells(((p.lat, p.lng) for p in trace), H3_RESOLUTION)
+    )
+    return RunDetail(
+        id=row["id"],
+        started_at=row["started_at"],
+        ended_at=row["ended_at"],
+        distance_meters=float(row["distance_meters"]) if row["distance_meters"] is not None else None,
+        cells_claimed=row["cells_claimed"],
+        created_at=row["created_at"],
+        trace=trace,
+        cells=cells,
     )
 
 

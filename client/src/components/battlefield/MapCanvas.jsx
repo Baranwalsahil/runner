@@ -10,6 +10,10 @@ const LINE_ID = "claimed-cells-line";
 export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, onCellClick, onMapReady }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
+  // Keep the latest cells in a ref so the (once-only) "load" handler seeds the
+  // source with current data even if cells arrived before the style loaded.
+  const cellsRef = useRef(cells);
+  cellsRef.current = cells;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -24,7 +28,7 @@ export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, 
     onMapReady?.(map);
 
     map.on("load", () => {
-      map.addSource(SRC_ID, { type: "geojson", data: cellsToGeoJSON(cells) });
+      map.addSource(SRC_ID, { type: "geojson", data: cellsToGeoJSON(cellsRef.current) });
       map.addLayer({
         id: FILL_ID,
         type: "fill",
@@ -67,21 +71,18 @@ export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, 
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    let apply;
+    // Camera methods are safe as soon as the map exists (they don't need the
+    // style/tiles loaded), so apply directly. The previous isStyleLoaded()
+    // gate could defer to a "load" event that had already fired, leaving the
+    // camera stuck — so a freshly selected run's cells rendered off-screen.
     if (bounds && Array.isArray(bounds.sw) && Array.isArray(bounds.ne)) {
-      apply = () =>
-        map.fitBounds?.([bounds.sw, bounds.ne], { padding: 40, maxZoom: 15, animate: false });
+      map.fitBounds?.([bounds.sw, bounds.ne], { padding: 40, maxZoom: 15, animate: false });
     } else if (center) {
       const lng = Number(center.lng);
       const lat = Number(center.lat);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-      const targetZoom = zoom ?? center.zoom ?? 13;
-      apply = () => map.jumpTo?.({ center: [lng, lat], zoom: targetZoom });
-    } else {
-      return;
+      map.jumpTo?.({ center: [lng, lat], zoom: zoom ?? center.zoom ?? 13 });
     }
-    if (map.isStyleLoaded?.()) apply();
-    else map.once?.("load", apply);
   }, [
     bounds?.sw?.[0], bounds?.sw?.[1], bounds?.ne?.[0], bounds?.ne?.[1],
     center?.lat, center?.lng, center?.zoom, zoom,

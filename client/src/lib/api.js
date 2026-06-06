@@ -42,4 +42,6 @@ export const leaderboard = {
 export const runs = {
   feed: ({ limit = 12 } = {}) =>
     apiJson(`/runs/feed?limit=${limit}`),
+  list: () => apiJson("/runs"),
+  detail: (id) => apiJson(`/runs/${id}/detail`),
 };
