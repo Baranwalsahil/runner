@@ -53,7 +53,7 @@ async def _clean_db(_override_dsn):
     yield
     if pool_mod._pool is not None:
         await pool_mod._pool.execute(
-            "DELETE FROM claimed_cells; DELETE FROM runs; DELETE FROM users;"
+            "DELETE FROM claimed_cell_users; DELETE FROM claimed_cells; DELETE FROM runs; DELETE FROM users;"
         )
         await pool_mod.close_pool()
 
@@ -166,6 +166,106 @@ async def test_ownership_transfers_on_second_user_overlap(app_client):
     # User B now owns every cell A used to own; A owns nothing.
     assert cells_b == cells_a, "user B should now own every cell A used to own"
     assert cells_a_after == set()
+
+
+@pytest.mark.asyncio
+async def test_own_rerun_stacks_strength(app_client):
+    """Re-running your own path raises your per-cell count and total strength."""
+    token, user_id = await _signup(app_client)
+    trace = _trace_around(47.6062, -122.3321, n=10)
+    r1 = await app_client.post(
+        "/runs", json=_run_body(trace), headers={"Authorization": f"Bearer {token}"}
+    )
+    total1 = r1.json()["new_total"]
+    cells = r1.json()["cells_claimed"]
+    assert total1 == cells  # first pass: every cell at x1
+
+    r2 = await app_client.post(
+        "/runs", json=_run_body(trace), headers={"Authorization": f"Bearer {token}"}
+    )
+    total2 = r2.json()["new_total"]
+    assert total2 == 2 * cells  # second pass: every cell now x2
+
+    pool = await pool_mod.get_pool()
+    counts = await pool.fetch(
+        "SELECT count FROM claimed_cell_users WHERE user_id = $1", uuid.UUID(user_id)
+    )
+    assert counts and all(c["count"] == 2 for c in counts)
+
+
+@pytest.mark.asyncio
+async def test_chip_reduces_prior_owner_strength(app_client):
+    """A runs x3, B runs once: A drops to x2 and keeps ownership; B holds x1."""
+    token_a, user_a = await _signup(app_client, suffix="aaaa")
+    trace = _trace_around(47.6062, -122.3321, n=10)
+    for _ in range(3):
+        await app_client.post(
+            "/runs", json=_run_body(trace), headers={"Authorization": f"Bearer {token_a}"}
+        )
+    pool = await pool_mod.get_pool()
+    a_cells = [r["h3_index"] for r in await pool.fetch(
+        "SELECT h3_index FROM claimed_cell_users WHERE user_id = $1", uuid.UUID(user_a)
+    )]
+    assert a_cells and all(
+        r["count"] == 3 for r in await pool.fetch(
+            "SELECT count FROM claimed_cell_users WHERE user_id = $1", uuid.UUID(user_a)
+        )
+    )
+
+    token_b, user_b = await _signup(app_client, suffix="bbbb")
+    await app_client.post(
+        "/runs", json=_run_body(trace), headers={"Authorization": f"Bearer {token_b}"}
+    )
+
+    # A chipped 3 -> 2 on each shared cell, still owner (2 > 1).
+    a_after = await pool.fetch(
+        "SELECT count FROM claimed_cell_users WHERE user_id = $1", uuid.UUID(user_a)
+    )
+    assert a_after and all(r["count"] == 2 for r in a_after)
+    b_after = await pool.fetch(
+        "SELECT count FROM claimed_cell_users WHERE user_id = $1", uuid.UUID(user_b)
+    )
+    assert b_after and all(r["count"] == 1 for r in b_after)
+
+    # Owner pointer still A (max count) on a shared cell.
+    owner = await pool.fetchrow(
+        "SELECT user_id, claim_count FROM claimed_cells WHERE h3_index = $1", a_cells[0]
+    )
+    assert owner["user_id"] == uuid.UUID(user_a)
+    assert owner["claim_count"] == 2
+
+    # Totals: A sum strength dropped, B gained.
+    ta = await pool.fetchval("SELECT total_cells FROM users WHERE id = $1", uuid.UUID(user_a))
+    tb = await pool.fetchval("SELECT total_cells FROM users WHERE id = $1", uuid.UUID(user_b))
+    assert ta == 2 * len(a_cells)
+    assert tb == len(a_cells)
+
+
+@pytest.mark.asyncio
+async def test_territory_returns_shares(app_client):
+    """Territory API exposes per-user shares for a contested cell."""
+    token_a, user_a = await _signup(app_client, suffix="aaaa")
+    trace = _trace_around(47.6062, -122.3321, n=10)
+    for _ in range(2):
+        await app_client.post(
+            "/runs", json=_run_body(trace), headers={"Authorization": f"Bearer {token_a}"}
+        )
+    token_b, _ = await _signup(app_client, suffix="bbbb")
+    await app_client.post(
+        "/runs", json=_run_body(trace), headers={"Authorization": f"Bearer {token_b}"}
+    )
+    bounds = "47.60,-122.34,47.62,-122.32"
+    resp = await app_client.get(
+        f"/territory?bounds={bounds}", headers={"Authorization": f"Bearer {token_a}"}
+    )
+    assert resp.status_code == 200
+    cells = resp.json()
+    contested = [c for c in cells if len(c["shares"]) > 1]
+    assert contested, "expected at least one contested cell with 2 shares"
+    sh = contested[0]["shares"]
+    # Sorted strongest-first; counts present.
+    assert sh[0]["count"] >= sh[-1]["count"]
+    assert all("color" in s and "count" in s for s in sh)
 
 
 @pytest.mark.asyncio

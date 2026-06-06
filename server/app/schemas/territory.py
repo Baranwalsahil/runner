@@ -28,6 +28,15 @@ class Bounds(BaseModel):
         return cls(sw_lat=sw_lat, sw_lng=sw_lng, ne_lat=ne_lat, ne_lng=ne_lng)
 
 
+class CellShare(BaseModel):
+    """One user's strength stake in a cell."""
+
+    user_id: UUID
+    username: str | None
+    color: str
+    count: int
+
+
 class CellOut(BaseModel):
     h3_index: str
     user_id: UUID | None
@@ -36,6 +45,8 @@ class CellOut(BaseModel):
     resolution: int
     claim_count: int
     claimed_at: datetime
+    # All holders of this cell, sorted strongest-first. Owner == shares[0].
+    shares: list[CellShare] = []
 
 
 class TerritoryStats(BaseModel):

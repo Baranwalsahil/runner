@@ -37,14 +37,44 @@ def _time_ago(dt: datetime) -> str:
         return f"{h}h ago"
     return f"{h // 24}d ago"
 
-CLAIM_SQL = """
-INSERT INTO claimed_cells (h3_index, user_id, resolution, claim_count)
-VALUES ($1, $2, $3, 1)
+# Step 1: running a cell grants the runner +1 strength on it.
+GRANT_SQL = """
+INSERT INTO claimed_cell_users (h3_index, user_id, count, updated_at)
+SELECT unnest($1::text[]), $2, 1, NOW()
+ON CONFLICT (h3_index, user_id) DO UPDATE
+  SET count = claimed_cell_users.count + 1,
+      updated_at = NOW();
+"""
+
+# Step 2: every other holder on those cells loses 1 strength (the "chip").
+CHIP_SQL = """
+UPDATE claimed_cell_users
+SET count = count - 1, updated_at = NOW()
+WHERE h3_index = ANY($1::text[]) AND user_id <> $2;
+"""
+
+# Step 3: drop holders whose strength fell to zero.
+PRUNE_SQL = """
+DELETE FROM claimed_cell_users
+WHERE h3_index = ANY($1::text[]) AND count <= 0;
+"""
+
+# Step 4: recompute the owner-pointer for each touched cell. Owner = holder
+# with max count (tiebreak: most recently updated). Every touched cell has at
+# least one holder (the runner), so the inner select is never empty.
+OWNER_SQL = """
+INSERT INTO claimed_cells (h3_index, user_id, resolution, claim_count, claimed_at)
+SELECT r.h3_index, r.user_id, $2, r.count, NOW()
+FROM (
+  SELECT DISTINCT ON (h3_index) h3_index, user_id, count
+  FROM claimed_cell_users
+  WHERE h3_index = ANY($1::text[])
+  ORDER BY h3_index, count DESC, updated_at DESC
+) r
 ON CONFLICT (h3_index) DO UPDATE
   SET user_id = EXCLUDED.user_id,
-      claimed_at = NOW(),
-      claim_count = claimed_cells.claim_count + 1
-WHERE claimed_cells.user_id IS DISTINCT FROM EXCLUDED.user_id;
+      claim_count = EXCLUDED.claim_count,
+      claimed_at = NOW();
 """
 
 
@@ -77,19 +107,18 @@ async def ingest_run(
 
     async with pool.acquire() as conn:
         async with conn.transaction():
-            # Capture displaced owners before the upsert; their totals must
-            # also be recomputed once ownership transfers.
-            displaced_rows = await conn.fetch(
+            # Capture every prior holder of these cells before mutating. Their
+            # totals must be recomputed too — chipping reduces their strength
+            # (and may evict them), so they are "affected" alongside the runner.
+            holder_rows = await conn.fetch(
                 """
-                SELECT DISTINCT user_id FROM claimed_cells
-                WHERE h3_index = ANY($1::text[])
-                  AND user_id IS NOT NULL
-                  AND user_id <> $2
+                SELECT DISTINCT user_id FROM claimed_cell_users
+                WHERE h3_index = ANY($1::text[]) AND user_id <> $2
                 """,
                 cell_list,
                 user_id,
             )
-            displaced: list[UUID] = [r["user_id"] for r in displaced_rows]
+            displaced: list[UUID] = [r["user_id"] for r in holder_rows]
 
             run_row = await conn.fetchrow(
                 """
@@ -107,18 +136,20 @@ async def ingest_run(
             )
             run_id: UUID = run_row["id"]
 
-            await conn.executemany(
-                CLAIM_SQL,
-                [(idx, user_id, H3_RESOLUTION) for idx in cell_list],
-            )
+            # Grant runner strength, chip rivals, prune depleted, reseat owner.
+            await conn.execute(GRANT_SQL, cell_list, user_id)
+            await conn.execute(CHIP_SQL, cell_list, user_id)
+            await conn.execute(PRUNE_SQL, cell_list)
+            await conn.execute(OWNER_SQL, cell_list, H3_RESOLUTION)
 
+            # total_cells is now total strength = SUM(count) of a user's shares.
             affected_ids: list[UUID] = [user_id, *displaced]
             updated = await conn.fetch(
                 """
                 UPDATE users u
-                SET total_cells = (
-                      SELECT COUNT(*) FROM claimed_cells WHERE user_id = u.id
-                    ),
+                SET total_cells = COALESCE((
+                      SELECT SUM(count) FROM claimed_cell_users WHERE user_id = u.id
+                    ), 0),
                     updated_at = NOW()
                 WHERE u.id = ANY($1::uuid[])
                 RETURNING u.id, u.total_cells

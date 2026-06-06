@@ -6,13 +6,23 @@ function boundsToQuery({ sw_lat, sw_lng, ne_lat, ne_lng }) {
 
 /** Map API cell row → MapCanvas cell shape. */
 export function adaptApiCell(c) {
+  const shares = (c.shares || []).map((s) => ({
+    userId: s.user_id,
+    owner: s.username ? `@${s.username}` : "@unclaimed",
+    color: s.color || "#c3f400",
+    count: s.count,
+  }));
+  const total = shares.reduce((sum, s) => sum + s.count, 0);
+  const ownerCount = shares.length ? shares[0].count : c.claim_count;
   return {
     h3Index: c.h3_index,
     ownerId: c.user_id,
     owner: c.username ? `@${c.username}` : "@unclaimed",
     color: c.color || "#c3f400",
     claimedAt: c.claimed_at,
-    ownership: Math.min(100, 50 + c.claim_count * 10),
+    // Owner's slice of total strength on the cell.
+    ownership: total ? Math.round((ownerCount / total) * 100) : 100,
+    shares,
   };
 }
 

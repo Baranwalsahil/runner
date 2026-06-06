@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import { osmStyle, SEATTLE } from "../../lib/mapStyle.js";
-import { cellsToGeoJSON } from "../../lib/h3Utils.js";
+import { cellsToWedgeGeoJSON } from "../../lib/h3Utils.js";
 
 const SRC_ID = "claimed-cells";
 const FILL_ID = "claimed-cells-fill";
@@ -28,7 +28,7 @@ export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, 
     onMapReady?.(map);
 
     map.on("load", () => {
-      map.addSource(SRC_ID, { type: "geojson", data: cellsToGeoJSON(cellsRef.current) });
+      map.addSource(SRC_ID, { type: "geojson", data: cellsToWedgeGeoJSON(cellsRef.current) });
       map.addLayer({
         id: FILL_ID,
         type: "fill",
@@ -65,7 +65,7 @@ export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, 
     const map = mapRef.current;
     if (!map) return;
     const src = map.getSource?.(SRC_ID);
-    if (src) src.setData(cellsToGeoJSON(cells));
+    if (src) src.setData(cellsToWedgeGeoJSON(cells));
   }, [cells]);
 
   useEffect(() => {
