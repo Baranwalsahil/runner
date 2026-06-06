@@ -215,7 +215,6 @@ export default function Dashboard() {
         ownership: 100,
       }))
     : [];
-  const selectedTrace = viewingRun ? selectedRun.trace ?? [] : [];
   const mapCells = viewingRun
     ? selectedCells
     : filterCellsNearLocation(cells, currentLocation, NEARBY_RADIUS_KM);
@@ -251,7 +250,6 @@ export default function Dashboard() {
           district={mapDistrict}
           ownership={mapLiveBattles > 0 ? Math.min(100, mapLiveBattles) : 0}
           cells={mapCells}
-          trace={selectedTrace}
           currentLocation={currentLocation}
           locationLoading={locLoading}
         />

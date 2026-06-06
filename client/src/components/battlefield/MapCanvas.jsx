@@ -6,23 +6,14 @@ import { cellsToGeoJSON } from "../../lib/h3Utils.js";
 const SRC_ID = "claimed-cells";
 const FILL_ID = "claimed-cells-fill";
 const LINE_ID = "claimed-cells-line";
-const TRACE_SRC_ID = "run-trace";
-const TRACE_LINE_ID = "run-trace-line";
 
-function traceToGeoJSON(trace) {
-  const coords = (trace || [])
-    .filter((p) => Number.isFinite(p?.lng) && Number.isFinite(p?.lat))
-    .map((p) => [p.lng, p.lat]);
-  return {
-    type: "Feature",
-    geometry: { type: "LineString", coordinates: coords },
-    properties: {},
-  };
-}
-
-export default function MapCanvas({ cells = [], trace = [], center = SEATTLE, zoom, bounds, onCellClick, onMapReady }) {
+export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, onCellClick, onMapReady }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
+  // Keep the latest cells in a ref so the (once-only) "load" handler seeds the
+  // source with current data even if cells arrived before the style loaded.
+  const cellsRef = useRef(cells);
+  cellsRef.current = cells;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -37,7 +28,7 @@ export default function MapCanvas({ cells = [], trace = [], center = SEATTLE, zo
     onMapReady?.(map);
 
     map.on("load", () => {
-      map.addSource(SRC_ID, { type: "geojson", data: cellsToGeoJSON(cells) });
+      map.addSource(SRC_ID, { type: "geojson", data: cellsToGeoJSON(cellsRef.current) });
       map.addLayer({
         id: FILL_ID,
         type: "fill",
@@ -54,18 +45,6 @@ export default function MapCanvas({ cells = [], trace = [], center = SEATTLE, zo
         paint: {
           "line-color": ["coalesce", ["get", "color"], "#c3f400"],
           "line-width": 1.5,
-        },
-      });
-      map.addSource(TRACE_SRC_ID, { type: "geojson", data: traceToGeoJSON(trace) });
-      map.addLayer({
-        id: TRACE_LINE_ID,
-        type: "line",
-        source: TRACE_SRC_ID,
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": "#00e5ff",
-          "line-width": 3,
-          "line-opacity": 0.9,
         },
       });
       map.on("click", FILL_ID, (e) => {
@@ -92,28 +71,18 @@ export default function MapCanvas({ cells = [], trace = [], center = SEATTLE, zo
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const src = map.getSource?.(TRACE_SRC_ID);
-    if (src) src.setData(traceToGeoJSON(trace));
-  }, [trace]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    let apply;
+    // Camera methods are safe as soon as the map exists (they don't need the
+    // style/tiles loaded), so apply directly. The previous isStyleLoaded()
+    // gate could defer to a "load" event that had already fired, leaving the
+    // camera stuck — so a freshly selected run's cells rendered off-screen.
     if (bounds && Array.isArray(bounds.sw) && Array.isArray(bounds.ne)) {
-      apply = () =>
-        map.fitBounds?.([bounds.sw, bounds.ne], { padding: 40, maxZoom: 15, animate: false });
+      map.fitBounds?.([bounds.sw, bounds.ne], { padding: 40, maxZoom: 15, animate: false });
     } else if (center) {
       const lng = Number(center.lng);
       const lat = Number(center.lat);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-      const targetZoom = zoom ?? center.zoom ?? 13;
-      apply = () => map.jumpTo?.({ center: [lng, lat], zoom: targetZoom });
-    } else {
-      return;
+      map.jumpTo?.({ center: [lng, lat], zoom: zoom ?? center.zoom ?? 13 });
     }
-    if (map.isStyleLoaded?.()) apply();
-    else map.once?.("load", apply);
   }, [
     bounds?.sw?.[0], bounds?.sw?.[1], bounds?.ne?.[0], bounds?.ne?.[1],
     center?.lat, center?.lng, center?.zoom, zoom,
