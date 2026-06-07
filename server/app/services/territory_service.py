@@ -7,7 +7,7 @@ import h3
 
 from app.cache import territory_cache
 from app.constants import H3_RESOLUTION
-from app.schemas.territory import Bounds, CellOut, TerritoryStats
+from app.schemas.territory import Bounds, CellOut, CellShare, TerritoryStats
 from app.services.color import color_for_uuid
 
 
@@ -23,7 +23,9 @@ def _candidate_cells(bounds: Bounds, resolution: int) -> list[str]:
     return list(h3.h3shape_to_cells(poly, resolution))
 
 
-def _row_to_cell(row: asyncpg.Record) -> CellOut:
+def _row_to_cell(
+    row: asyncpg.Record, shares: list[CellShare] | None = None
+) -> CellOut:
     uid: UUID | None = row["user_id"]
     return CellOut(
         h3_index=row["h3_index"],
@@ -33,7 +35,37 @@ def _row_to_cell(row: asyncpg.Record) -> CellOut:
         resolution=row["resolution"],
         claim_count=row["claim_count"],
         claimed_at=row["claimed_at"],
+        shares=shares or [],
     )
+
+
+async def _shares_by_cell(
+    pool: asyncpg.Pool, h3_indexes: list[str]
+) -> dict[str, list[CellShare]]:
+    """Map each h3_index → its holders (strongest-first)."""
+    if not h3_indexes:
+        return {}
+    rows = await pool.fetch(
+        """
+        SELECT cu.h3_index, cu.user_id, cu.count, u.username
+        FROM claimed_cell_users cu
+        JOIN users u ON u.id = cu.user_id
+        WHERE cu.h3_index = ANY($1::text[])
+        ORDER BY cu.h3_index, cu.count DESC, cu.updated_at DESC
+        """,
+        h3_indexes,
+    )
+    out: dict[str, list[CellShare]] = {}
+    for r in rows:
+        out.setdefault(r["h3_index"], []).append(
+            CellShare(
+                user_id=r["user_id"],
+                username=r["username"],
+                color=color_for_uuid(r["user_id"]),
+                count=r["count"],
+            )
+        )
+    return out
 
 
 async def cells_in_bounds(
@@ -60,7 +92,8 @@ async def cells_in_bounds(
             """,
             candidates,
         )
-        result = [_row_to_cell(r) for r in rows]
+        shares = await _shares_by_cell(pool, [r["h3_index"] for r in rows])
+        result = [_row_to_cell(r, shares.get(r["h3_index"])) for r in rows]
 
     if cache is not None:
         await territory_cache.set_bbox(cache, bounds, result)
@@ -87,7 +120,8 @@ async def cells_for_user(
         limit,
         offset,
     )
-    return [_row_to_cell(r) for r in rows]
+    shares = await _shares_by_cell(pool, [r["h3_index"] for r in rows])
+    return [_row_to_cell(r, shares.get(r["h3_index"])) for r in rows]
 
 
 async def stats(pool: asyncpg.Pool) -> TerritoryStats:

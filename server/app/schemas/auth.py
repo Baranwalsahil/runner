@@ -32,6 +32,7 @@ class User(BaseModel):
     last_name: str | None = None
     avatar_url: str | None = None
     total_cells: int = 0
+    total_strength: int = 0
     total_area_m2: float = 0.0
     created_at: datetime
 

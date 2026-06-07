@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import { osmStyle, SEATTLE } from "../../lib/mapStyle.js";
-import { cellsToGeoJSON } from "../../lib/h3Utils.js";
+import { cellsToWedgeGeoJSON } from "../../lib/h3Utils.js";
 
 const SRC_ID = "claimed-cells";
 const FILL_ID = "claimed-cells-fill";
 const LINE_ID = "claimed-cells-line";
+const LABEL_ID = "claimed-cells-label";
 
 export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, onCellClick, onMapReady }) {
   const containerRef = useRef(null);
@@ -28,7 +29,7 @@ export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, 
     onMapReady?.(map);
 
     map.on("load", () => {
-      map.addSource(SRC_ID, { type: "geojson", data: cellsToGeoJSON(cellsRef.current) });
+      map.addSource(SRC_ID, { type: "geojson", data: cellsToWedgeGeoJSON(cellsRef.current) });
       map.addLayer({
         id: FILL_ID,
         type: "fill",
@@ -45,6 +46,24 @@ export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, 
         paint: {
           "line-color": ["coalesce", ["get", "color"], "#c3f400"],
           "line-width": 1.5,
+        },
+      });
+      // Strength badge (×N) centered on each wedge.
+      map.addLayer({
+        id: LABEL_ID,
+        type: "symbol",
+        source: SRC_ID,
+        layout: {
+          "text-field": ["get", "strengthLabel"],
+          "text-font": ["Open Sans Bold", "Noto Sans Bold"],
+          "text-size": 14,
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+        },
+        paint: {
+          "text-color": "#0a0a0a",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 1.4,
         },
       });
       map.on("click", FILL_ID, (e) => {
@@ -65,7 +84,7 @@ export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, 
     const map = mapRef.current;
     if (!map) return;
     const src = map.getSource?.(SRC_ID);
-    if (src) src.setData(cellsToGeoJSON(cells));
+    if (src) src.setData(cellsToWedgeGeoJSON(cells));
   }, [cells]);
 
   useEffect(() => {

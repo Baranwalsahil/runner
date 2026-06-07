@@ -171,6 +171,7 @@ export default function Dashboard() {
   }, [activeRunId]);
 
   const totalCells = me?.total_cells ?? 0;
+  const totalStrength = me?.total_strength ?? 0;
   const chartData = build7DayChart(runs);
 
   const bestCells = runs.reduce(
@@ -212,14 +213,28 @@ export default function Dashboard() {
       : `${totalCells} CELL${totalCells === 1 ? "" : "S"} CLAIMED`;
 
   const viewingRun = Boolean(selectedRun);
+  // Current strength the signed-in user holds per owned cell (from territory).
+  const myCountByH3 = new Map();
+  for (const c of cells) {
+    const mine = (c.shares ?? []).find((s) => s.userId === user?.id);
+    if (mine) myCountByH3.set(c.h3Index, mine.count);
+  }
+  const ownerLabel = `@${me?.username ?? user?.username ?? "you"}`;
   const selectedCells = viewingRun
-    ? (selectedRun.cells ?? []).map((h3Index) => ({
-        h3Index,
-        ownerId: user?.id,
-        owner: `@${me?.username ?? user?.username ?? "you"}`,
-        color: RUN_CELL_COLOR,
-        ownership: 100,
-      }))
+    ? (selectedRun.cells ?? []).map((h3Index) => {
+        const count = myCountByH3.get(h3Index) ?? 1;
+        return {
+          h3Index,
+          ownerId: user?.id,
+          owner: ownerLabel,
+          color: RUN_CELL_COLOR,
+          ownership: 100,
+          // Single lime wedge + ×N strength badge on the run path.
+          shares: [
+            { userId: user?.id, owner: ownerLabel, color: RUN_CELL_COLOR, count },
+          ],
+        };
+      })
     : [];
   const mapCells = viewingRun
     ? selectedCells
@@ -245,6 +260,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
         <TerritoryDominance
           cells={totalCells}
+          strength={totalStrength}
           region={region}
           chartData={chartData}
         />

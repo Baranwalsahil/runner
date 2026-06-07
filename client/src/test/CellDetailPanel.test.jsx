@@ -36,4 +36,33 @@ describe('CellDetailPanel', () => {
     fireEvent.click(screen.getByTestId('challenge-cell'));
     expect(onChallenge).toHaveBeenCalledWith(CELL);
   });
+
+  it('renders per-user holder breakdown for a contested cell', () => {
+    const contested = {
+      ...CELL,
+      shares: [
+        { userId: 'a', owner: '@A', color: '#aaa', count: 2 },
+        { userId: 'b', owner: '@B', color: '#bbb', count: 1 },
+      ],
+    };
+    render(<CellDetailPanel cell={contested} />);
+    expect(screen.getByTestId('cell-shares')).toBeInTheDocument();
+    expect(screen.getByText('@A')).toBeInTheDocument();
+    expect(screen.getByText('x2')).toBeInTheDocument();
+    expect(screen.getByText('x1')).toBeInTheDocument();
+    expect(screen.getByText('67%')).toBeInTheDocument(); // 2/3
+  });
+
+  it('parses shares from sharesJson string (map feature properties)', () => {
+    const fromMap = {
+      ...CELL,
+      sharesJson: JSON.stringify([
+        { userId: 'a', owner: '@A', color: '#aaa', count: 1 },
+        { userId: 'b', owner: '@B', color: '#bbb', count: 1 },
+      ]),
+    };
+    render(<CellDetailPanel cell={fromMap} />);
+    expect(screen.getByTestId('cell-shares')).toBeInTheDocument();
+    expect(screen.getAllByText('50%')).toHaveLength(2);
+  });
 });

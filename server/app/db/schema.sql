@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     avatar_url TEXT,
     total_cells INTEGER DEFAULT 0,
+    total_strength INTEGER DEFAULT 0,
     total_area_m2 DECIMAL(12,2) DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
@@ -43,7 +44,18 @@ CREATE TABLE IF NOT EXISTS claimed_cells (
     resolution INTEGER NOT NULL
 );
 
+-- Per-user strength shares on each cell (see migrations/003_cell_shares.sql).
+CREATE TABLE IF NOT EXISTS claimed_cell_users (
+    h3_index VARCHAR(20) NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    count INTEGER NOT NULL DEFAULT 1,
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (h3_index, user_id)
+);
+
 -- Indexes
+CREATE INDEX IF NOT EXISTS idx_cell_users_cell ON claimed_cell_users(h3_index);
+CREATE INDEX IF NOT EXISTS idx_cell_users_user ON claimed_cell_users(user_id);
 CREATE INDEX IF NOT EXISTS idx_cells_user ON claimed_cells(user_id);
 CREATE INDEX IF NOT EXISTS idx_cells_claimed_at ON claimed_cells(claimed_at);
 CREATE INDEX IF NOT EXISTS idx_runs_user ON runs(user_id);

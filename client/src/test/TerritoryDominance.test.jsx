@@ -8,6 +8,18 @@ describe('TerritoryDominance', () => {
     expect(screen.getByText('1,284')).toBeInTheDocument();
   });
 
+  it('renders strength when provided', () => {
+    render(<TerritoryDominance cells={3} strength={6} />);
+    const el = screen.getByTestId('total-strength');
+    expect(el).toHaveTextContent('6');
+    expect(el).toHaveTextContent('STRENGTH');
+  });
+
+  it('omits strength block when not provided', () => {
+    render(<TerritoryDominance cells={3} />);
+    expect(screen.queryByTestId('total-strength')).toBeNull();
+  });
+
   it('renders region pill', () => {
     render(<TerritoryDominance region="TOP 5% IN SEATTLE" />);
     expect(screen.getByText('TOP 5% IN SEATTLE')).toBeInTheDocument();

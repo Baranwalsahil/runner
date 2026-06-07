@@ -34,6 +34,15 @@ def _cell_to_jsonable(c: CellOut) -> dict[str, Any]:
         "resolution": c.resolution,
         "claim_count": c.claim_count,
         "claimed_at": c.claimed_at.isoformat() if c.claimed_at else None,
+        "shares": [
+            {
+                "user_id": str(s.user_id),
+                "username": s.username,
+                "color": s.color,
+                "count": s.count,
+            }
+            for s in c.shares
+        ],
     }
 
 

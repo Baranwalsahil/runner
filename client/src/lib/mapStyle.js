@@ -2,6 +2,8 @@ export const SEATTLE = { lng: -122.3321, lat: 47.6062, zoom: 13 };
 
 export const osmStyle = {
   version: 8,
+  // Public glyph PBFs so symbol (text) layers can render cell strength labels.
+  glyphs: "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
   sources: {
     osm: {
       type: "raster",

@@ -13,7 +13,7 @@ class UserAlreadyExists(Exception):
 
 _SELECT_COLUMNS = (
     "id, email, username, first_name, last_name, "
-    "avatar_url, total_cells, total_area_m2, created_at"
+    "avatar_url, total_cells, total_strength, total_area_m2, created_at"
 )
 
 
@@ -26,6 +26,7 @@ def _row_to_user(row: asyncpg.Record) -> User:
         last_name=row["last_name"],
         avatar_url=row["avatar_url"],
         total_cells=row["total_cells"],
+        total_strength=row["total_strength"],
         total_area_m2=float(row["total_area_m2"]),
         created_at=row["created_at"],
     )

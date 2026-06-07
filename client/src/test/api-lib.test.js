@@ -16,7 +16,28 @@ describe("adaptApiCell", () => {
     expect(out.ownerId).toBe("abc");
     expect(out.owner).toBe("@runner");
     expect(out.color).toBe("#00dbe9");
-    expect(out.ownership).toBe(70);
+    // No shares present => owner holds the whole cell.
+    expect(out.ownership).toBe(100);
+    expect(out.shares).toEqual([]);
+  });
+
+  it("derives ownership from owner's slice of total strength", () => {
+    const out = adaptApiCell({
+      h3_index: "x",
+      user_id: "a",
+      username: "alpha",
+      color: "#aaa",
+      resolution: 9,
+      claim_count: 2,
+      claimed_at: "2026-05-19T12:00:00",
+      shares: [
+        { user_id: "a", username: "alpha", color: "#aaa", count: 2 },
+        { user_id: "b", username: "beta", color: "#bbb", count: 1 },
+      ],
+    });
+    expect(out.ownership).toBe(67); // 2/3
+    expect(out.shares).toHaveLength(2);
+    expect(out.shares[0]).toMatchObject({ owner: "@alpha", count: 2 });
   });
 
   it("defaults missing username + color", () => {
