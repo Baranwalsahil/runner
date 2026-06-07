@@ -24,4 +24,23 @@ describe('MapCanvas', () => {
     render(<MapCanvas cells={mockCells} onMapReady={(m) => (map = m)} />);
     await waitFor(() => expect(map.getSource('claimed-cells')).toBeTruthy());
   });
+
+  const labelLayerAdded = (map) =>
+    map.addLayer.mock.calls.some(([layer]) => layer?.id === 'claimed-cells-label');
+
+  it('adds the strength label layer by default', async () => {
+    let map;
+    render(<MapCanvas cells={mockCells} onMapReady={(m) => (map = m)} />);
+    await waitFor(() => expect(map.getSource('claimed-cells')).toBeTruthy());
+    expect(labelLayerAdded(map)).toBe(true);
+  });
+
+  it('omits the strength label layer when showStrengthLabels is false', async () => {
+    let map;
+    render(
+      <MapCanvas cells={mockCells} showStrengthLabels={false} onMapReady={(m) => (map = m)} />
+    );
+    await waitFor(() => expect(map.getSource('claimed-cells')).toBeTruthy());
+    expect(labelLayerAdded(map)).toBe(false);
+  });
 });

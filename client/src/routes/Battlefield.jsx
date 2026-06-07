@@ -114,6 +114,7 @@ export default function Battlefield() {
           zoom={14}
           onMapReady={handleMapReady}
           onCellClick={(props) => setSelectedCell(props)}
+          showStrengthLabels={false}
         />
       ) : (
         <div

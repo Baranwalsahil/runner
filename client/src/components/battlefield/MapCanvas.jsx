@@ -8,13 +8,16 @@ const FILL_ID = "claimed-cells-fill";
 const LINE_ID = "claimed-cells-line";
 const LABEL_ID = "claimed-cells-label";
 
-export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, onCellClick, onMapReady }) {
+export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, onCellClick, onMapReady, showStrengthLabels = true }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   // Keep the latest cells in a ref so the (once-only) "load" handler seeds the
   // source with current data even if cells arrived before the style loaded.
   const cellsRef = useRef(cells);
   cellsRef.current = cells;
+  // Ref so the once-only "load" handler reads the current prop value.
+  const showLabelsRef = useRef(showStrengthLabels);
+  showLabelsRef.current = showStrengthLabels;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -48,24 +51,26 @@ export default function MapCanvas({ cells = [], center = SEATTLE, zoom, bounds, 
           "line-width": 1.5,
         },
       });
-      // Strength badge (×N) centered on each wedge.
-      map.addLayer({
-        id: LABEL_ID,
-        type: "symbol",
-        source: SRC_ID,
-        layout: {
-          "text-field": ["get", "strengthLabel"],
-          "text-font": ["Open Sans Bold", "Noto Sans Bold"],
-          "text-size": 14,
-          "text-allow-overlap": true,
-          "text-ignore-placement": true,
-        },
-        paint: {
-          "text-color": "#0a0a0a",
-          "text-halo-color": "#ffffff",
-          "text-halo-width": 1.4,
-        },
-      });
+      // Strength badge (×N) centered on each wedge. Opt-out per map.
+      if (showLabelsRef.current) {
+        map.addLayer({
+          id: LABEL_ID,
+          type: "symbol",
+          source: SRC_ID,
+          layout: {
+            "text-field": ["get", "strengthLabel"],
+            "text-font": ["Open Sans Bold", "Noto Sans Bold"],
+            "text-size": 14,
+            "text-allow-overlap": true,
+            "text-ignore-placement": true,
+          },
+          paint: {
+            "text-color": "#0a0a0a",
+            "text-halo-color": "#ffffff",
+            "text-halo-width": 1.4,
+          },
+        });
+      }
       map.on("click", FILL_ID, (e) => {
         const f = e.features?.[0];
         if (f) onCellClick?.(f.properties);
