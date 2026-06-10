@@ -57,7 +57,7 @@ describe('RankTable', () => {
     const players = makePlayers(5);
     render(<RankTable players={players} currentUserId="u3" />);
     const me = screen.getAllByTestId('rank-row').find((r) => r.dataset.userId === 'u3');
-    expect(me.className).toMatch(/border-primary-fixed/);
+    expect(me.className).toMatch(/border-secondary-fixed-dim/);
   });
 
   it('respects isCurrentUser flag too', () => {
@@ -65,6 +65,6 @@ describe('RankTable', () => {
     players[1].isCurrentUser = true;
     render(<RankTable players={players} />);
     const me = screen.getAllByTestId('rank-row')[1];
-    expect(me.className).toMatch(/border-primary-fixed/);
+    expect(me.className).toMatch(/border-secondary-fixed-dim/);
   });
 });

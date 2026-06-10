@@ -71,6 +71,7 @@ export default {
       },
       fontFamily: {
         "hud-mono": ["JetBrains Mono", "monospace"],
+        scifi: ["Space Grotesk", "sans-serif"],
         "label-bold": ["Inter"],
         "body-md": ["Inter"],
         "headline-lg": ["Lexend"],
