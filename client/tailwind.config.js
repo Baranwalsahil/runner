@@ -70,6 +70,7 @@ export default {
         xl: "64px",
       },
       fontFamily: {
+        "hud-mono": ["JetBrains Mono", "monospace"],
         "label-bold": ["Inter"],
         "body-md": ["Inter"],
         "headline-lg": ["Lexend"],
