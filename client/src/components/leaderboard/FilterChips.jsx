@@ -1,6 +1,6 @@
 function ChipRow({ label, options, value, onChange, testid }) {
   return (
-    <div data-testid={testid} className="scifi-panel p-1 rounded-xl flex gap-xs">
+    <div data-testid={testid} className="glass-panel p-1 rounded-full flex gap-xs">
       {options.map((opt) => {
         const active = opt === value;
         return (
@@ -9,10 +9,10 @@ function ChipRow({ label, options, value, onChange, testid }) {
             data-testid={`chip-${opt.toLowerCase()}`}
             onClick={() => onChange(opt)}
             aria-pressed={active}
-            className={`font-scifi px-md py-sm rounded-lg transition-all uppercase text-xs tracking-[0.15em] border ${
+            className={`font-label-bold px-md py-sm rounded-full transition-all uppercase text-xs ${
               active
-                ? "border-secondary-fixed-dim/60 bg-secondary-fixed-dim/10 text-secondary-fixed [text-shadow:0_0_10px_rgba(0,219,233,0.5)]"
-                : "border-transparent text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30"
+                ? "bg-primary-fixed text-on-primary-fixed"
+                : "text-on-surface-variant hover:bg-surface-variant/50"
             }`}
           >
             {opt}

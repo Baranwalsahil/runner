@@ -42,13 +42,10 @@ export default function Leaderboard() {
     <div className="px-margin-safe max-w-7xl mx-auto w-full">
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-xl gap-md">
         <div>
-          <p className="font-scifi text-[11px] uppercase tracking-[0.3em] text-secondary-fixed-dim mb-2">
-            Global Ranking
-          </p>
-          <h1 className="font-scifi font-light text-5xl text-on-surface tracking-tight uppercase">
+          <h1 className="font-headline-xl text-primary tracking-tighter uppercase">
             Territory Lords
           </h1>
-          <p className="font-scifi font-light text-on-surface-variant text-lg max-w-2xl mt-2">
+          <p className="text-on-surface-variant font-body-lg max-w-2xl">
             The elite grid-runners commanding the most significant real estate in the physical world. Dominate the terrain to climb the ranks.
           </p>
         </div>
@@ -62,10 +59,7 @@ export default function Leaderboard() {
         />
       </div>
       {loading && (
-        <p
-          data-testid="lb-loading"
-          className="font-scifi text-on-surface-variant uppercase tracking-[0.2em] text-sm"
-        >
+        <p data-testid="lb-loading" className="text-on-surface-variant font-mono uppercase">
           Loading leaderboard…
         </p>
       )}
@@ -75,7 +69,7 @@ export default function Leaderboard() {
         </p>
       )}
       {!loading && !error && rows.length === 0 && (
-        <p className="font-scifi text-on-surface-variant uppercase tracking-[0.2em] text-sm">
+        <p className="text-on-surface-variant font-mono uppercase">
           No runners yet. Be the first to claim territory.
         </p>
       )}
