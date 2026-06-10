@@ -27,7 +27,7 @@ describe('TopNavBar', () => {
   it('marks active link with lime underline classes', () => {
     renderAt('/dashboard');
     const dash = screen.getByText('DASHBOARD');
-    expect(dash.className).toMatch(/border-primary-fixed/);
+    expect(dash.className).toMatch(/border-secondary-fixed-dim/);
     expect(dash.className).toMatch(/border-b-2/);
   });
 

@@ -38,7 +38,7 @@ describe('index.css', () => {
     expect(css).toMatch(/data:image\/svg\+xml/);
   });
 
-  it('sets body background-color #131313', () => {
-    expect(css).toMatch(/background-color:\s*#131313/);
+  it('sets body background-color #0a0e14', () => {
+    expect(css).toMatch(/background-color:\s*#0a0e14/);
   });
 });

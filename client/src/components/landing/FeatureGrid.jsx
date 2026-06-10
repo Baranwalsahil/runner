@@ -34,13 +34,15 @@ export default function FeatureGrid() {
         {FEATURES.map((f) => (
           <div
             key={f.title}
-            className={`glass-panel p-xl rounded-xl group transition-all ${f.hover}`}
+            className={`scifi-panel p-xl rounded-2xl group transition-all ${f.hover}`}
           >
             <div className={`mb-md ${f.accent}`}>
               <Icon name={f.icon} filled className="text-[48px]" />
             </div>
-            <h3 className="font-headline-md text-primary mb-sm">{f.title}</h3>
-            <p className="text-on-surface-variant font-body-md">{f.body}</p>
+            <h3 className="font-scifi font-medium text-2xl tracking-[0.2em] text-primary mb-sm">
+              {f.title}
+            </h3>
+            <p className="text-on-surface-variant font-scifi font-light leading-relaxed">{f.body}</p>
           </div>
         ))}
       </div>

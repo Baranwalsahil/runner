@@ -19,24 +19,27 @@ export default function Hero() {
         />
       </div>
       <div className="relative z-10 text-center max-w-4xl">
-        <h1 className="font-headline-xl text-primary mb-md tracking-tighter">
-          DOMINATE THE <span className="text-primary-fixed italic">GRID</span>
+        <p className="font-scifi text-[11px] uppercase tracking-[0.35em] text-secondary-fixed-dim mb-md">
+          Orbital uplink established
+        </p>
+        <h1 className="font-scifi font-light text-headline-xl text-primary mb-md tracking-tight">
+          DOMINATE THE <span className="text-secondary-fixed scifi-glow">GRID</span>
         </h1>
-        <p className="font-body-lg text-on-surface-variant mb-xl max-w-2xl mx-auto">
+        <p className="font-scifi font-light text-lg text-on-surface-variant mb-xl max-w-2xl mx-auto leading-relaxed">
           The world is your battlefield. Every step is a conquest. Every mile is a claim. Sync your runs, capture territory, and defend your dominion against runners worldwide.
         </p>
         <div className="flex flex-col sm:flex-row gap-md justify-center">
           <button
             data-testid="cta-start"
             onClick={() => navigate("/dashboard")}
-            className="bg-primary-fixed text-on-primary-fixed px-xl py-md font-label-bold text-lg rounded-none hover:scale-105 transition-transform shadow-[0_0_30px_rgba(195,244,0,0.4)]"
+            className="bg-secondary-container text-on-secondary px-xl py-md font-scifi font-medium uppercase tracking-[0.15em] text-lg rounded-[999px] hover:scale-105 transition-transform shadow-[0_0_30px_rgba(0,219,233,0.45)]"
           >
             START RUNNING
           </button>
           <button
             data-testid="cta-battlefield"
             onClick={() => navigate("/battlefield")}
-            className="border border-secondary-fixed-dim text-secondary-fixed-dim px-xl py-md font-label-bold text-lg rounded-none hover:bg-secondary-fixed-dim/10 transition-all shadow-[0_0_20px_rgba(0,219,233,0.2)]"
+            className="border border-secondary-fixed-dim/50 text-secondary-fixed-dim px-xl py-md font-scifi font-medium uppercase tracking-[0.15em] text-lg rounded-[999px] hover:bg-secondary-fixed-dim/10 hover:border-secondary-fixed-dim transition-all shadow-[0_0_20px_rgba(0,219,233,0.2)]"
           >
             VIEW BATTLEFIELD
           </button>

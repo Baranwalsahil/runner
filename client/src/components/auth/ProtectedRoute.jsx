@@ -7,7 +7,7 @@ export default function ProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="p-xl text-center font-mono text-sm text-on-surface-variant">
+      <div className="p-xl text-center font-scifi uppercase tracking-[0.2em] text-sm text-on-surface-variant">
         Loading…
       </div>
     );

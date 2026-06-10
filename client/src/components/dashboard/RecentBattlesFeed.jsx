@@ -5,7 +5,7 @@ const PAGE_SIZE = 4;
 
 function labelClass(type) {
   if (type === "lost") return "text-error";
-  if (type === "gained") return "text-primary-fixed";
+  if (type === "gained") return "text-secondary-fixed";
   return "text-on-surface-variant";
 }
 
@@ -32,25 +32,25 @@ function BattleItem({ battle, firstNewRef, onSelect, selected }) {
       }
       className={`p-md transition-all${clickable ? " cursor-pointer" : ""}${
         selected
-          ? " bg-primary-fixed/10 border-l-2 border-primary-fixed"
+          ? " bg-secondary-fixed-dim/10 border-l-2 border-secondary-fixed-dim"
           : battle.accent
-            ? " bg-primary-fixed/5 border-l-2 border-primary-fixed"
+            ? " bg-secondary-fixed-dim/5 border-l-2 border-secondary-fixed-dim"
             : ""
       } hover:bg-surface-variant/20`}
     >
       <div className="flex justify-between items-start mb-base">
-        <span className={`${labelClass(battle.type)} font-label-bold text-xs uppercase`}>
+        <span className={`${labelClass(battle.type)} font-scifi text-xs uppercase tracking-[0.15em]`}>
           {battle.label}
         </span>
-        <span className="text-on-surface-variant text-[10px]">{battle.time}</span>
+        <span className="text-on-surface-variant font-scifi font-light text-[10px]">{battle.time}</span>
       </div>
-      <p className="text-sm font-medium mb-1">{battle.title}</p>
-      <p className="text-xs text-on-surface-variant">
+      <p className="text-sm font-scifi font-medium mb-1">{battle.title}</p>
+      <p className="text-xs font-scifi font-light text-on-surface-variant">
         {battle.subject_label ?? battle.subjectLabel}{" "}
         <span className="text-secondary-fixed">{battle.user}</span>
       </p>
       {battle.challengeable && (
-        <button className="mt-base text-xs font-label-bold text-primary-fixed border border-primary-fixed/30 px-2 py-1 rounded hover:bg-primary-fixed hover:text-on-primary-fixed transition-all">
+        <button className="mt-base text-xs font-scifi uppercase tracking-[0.15em] text-secondary-fixed border border-secondary-fixed-dim/40 px-2 py-1 rounded-full hover:bg-secondary-fixed-dim/15 transition-all">
           CHALLENGE
         </button>
       )}
@@ -81,29 +81,29 @@ export default function RecentBattlesFeed({
   return (
     <div
       data-testid="recent-battles"
-      className="glass-panel rounded-xl flex flex-col h-[500px]"
+      className="scifi-panel rounded-2xl flex flex-col h-[500px]"
     >
-      <div className="p-md border-b border-outline-variant/30 flex justify-between items-center flex-shrink-0">
-        <h3 className="font-label-bold uppercase tracking-widest text-on-surface-variant">
+      <div className="p-md border-b border-secondary-fixed-dim/15 flex justify-between items-center flex-shrink-0">
+        <h3 className="font-scifi text-[11px] uppercase tracking-[0.25em] text-on-surface-variant">
           Recent Battles
         </h3>
-        <Icon name="history" className="text-primary-fixed text-sm" />
+        <Icon name="history" className="text-secondary-fixed-dim text-sm" />
       </div>
       <div
         data-testid="battles-list"
-        className="flex-grow overflow-y-auto divide-y divide-outline-variant/20 scroll-smooth"
+        className="flex-grow overflow-y-auto divide-y divide-secondary-fixed-dim/10 scroll-smooth"
       >
         {loading ? (
           <div
             data-testid="battles-loading"
-            className="p-md text-center text-on-surface-variant text-xs font-label-bold uppercase tracking-widest"
+            className="p-md text-center text-on-surface-variant text-xs font-scifi uppercase tracking-[0.2em]"
           >
             Loading activity...
           </div>
         ) : battles.length === 0 ? (
           <div
             data-testid="battles-empty"
-            className="p-md text-center text-on-surface-variant text-xs font-label-bold uppercase tracking-widest"
+            className="p-md text-center text-on-surface-variant text-xs font-scifi uppercase tracking-[0.2em]"
           >
             No activity yet.
             <br />
@@ -127,7 +127,7 @@ export default function RecentBattlesFeed({
         data-testid="load-more"
         onClick={handleClick}
         disabled={loaded || extraBattles.length === 0}
-        className={`w-full p-md border-t border-outline-variant/30 flex items-center justify-center gap-base text-xs font-label-bold uppercase tracking-widest text-on-surface-variant hover:text-primary-fixed hover:bg-surface-variant/20 transition-all flex-shrink-0${
+        className={`w-full p-md border-t border-secondary-fixed-dim/15 flex items-center justify-center gap-base text-xs font-scifi uppercase tracking-[0.2em] text-on-surface-variant hover:text-secondary-fixed hover:bg-surface-variant/20 transition-all flex-shrink-0${
           loaded || extraBattles.length === 0
             ? " opacity-60 cursor-not-allowed"
             : ""

@@ -41,15 +41,15 @@ export default function RankTable({ players, currentUserId }) {
   }
 
   return (
-    <div data-testid="rank-table" className="glass-panel rounded-xl overflow-hidden">
-      <div className="grid grid-cols-12 gap-base px-md py-md border-b border-outline-variant/20 bg-surface-container-low text-on-surface-variant font-label-bold uppercase text-xs">
+    <div data-testid="rank-table" className="scifi-panel rounded-2xl overflow-hidden">
+      <div className="grid grid-cols-12 gap-base px-md py-md border-b border-secondary-fixed-dim/15 font-scifi text-[11px] uppercase tracking-[0.2em] text-on-surface-variant">
         {COLUMNS.map((col) => (
           <button
             key={col.key}
             data-testid={`sort-${col.key}`}
             onClick={() => col.sortable && handleSort(col.key)}
             disabled={!col.sortable}
-            className={`${col.span} text-left flex items-center gap-base ${col.sortable ? "hover:text-primary-fixed cursor-pointer" : "cursor-default"} ${col.span.includes("text-right") ? "justify-end" : ""}`}
+            className={`${col.span} text-left flex items-center gap-base ${col.sortable ? "hover:text-secondary-fixed cursor-pointer" : "cursor-default"} ${col.span.includes("text-right") ? "justify-end" : ""}`}
           >
             <span>{col.label}</span>
             {col.sortable && sortKey === col.key && (
@@ -65,59 +65,59 @@ export default function RankTable({ players, currentUserId }) {
             key={p.id}
             data-testid="rank-row"
             data-user-id={p.id}
-            className={`grid grid-cols-12 gap-base px-md py-sm border-b border-outline-variant/10 transition-all items-center text-sm ${
+            className={`grid grid-cols-12 gap-base px-md py-sm border-b border-secondary-fixed-dim/10 transition-all items-center text-sm ${
               isMe
-                ? "bg-primary-container/10 border-l-4 border-primary-fixed"
-                : "hover:bg-surface-variant/30"
+                ? "bg-secondary-fixed-dim/5 border-l-2 border-secondary-fixed-dim"
+                : "hover:bg-surface-variant/20"
             }`}
           >
-            <div className={`col-span-1 font-stats-display ${isMe ? "text-primary-fixed" : "text-on-surface-variant"}`}>
+            <div className={`col-span-1 font-scifi font-light text-xl ${isMe ? "text-secondary-fixed" : "text-on-surface-variant"}`}>
               {String(p.rank).padStart(2, "0")}
             </div>
             <div className="col-span-4 flex items-center gap-md">
               {p.avatar ? (
                 <img alt={`${p.username} avatar`} className="w-10 h-10 rounded-full object-cover" src={p.avatar} />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-surface-container-high border-2 border-primary-fixed flex items-center justify-center">
-                  <Icon name="person" filled className="text-primary-fixed" />
+                <div className="w-10 h-10 rounded-full bg-surface-container-low border border-secondary-fixed-dim/40 flex items-center justify-center">
+                  <Icon name="person" filled className="text-secondary-fixed-dim" />
                 </div>
               )}
-              <span className={`font-headline-md ${isMe ? "text-primary-fixed italic" : "text-primary"} uppercase`}>
+              <span className={`font-scifi font-medium ${isMe ? "text-secondary-fixed" : "text-on-surface"} uppercase tracking-wide`}>
                 {p.username}
               </span>
             </div>
-            <div className={`col-span-2 font-body-md ${isMe ? "text-primary" : "text-on-surface-variant"}`}>
+            <div className={`col-span-2 font-scifi font-light ${isMe ? "text-on-surface" : "text-on-surface-variant"}`}>
               {p.region}
             </div>
-            <div className={`col-span-2 text-right font-stats-display ${isMe ? "text-primary-fixed" : "text-secondary-fixed"}`}>
+            <div className={`col-span-2 text-right font-scifi font-light text-xl ${isMe ? "text-secondary-fixed" : "text-secondary-fixed-dim"} scifi-glow`}>
               {p.cells.toLocaleString()}
             </div>
-            <div className="col-span-2 text-right font-body-md text-on-surface-variant">
+            <div className="col-span-2 text-right font-scifi font-light text-on-surface-variant">
               {p.areaM2.toLocaleString()}
             </div>
-            <div className="col-span-1 text-right font-stats-display text-primary-fixed">
+            <div className="col-span-1 text-right font-scifi font-light text-xl text-secondary-fixed-dim">
               {p.streak}
             </div>
           </div>
         );
       })}
-      <div className="flex items-center justify-between px-md py-md bg-surface-container-low/40">
+      <div className="flex items-center justify-between px-md py-md border-t border-secondary-fixed-dim/15">
         <button
           data-testid="prev-page"
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page === 1}
-          className="font-label-bold text-xs px-md py-sm rounded-full hover:bg-surface-variant/40 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="font-scifi text-xs uppercase tracking-[0.2em] px-md py-sm rounded-full border border-secondary-fixed-dim/30 hover:border-secondary-fixed-dim/60 hover:text-secondary-fixed transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           PREV
         </button>
-        <span data-testid="page-indicator" className="font-label-bold text-on-surface-variant text-xs uppercase">
+        <span data-testid="page-indicator" className="font-scifi text-on-surface-variant text-xs uppercase tracking-[0.2em]">
           Page {page} / {totalPages}
         </span>
         <button
           data-testid="next-page"
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           disabled={page === totalPages}
-          className="font-label-bold text-xs px-md py-sm rounded-full hover:bg-surface-variant/40 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="font-scifi text-xs uppercase tracking-[0.2em] px-md py-sm rounded-full border border-secondary-fixed-dim/30 hover:border-secondary-fixed-dim/60 hover:text-secondary-fixed transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           NEXT
         </button>

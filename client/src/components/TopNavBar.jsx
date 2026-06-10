@@ -31,7 +31,7 @@ export default function TopNavBar() {
     <>
       <nav
         data-testid="top-nav"
-        className="fixed top-0 left-0 right-0 z-50 bg-surface/60 backdrop-blur-lg border-b border-outline-variant/30 shadow-[0_0_15px_rgba(195,244,0,0.1)] flex justify-between items-center w-full px-margin-safe h-16"
+        className="fixed top-0 left-0 right-0 z-50 bg-[rgba(10,14,20,0.7)] backdrop-blur-lg border-b border-secondary-fixed-dim/20 shadow-[0_0_30px_-10px_rgba(0,219,233,0.35)] flex justify-between items-center w-full px-margin-safe h-16"
       >
         <div className="flex items-center gap-md">
           <button
@@ -45,7 +45,7 @@ export default function TopNavBar() {
           </button>
           <Link
             to="/"
-            className="font-headline-md text-primary-fixed tracking-tighter italic font-black"
+            className="font-scifi font-medium text-secondary-fixed tracking-[0.25em] scifi-glow"
           >
             TERRITORY RUN
           </Link>
@@ -56,10 +56,10 @@ export default function TopNavBar() {
                 to={to}
                 className={({ isActive }) =>
                   [
-                    "font-label-bold transition-colors pb-1",
+                    "font-scifi text-xs uppercase tracking-[0.2em] transition-colors pb-1 pt-1",
                     isActive
-                      ? "text-primary-fixed border-b-2 border-primary-fixed"
-                      : "text-on-surface-variant hover:text-primary",
+                      ? "text-secondary-fixed border-b-2 border-secondary-fixed-dim"
+                      : "text-on-surface-variant hover:text-secondary-fixed",
                   ].join(" ")
                 }
               >
@@ -71,16 +71,16 @@ export default function TopNavBar() {
         <div className="flex items-center gap-base">
           <button
             aria-label="notifications"
-            className="p-base hover:bg-surface-variant/50 transition-all duration-200 rounded-full active:scale-95 opacity-80"
+            className="p-base hover:bg-secondary-fixed-dim/10 transition-all duration-200 rounded-full active:scale-95 opacity-80"
           >
-            <Icon name="notifications" className="text-primary-fixed" />
+            <Icon name="notifications" className="text-secondary-fixed-dim" />
           </button>
           <Link
             to="/profile"
             aria-label="account"
-            className="p-base hover:bg-surface-variant/50 transition-all duration-200 rounded-full active:scale-95 opacity-80 inline-flex"
+            className="p-base hover:bg-secondary-fixed-dim/10 transition-all duration-200 rounded-full active:scale-95 opacity-80 inline-flex"
           >
-            <Icon name="account_circle" className="text-primary-fixed" />
+            <Icon name="account_circle" className="text-secondary-fixed-dim" />
           </Link>
         </div>
       </nav>
@@ -102,9 +102,9 @@ export default function TopNavBar() {
                 to={to}
                 className={({ isActive }) =>
                   [
-                    "block font-label-bold text-lg py-md px-md rounded-lg transition-all",
+                    "block font-scifi uppercase tracking-[0.15em] text-lg py-md px-md rounded-xl transition-all",
                     isActive
-                      ? "text-primary-fixed bg-primary-fixed/10 border-l-4 border-primary-fixed"
+                      ? "text-secondary-fixed bg-secondary-fixed-dim/10 border-l-4 border-secondary-fixed-dim"
                       : "text-on-surface hover:bg-surface-variant/50",
                   ].join(" ")
                 }

@@ -29,7 +29,7 @@ export default function SignUpForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-md" aria-label="Sign up">
       <label className="block">
-        <span className="block text-xs font-mono uppercase tracking-wider text-on-surface-variant">
+        <span className="block text-xs font-scifi uppercase tracking-[0.2em] text-on-surface-variant">
           Email
         </span>
         <input
@@ -38,12 +38,12 @@ export default function SignUpForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-xs w-full rounded-md border border-outline bg-surface px-md py-sm text-on-surface focus:border-primary-fixed focus:outline-none"
+          className="mt-xs w-full rounded-xl border border-secondary-fixed-dim/30 bg-[#0b0f16] px-md py-sm text-on-surface focus:border-secondary-fixed-dim focus:outline-none"
         />
       </label>
 
       <label className="block">
-        <span className="block text-xs font-mono uppercase tracking-wider text-on-surface-variant">
+        <span className="block text-xs font-scifi uppercase tracking-[0.2em] text-on-surface-variant">
           Username
         </span>
         <input
@@ -55,12 +55,12 @@ export default function SignUpForm() {
           pattern="[A-Za-z0-9_-]+"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="mt-xs w-full rounded-md border border-outline bg-surface px-md py-sm text-on-surface focus:border-primary-fixed focus:outline-none"
+          className="mt-xs w-full rounded-xl border border-secondary-fixed-dim/30 bg-[#0b0f16] px-md py-sm text-on-surface focus:border-secondary-fixed-dim focus:outline-none"
         />
       </label>
 
       <label className="block">
-        <span className="block text-xs font-mono uppercase tracking-wider text-on-surface-variant">
+        <span className="block text-xs font-scifi uppercase tracking-[0.2em] text-on-surface-variant">
           Password
         </span>
         <input
@@ -71,7 +71,7 @@ export default function SignUpForm() {
           maxLength={128}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-xs w-full rounded-md border border-outline bg-surface px-md py-sm text-on-surface focus:border-primary-fixed focus:outline-none"
+          className="mt-xs w-full rounded-xl border border-secondary-fixed-dim/30 bg-[#0b0f16] px-md py-sm text-on-surface focus:border-secondary-fixed-dim focus:outline-none"
         />
       </label>
 
@@ -84,7 +84,7 @@ export default function SignUpForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-md bg-primary-fixed px-md py-sm font-mono uppercase tracking-wider text-on-primary-fixed disabled:opacity-50"
+        className="w-full rounded-full bg-secondary-container px-md py-sm font-scifi font-medium uppercase tracking-[0.15em] text-on-secondary shadow-[0_0_20px_rgba(0,219,233,0.3)] disabled:opacity-50"
       >
         {submitting ? "Creating account…" : "Sign up"}
       </button>

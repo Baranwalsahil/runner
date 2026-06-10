@@ -10,20 +10,24 @@ export default function QuickRunStats({ stats = DEFAULT_STATS }) {
   return (
     <div
       data-testid="quick-run-stats"
-      className="glass-panel p-md rounded-xl flex flex-col gap-md"
+      className="scifi-panel p-md rounded-2xl flex flex-col gap-md"
     >
       <div className="flex items-center gap-base mb-base">
         <Icon name="sprint" className="text-secondary-fixed-dim" />
-        <p className="font-label-bold text-on-surface-variant">TRADITIONAL STATS</p>
+        <p className="font-scifi text-[11px] uppercase tracking-[0.25em] text-on-surface-variant">
+          TRADITIONAL STATS
+        </p>
       </div>
       <div className="space-y-md">
         {stats.map((s) => (
           <div
             key={s.label}
-            className="flex justify-between items-end border-b border-outline-variant/30 pb-2"
+            className="flex justify-between items-end border-b border-secondary-fixed-dim/15 pb-2"
           >
-            <span className="text-on-surface-variant font-label-bold">{s.label}</span>
-            <span className="font-stats-display text-primary text-2xl">
+            <span className="text-on-surface-variant font-scifi text-[11px] uppercase tracking-[0.2em]">
+              {s.label}
+            </span>
+            <span className="font-scifi font-light text-secondary-fixed text-2xl">
               {s.value} <small className="text-xs text-on-surface-variant">{s.suffix}</small>
             </span>
           </div>

@@ -91,7 +91,7 @@ export default function RunTracker() {
 
   return (
     <div data-testid="run-tracker" className="mx-auto max-w-md p-lg space-y-md">
-      <h1 className="font-mono text-2xl uppercase tracking-wider text-primary-fixed">
+      <h1 className="font-scifi font-light text-3xl uppercase tracking-tight text-on-surface">
         Session Tracker
       </h1>
 
@@ -101,7 +101,7 @@ export default function RunTracker() {
         <Stat label="Points" value={String(points.length)} />
       </div>
 
-      <div className="text-center text-xs font-mono uppercase tracking-wider text-on-surface-variant">
+      <div className="text-center text-xs font-scifi uppercase tracking-[0.2em] text-on-surface-variant">
         Est. cells: {estimatedCells}
       </div>
 
@@ -118,14 +118,14 @@ export default function RunTracker() {
       {result && (
         <div
           data-testid="run-result"
-          className="rounded-md border border-primary-fixed bg-surface p-md text-sm font-mono"
+          className="scifi-panel rounded-2xl p-md text-sm font-scifi"
         >
           <div>cells claimed: {result.cells_claimed}</div>
           <div>new total: {result.new_total}</div>
           <button
             type="button"
             onClick={() => navigate("/dashboard")}
-            className="mt-md w-full rounded-md bg-primary-fixed px-md py-sm uppercase tracking-wider text-on-primary-fixed"
+            className="mt-md w-full rounded-full bg-secondary-container px-md py-sm font-scifi font-medium uppercase tracking-[0.15em] text-on-secondary shadow-[0_0_20px_rgba(0,219,233,0.3)]"
           >
             View dashboard
           </button>
@@ -137,7 +137,7 @@ export default function RunTracker() {
           type="button"
           onClick={handleStart}
           disabled={submitting}
-          className="w-full rounded-md bg-primary-fixed px-md py-md text-lg font-mono uppercase tracking-wider text-on-primary-fixed disabled:opacity-50"
+          className="w-full rounded-full bg-secondary-container px-md py-md text-lg font-scifi font-medium uppercase tracking-[0.15em] text-on-secondary shadow-[0_0_25px_rgba(0,219,233,0.4)] disabled:opacity-50"
         >
           Start
         </button>
@@ -147,7 +147,7 @@ export default function RunTracker() {
           type="button"
           onClick={handleStop}
           disabled={submitting}
-          className="w-full rounded-md bg-red-500 px-md py-md text-lg font-mono uppercase tracking-wider text-white disabled:opacity-50"
+          className="w-full rounded-full bg-red-500 px-md py-md text-lg font-scifi font-medium uppercase tracking-[0.15em] text-white shadow-[0_0_25px_rgba(239,68,68,0.4)] disabled:opacity-50"
         >
           {submitting ? "Submitting…" : "Stop & Submit"}
         </button>
@@ -158,11 +158,11 @@ export default function RunTracker() {
 
 function Stat({ label, value }) {
   return (
-    <div className="rounded-md border border-outline bg-surface p-sm">
-      <div className="text-xs font-mono uppercase tracking-wider text-on-surface-variant">
+    <div className="scifi-panel rounded-xl p-sm">
+      <div className="text-xs font-scifi uppercase tracking-[0.2em] text-on-surface-variant">
         {label}
       </div>
-      <div className="font-mono text-lg text-on-surface">{value}</div>
+      <div className="font-scifi font-light text-xl text-secondary-fixed">{value}</div>
     </div>
   );
 }
