@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import Icon from "../Icon.jsx";
-import HudPanelHeader from "./HudPanelHeader.jsx";
+import HudPanelHeader from "../HudPanelHeader.jsx";
 
 const PAGE_SIZE = 4;
 

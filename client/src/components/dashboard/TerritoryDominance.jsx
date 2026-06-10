@@ -1,4 +1,4 @@
-import HudPanelHeader from "./HudPanelHeader.jsx";
+import HudPanelHeader from "../HudPanelHeader.jsx";
 
 const DEFAULT_CHART = [
   { height: 30, opacity: 40 },

@@ -1,4 +1,4 @@
-import HudPanelHeader from "./HudPanelHeader.jsx";
+import HudPanelHeader from "../HudPanelHeader.jsx";
 
 const DEFAULT_STATS = [
   { label: "PACE", value: "7'12\"", suffix: "/MI" },

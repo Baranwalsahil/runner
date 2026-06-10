@@ -121,7 +121,7 @@ export default function Battlefield() {
           data-testid="battlefield-location-status"
           className="absolute inset-0 flex items-center justify-center bg-surface-container-low"
         >
-          <div className="glass-panel neon-border-cyan rounded-lg px-md py-md text-center font-label-bold uppercase tracking-widest text-sm max-w-md">
+          <div className="hud-panel hud-corners px-md py-md text-center font-hud-mono uppercase tracking-widest text-sm max-w-md">
             {locLoading
               ? "Locating you…"
               : locError
@@ -146,7 +146,7 @@ export default function Battlefield() {
       {(loading || error) && (
         <div
           data-testid="territory-status"
-          className="absolute top-2 left-2 z-50 rounded-md bg-surface/80 px-md py-xs text-xs font-mono uppercase tracking-wider text-on-surface-variant"
+          className="absolute top-2 left-2 z-50 hud-panel px-md py-xs text-xs font-hud-mono uppercase tracking-widest text-on-surface-variant"
         >
           {error ? `Error: ${error}` : "Loading…"}
         </div>

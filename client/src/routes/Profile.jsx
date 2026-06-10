@@ -46,51 +46,56 @@ export default function Profile() {
 
   return (
     <div className="px-margin-safe max-w-xl mx-auto w-full">
-      <h1 className="font-headline-md text-primary-fixed mb-lg">PROFILE</h1>
+      <p className="font-hud-mono text-xs uppercase tracking-widest text-primary-fixed mb-2">
+        <span aria-hidden="true">[ OPERATOR.FILE ]</span>
+      </p>
+      <h1 className="font-hud-mono font-bold text-2xl tracking-widest text-primary-fixed mb-lg [text-shadow:0_0_12px_rgba(195,244,0,0.35)]">
+        PROFILE
+      </h1>
       <form
         data-testid="profile-form"
         onSubmit={onSubmit}
-        className="glass-panel rounded-xl p-lg space-y-md"
+        className="hud-panel hud-corners p-lg space-y-md"
       >
         <label className="block">
-          <span className="font-label-bold text-xs text-on-surface-variant">EMAIL</span>
+          <span className="font-hud-mono text-xs uppercase tracking-widest text-on-surface-variant">▣ EMAIL</span>
           <input
             type="email"
             value={user?.email ?? ""}
             readOnly
             disabled
             aria-label="email"
-            className="mt-1 w-full bg-surface-container-low text-on-surface-variant px-md py-sm rounded-lg border border-outline-variant opacity-60"
+            className="mt-1 w-full bg-surface-container-low text-on-surface-variant px-md py-sm border border-primary-fixed/40 opacity-60"
           />
         </label>
         <label className="block">
-          <span className="font-label-bold text-xs text-on-surface-variant">FIRST NAME</span>
+          <span className="font-hud-mono text-xs uppercase tracking-widest text-on-surface-variant">▣ FIRST NAME</span>
           <input
             type="text"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             aria-label="first name"
-            className="mt-1 w-full bg-surface-container px-md py-sm rounded-lg border border-outline-variant text-white"
+            className="mt-1 w-full bg-surface-container px-md py-sm border border-primary-fixed/40 text-white"
           />
         </label>
         <label className="block">
-          <span className="font-label-bold text-xs text-on-surface-variant">LAST NAME</span>
+          <span className="font-hud-mono text-xs uppercase tracking-widest text-on-surface-variant">▣ LAST NAME</span>
           <input
             type="text"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             aria-label="last name"
-            className="mt-1 w-full bg-surface-container px-md py-sm rounded-lg border border-outline-variant text-white"
+            className="mt-1 w-full bg-surface-container px-md py-sm border border-primary-fixed/40 text-white"
           />
         </label>
         <label className="block">
-          <span className="font-label-bold text-xs text-on-surface-variant">USERNAME</span>
+          <span className="font-hud-mono text-xs uppercase tracking-widest text-on-surface-variant">▣ USERNAME</span>
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             aria-label="username"
-            className="mt-1 w-full bg-surface-container px-md py-sm rounded-lg border border-outline-variant text-white"
+            className="mt-1 w-full bg-surface-container px-md py-sm border border-primary-fixed/40 text-white"
           />
         </label>
         {error && (
@@ -103,14 +108,14 @@ export default function Profile() {
           <button
             type="submit"
             disabled={status === "saving"}
-            className="bg-primary-fixed text-on-primary-fixed font-label-bold px-lg py-sm rounded-lg disabled:opacity-60"
+            className="bg-primary-fixed text-on-primary-fixed font-hud-mono font-bold uppercase tracking-widest px-lg py-sm disabled:opacity-60"
           >
             {status === "saving" ? "SAVING…" : "SAVE"}
           </button>
           <button
             type="button"
             onClick={onSignOut}
-            className="border border-outline-variant text-on-surface px-lg py-sm rounded-lg hover:bg-surface-variant/40"
+            className="border border-primary-fixed/30 font-hud-mono uppercase tracking-widest text-on-surface px-lg py-sm hover:bg-surface-variant/40"
           >
             SIGN OUT
           </button>
