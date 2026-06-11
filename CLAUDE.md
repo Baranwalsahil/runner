@@ -638,6 +638,18 @@ When user says **"implement tasks list in folder tasks"** (or variants: "continu
 
 ---
 
+## Workflow: Feature request → task file first
+
+When the user describes a **feature** (says "feature", "I want to implement X", "new feature"), do NOT implement directly. First:
+
+1. Update `tasks/tasks-00-index.md` — add a row to the sequence table (next number, title, layer, effort).
+2. Create `tasks/tasks-NN-<slug>.md` — self-contained brief matching the format of existing task files: goal, prereqs, files touched, implementation notes, acceptance criteria, out of scope.
+3. Then implement via the Branch + PR workflow below, tracking status in `progress.md`.
+
+**Why:** All features are planned and tracked as numbered tasks; `tasks/` is the build-plan source of truth.
+
+---
+
 ## Workflow: Branch + PR (mandatory, no local merges)
 
 For **every** code change — task implementation, bug fix, polish, refactor — follow this flow:
