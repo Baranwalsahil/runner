@@ -14,7 +14,7 @@ export default function Auth() {
 
   if (loading) {
     return (
-      <div className="p-xl text-center font-mono text-sm text-on-surface-variant">
+      <div className="p-xl text-center font-hud-mono uppercase tracking-widest text-sm text-on-surface-variant">
         Loading…
       </div>
     );
@@ -26,11 +26,15 @@ export default function Auth() {
 
   return (
     <div className="mx-auto max-w-md p-lg">
-      <h1 className="mb-lg font-mono text-2xl uppercase tracking-wider text-primary-fixed">
-        {mode === "signin" ? "Sign in" : "Create account"}
-      </h1>
+      <div className="hud-panel hud-corners p-lg">
+        <p className="font-hud-mono text-xs uppercase tracking-widest text-primary-fixed mb-md">
+          <span aria-hidden="true">[ OPERATOR.ACCESS ]</span>
+        </p>
+        <h1 className="mb-lg font-hud-mono font-bold text-2xl uppercase tracking-widest text-primary-fixed [text-shadow:0_0_12px_rgba(195,244,0,0.35)]">
+          {mode === "signin" ? "Sign in" : "Create account"}
+        </h1>
 
-      <div className="mb-md flex gap-md text-sm font-mono uppercase tracking-wider">
+        <div className="mb-md flex gap-md text-sm font-hud-mono uppercase tracking-widest">
         <button
           type="button"
           onClick={() => setMode("signin")}
@@ -55,9 +59,10 @@ export default function Auth() {
         >
           Sign up
         </button>
-      </div>
+        </div>
 
-      {mode === "signin" ? <SignInForm /> : <SignUpForm />}
+        {mode === "signin" ? <SignInForm /> : <SignUpForm />}
+      </div>
     </div>
   );
 }

@@ -30,7 +30,7 @@ export default function SignInForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-md" aria-label="Sign in">
       <label className="block">
-        <span className="block text-xs font-mono uppercase tracking-wider text-on-surface-variant">
+        <span className="block text-xs font-hud-mono uppercase tracking-widest text-on-surface-variant">
           Email
         </span>
         <input
@@ -39,12 +39,12 @@ export default function SignInForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-xs w-full rounded-md border border-outline bg-surface px-md py-sm text-on-surface focus:border-primary-fixed focus:outline-none"
+          className="mt-xs w-full border border-primary-fixed/40 bg-surface-container-lowest px-md py-sm text-on-surface focus:border-primary-fixed focus:outline-none"
         />
       </label>
 
       <label className="block">
-        <span className="block text-xs font-mono uppercase tracking-wider text-on-surface-variant">
+        <span className="block text-xs font-hud-mono uppercase tracking-widest text-on-surface-variant">
           Password
         </span>
         <input
@@ -53,7 +53,7 @@ export default function SignInForm() {
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-xs w-full rounded-md border border-outline bg-surface px-md py-sm text-on-surface focus:border-primary-fixed focus:outline-none"
+          className="mt-xs w-full border border-primary-fixed/40 bg-surface-container-lowest px-md py-sm text-on-surface focus:border-primary-fixed focus:outline-none"
         />
       </label>
 
@@ -66,7 +66,7 @@ export default function SignInForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-md bg-primary-fixed px-md py-sm font-mono uppercase tracking-wider text-on-primary-fixed disabled:opacity-50"
+        className="w-full bg-primary-fixed px-md py-sm font-hud-mono uppercase tracking-widest text-on-primary-fixed disabled:opacity-50"
       >
         {submitting ? "Signing in…" : "Sign in"}
       </button>

@@ -42,10 +42,13 @@ export default function Leaderboard() {
     <div className="px-margin-safe max-w-7xl mx-auto w-full">
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-xl gap-md">
         <div>
-          <h1 className="font-headline-xl text-primary tracking-tighter uppercase">
+          <p className="font-hud-mono text-xs uppercase tracking-widest text-primary-fixed mb-2">
+            <span aria-hidden="true">[ GLOBAL.RANKING ]</span>
+          </p>
+          <h1 className="font-hud-mono font-bold text-headline-xl text-primary tracking-tight uppercase [text-shadow:0_0_16px_rgba(195,244,0,0.25)]">
             Territory Lords
           </h1>
-          <p className="text-on-surface-variant font-body-lg max-w-2xl">
+          <p className="text-on-surface-variant font-hud-mono text-sm max-w-2xl mt-2">
             The elite grid-runners commanding the most significant real estate in the physical world. Dominate the terrain to climb the ranks.
           </p>
         </div>
@@ -59,17 +62,17 @@ export default function Leaderboard() {
         />
       </div>
       {loading && (
-        <p data-testid="lb-loading" className="text-on-surface-variant font-mono uppercase">
+        <p data-testid="lb-loading" className="text-on-surface-variant font-hud-mono uppercase tracking-widest">
           Loading leaderboard…
         </p>
       )}
       {error && (
-        <p role="alert" className="text-red-400">
+        <p role="alert" className="text-red-400 font-hud-mono">
           {error}
         </p>
       )}
       {!loading && !error && rows.length === 0 && (
-        <p className="text-on-surface-variant font-mono uppercase">
+        <p className="text-on-surface-variant font-hud-mono uppercase tracking-widest">
           No runners yet. Be the first to claim territory.
         </p>
       )}

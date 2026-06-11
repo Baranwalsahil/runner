@@ -19,27 +19,29 @@ export default function CellDetailPanel({ cell, onClose, onChallenge }) {
   return (
     <div
       data-testid="cell-detail-panel"
-      className="absolute right-margin-safe bottom-margin-safe z-30 w-72 glass-panel neon-border-lime p-md rounded-xl"
+      className="absolute right-margin-safe bottom-margin-safe z-30 w-72 hud-panel hud-corners p-md"
     >
       <div className="flex justify-between items-start mb-base">
-        <h3 className="font-label-bold text-primary-fixed uppercase tracking-widest text-xs">
+        <h3 className="font-hud-mono font-bold text-primary-fixed uppercase tracking-widest text-xs">
+          <span aria-hidden="true">[ </span>
           Cell Intel
+          <span aria-hidden="true"> ]</span>
         </h3>
         <button aria-label="close" onClick={onClose} className="text-on-surface-variant hover:text-primary">
           <Icon name="close" className="text-sm" />
         </button>
       </div>
-      <p className="text-xs text-on-surface-variant uppercase font-label-bold">H3 Index</p>
-      <p className="font-mono text-xs text-primary mb-base break-all">{cell.h3Index}</p>
-      <p className="text-xs text-on-surface-variant uppercase font-label-bold">Owner</p>
-      <p className="font-label-bold text-secondary-fixed mb-base">{cell.owner}</p>
+      <p className="text-xs text-on-surface-variant uppercase font-hud-mono tracking-widest">H3 Index</p>
+      <p className="font-hud-mono text-xs text-primary mb-base break-all">{cell.h3Index}</p>
+      <p className="text-xs text-on-surface-variant uppercase font-hud-mono tracking-widest">Owner</p>
+      <p className="font-hud-mono text-secondary-fixed mb-base">{cell.owner}</p>
       {cell.claimedAt && (
         <>
-          <p className="text-xs text-on-surface-variant uppercase font-label-bold">Claimed</p>
+          <p className="text-xs text-on-surface-variant uppercase font-hud-mono tracking-widest">Claimed</p>
           <p className="text-xs text-primary mb-base">{new Date(cell.claimedAt).toLocaleString()}</p>
         </>
       )}
-      <p className="text-xs text-on-surface-variant uppercase font-label-bold">
+      <p className="text-xs text-on-surface-variant uppercase font-hud-mono tracking-widest">
         {shares.length > 1 ? "Contested — Holders" : "Ownership"}
       </p>
       {shares.length > 0 ? (
@@ -52,10 +54,10 @@ export default function CellDetailPanel({ cell, onClose, onChallenge }) {
                   className="inline-block w-2.5 h-2.5 rounded-sm shrink-0"
                   style={{ background: h.color }}
                 />
-                <span className="text-secondary-fixed font-label-bold truncate flex-1">
+                <span className="text-secondary-fixed font-hud-mono truncate flex-1">
                   {h.owner}
                 </span>
-                <span className="text-primary font-label-bold">x{h.count}</span>
+                <span className="text-primary font-hud-mono">x{h.count}</span>
                 <span className="text-on-surface-variant tabular-nums w-9 text-right">
                   {pct}%
                 </span>
@@ -71,13 +73,13 @@ export default function CellDetailPanel({ cell, onClose, onChallenge }) {
               style={{ width: `${cell.ownership}%`, background: cell.color }}
             />
           </div>
-          <span className="text-xs text-primary font-label-bold">{cell.ownership}%</span>
+          <span className="text-xs text-primary font-hud-mono">{cell.ownership}%</span>
         </div>
       )}
       <button
         data-testid="challenge-cell"
         onClick={() => onChallenge?.(cell)}
-        className="w-full bg-primary-fixed text-on-primary-fixed font-label-bold py-2 rounded text-xs hover:scale-[1.02] transition-transform"
+        className="w-full bg-primary-fixed text-on-primary-fixed font-hud-mono font-bold uppercase tracking-widest py-2 text-xs hover:scale-[1.02] transition-transform"
       >
         CHALLENGE
       </button>

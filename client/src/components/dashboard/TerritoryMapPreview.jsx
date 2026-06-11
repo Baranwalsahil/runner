@@ -77,7 +77,7 @@ export default function TerritoryMapPreview({
   return (
     <div
       data-testid="territory-map-preview"
-      className="lg:col-span-3 glass-panel rounded-xl overflow-hidden relative group h-[500px]"
+      className="lg:col-span-3 hud-panel hud-corners overflow-hidden relative group h-[500px]"
     >
       {showMap ? (
         <MapCanvas
@@ -101,30 +101,36 @@ export default function TerritoryMapPreview({
           data-testid="no-cells-overlay"
           className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
         >
-          <div className="glass-panel neon-border-cyan rounded-lg px-md py-sm text-center font-label-bold uppercase tracking-widest text-sm pointer-events-auto">
+          <div className="hud-panel px-md py-sm text-center font-hud-mono uppercase tracking-widest text-sm pointer-events-auto">
             No cells claimed near you
           </div>
         </div>
       )}
+      <div className="absolute inset-0 hud-scanlines z-10" />
       <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent pointer-events-none" />
-      <div className="absolute top-md left-md p-sm glass-panel neon-border-cyan rounded-lg z-10">
-        <div className="flex items-center gap-base">
-          <div className="w-3 h-3 rounded-full bg-secondary-fixed animate-pulse" />
-          <span className="font-label-bold text-xs">{liveLabel}: {liveBattles}</span>
+      <div className="absolute top-md left-md px-sm py-1 hud-panel z-10">
+        <div className="flex items-center gap-base font-hud-mono text-xs uppercase tracking-widest">
+          <span aria-hidden="true" className="text-primary-fixed">
+            [ TACTICAL.MAP ]
+          </span>
+          <span aria-hidden="true" className="text-primary-fixed hud-blink">
+            ●
+          </span>
+          <span className="text-on-surface">{liveLabel}: {liveBattles}</span>
         </div>
       </div>
       <div className="absolute bottom-md right-md flex flex-col gap-base z-10">
         <button
           aria-label="zoom in"
           onClick={handleZoomIn}
-          className="bg-surface-container-highest/80 backdrop-blur-md p-base rounded-full border border-outline-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-all"
+          className="bg-surface-container-highest/80 backdrop-blur-md p-base border border-primary-fixed/40 hover:bg-primary-fixed hover:text-on-primary-fixed transition-all"
         >
           <Icon name="zoom_in" />
         </button>
         <button
           aria-label="zoom out"
           onClick={handleZoomOut}
-          className="bg-surface-container-highest/80 backdrop-blur-md p-base rounded-full border border-outline-variant hover:bg-primary-fixed hover:text-on-primary-fixed transition-all"
+          className="bg-surface-container-highest/80 backdrop-blur-md p-base border border-primary-fixed/40 hover:bg-primary-fixed hover:text-on-primary-fixed transition-all"
         >
           <Icon name="zoom_out" />
         </button>

@@ -11,12 +11,16 @@ export default function Footer() {
   return (
     <footer
       data-testid="footer"
-      className="bg-surface-container-lowest border-t border-outline-variant/20 mt-xl"
+      className="bg-surface-container-lowest border-t border-primary-fixed/20 mt-xl"
     >
       <div className="flex flex-col md:flex-row justify-between items-center w-full px-margin-safe py-md max-w-7xl mx-auto gap-md">
         <div className="flex flex-col items-center md:items-start gap-xs">
-          <span className="font-headline-md text-primary-fixed/50">TERRITORY RUN</span>
-          <p className="text-on-surface-variant font-body-md text-sm">
+          <span className="font-hud-mono font-bold tracking-widest text-primary-fixed/50">
+            <span aria-hidden="true">[ </span>
+            TERRITORY RUN
+            <span aria-hidden="true"> ]</span>
+          </span>
+          <p className="text-on-surface-variant font-hud-mono text-xs tracking-wider">
             © 2024 TERRITORY RUN. DOMINATE THE GRID.
           </p>
         </div>
@@ -25,7 +29,7 @@ export default function Footer() {
             <a
               key={label}
               href={href}
-              className="text-on-surface-variant font-label-bold hover:text-primary transition-colors"
+              className="text-on-surface-variant font-hud-mono text-xs uppercase tracking-widest hover:text-primary-fixed transition-colors"
             >
               {label}
             </a>

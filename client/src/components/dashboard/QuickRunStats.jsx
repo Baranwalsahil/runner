@@ -1,4 +1,4 @@
-import Icon from "../Icon.jsx";
+import HudPanelHeader from "../HudPanelHeader.jsx";
 
 const DEFAULT_STATS = [
   { label: "PACE", value: "7'12\"", suffix: "/MI" },
@@ -10,21 +10,27 @@ export default function QuickRunStats({ stats = DEFAULT_STATS }) {
   return (
     <div
       data-testid="quick-run-stats"
-      className="glass-panel p-md rounded-xl flex flex-col gap-md"
+      className="hud-panel hud-corners p-md flex flex-col gap-md"
     >
-      <div className="flex items-center gap-base mb-base">
-        <Icon name="sprint" className="text-secondary-fixed-dim" />
-        <p className="font-label-bold text-on-surface-variant">TRADITIONAL STATS</p>
-      </div>
+      <HudPanelHeader label="RUN.METRICS" className="mb-base" />
       <div className="space-y-md">
         {stats.map((s) => (
           <div
             key={s.label}
-            className="flex justify-between items-end border-b border-outline-variant/30 pb-2"
+            className="flex justify-between items-end border-b border-primary-fixed/15 pb-2"
           >
-            <span className="text-on-surface-variant font-label-bold">{s.label}</span>
-            <span className="font-stats-display text-primary text-2xl">
-              {s.value} <small className="text-xs text-on-surface-variant">{s.suffix}</small>
+            <span className="font-hud-mono text-xs uppercase tracking-widest text-on-surface-variant">
+              <span aria-hidden="true" className="text-primary-fixed">
+                ▣{" "}
+              </span>
+              {s.label}
+            </span>
+            <span className="font-hud-mono text-primary text-2xl">
+              <span aria-hidden="true" className="text-on-surface-variant/50 text-sm">
+                //{" "}
+              </span>
+              {s.value}{" "}
+              <small className="text-xs text-on-surface-variant">{s.suffix}</small>
             </span>
           </div>
         ))}

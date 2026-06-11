@@ -41,8 +41,8 @@ export default function RankTable({ players, currentUserId }) {
   }
 
   return (
-    <div data-testid="rank-table" className="glass-panel rounded-xl overflow-hidden">
-      <div className="grid grid-cols-12 gap-base px-md py-md border-b border-outline-variant/20 bg-surface-container-low text-on-surface-variant font-label-bold uppercase text-xs">
+    <div data-testid="rank-table" className="hud-panel hud-corners overflow-hidden">
+      <div className="grid grid-cols-12 gap-base px-md py-md border-b border-primary-fixed/20 bg-surface-container-low font-hud-mono text-on-surface-variant uppercase tracking-widest text-xs">
         {COLUMNS.map((col) => (
           <button
             key={col.key}
@@ -65,59 +65,59 @@ export default function RankTable({ players, currentUserId }) {
             key={p.id}
             data-testid="rank-row"
             data-user-id={p.id}
-            className={`grid grid-cols-12 gap-base px-md py-sm border-b border-outline-variant/10 transition-all items-center text-sm ${
+            className={`grid grid-cols-12 gap-base px-md py-sm border-b border-primary-fixed/10 transition-all items-center text-sm ${
               isMe
                 ? "bg-primary-container/10 border-l-4 border-primary-fixed"
                 : "hover:bg-surface-variant/30"
             }`}
           >
-            <div className={`col-span-1 font-stats-display ${isMe ? "text-primary-fixed" : "text-on-surface-variant"}`}>
+            <div className={`col-span-1 font-hud-mono ${isMe ? "text-primary-fixed" : "text-on-surface-variant"}`}>
               {String(p.rank).padStart(2, "0")}
             </div>
             <div className="col-span-4 flex items-center gap-md">
               {p.avatar ? (
                 <img alt={`${p.username} avatar`} className="w-10 h-10 rounded-full object-cover" src={p.avatar} />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-surface-container-high border-2 border-primary-fixed flex items-center justify-center">
+                <div className="w-10 h-10 bg-surface-container-high border border-primary-fixed/60 flex items-center justify-center [clip-path:polygon(0_0,calc(100%-8px)_0,100%_8px,100%_100%,8px_100%,0_calc(100%-8px))]">
                   <Icon name="person" filled className="text-primary-fixed" />
                 </div>
               )}
-              <span className={`font-headline-md ${isMe ? "text-primary-fixed italic" : "text-primary"} uppercase`}>
+              <span className={`font-hud-mono font-bold tracking-wide ${isMe ? "text-primary-fixed" : "text-primary"} uppercase`}>
                 {p.username}
               </span>
             </div>
-            <div className={`col-span-2 font-body-md ${isMe ? "text-primary" : "text-on-surface-variant"}`}>
+            <div className={`col-span-2 font-hud-mono text-xs ${isMe ? "text-primary" : "text-on-surface-variant"}`}>
               {p.region}
             </div>
-            <div className={`col-span-2 text-right font-stats-display ${isMe ? "text-primary-fixed" : "text-secondary-fixed"}`}>
+            <div className={`col-span-2 text-right font-hud-mono ${isMe ? "text-primary-fixed" : "text-secondary-fixed"} [text-shadow:0_0_10px_rgba(195,244,0,0.2)]`}>
               {p.cells.toLocaleString()}
             </div>
-            <div className="col-span-2 text-right font-body-md text-on-surface-variant">
+            <div className="col-span-2 text-right font-hud-mono text-on-surface-variant">
               {p.areaM2.toLocaleString()}
             </div>
-            <div className="col-span-1 text-right font-stats-display text-primary-fixed">
+            <div className="col-span-1 text-right font-hud-mono text-primary-fixed">
               {p.streak}
             </div>
           </div>
         );
       })}
-      <div className="flex items-center justify-between px-md py-md bg-surface-container-low/40">
+      <div className="flex items-center justify-between px-md py-md bg-surface-container-low/40 border-t border-primary-fixed/20">
         <button
           data-testid="prev-page"
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page === 1}
-          className="font-label-bold text-xs px-md py-sm rounded-full hover:bg-surface-variant/40 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="font-hud-mono uppercase tracking-widest text-xs px-md py-sm border border-primary-fixed/30 hover:bg-primary-fixed hover:text-on-primary-fixed transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           PREV
         </button>
-        <span data-testid="page-indicator" className="font-label-bold text-on-surface-variant text-xs uppercase">
+        <span data-testid="page-indicator" className="font-hud-mono text-on-surface-variant text-xs uppercase tracking-widest">
           Page {page} / {totalPages}
         </span>
         <button
           data-testid="next-page"
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           disabled={page === totalPages}
-          className="font-label-bold text-xs px-md py-sm rounded-full hover:bg-surface-variant/40 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="font-hud-mono uppercase tracking-widest text-xs px-md py-sm border border-primary-fixed/30 hover:bg-primary-fixed hover:text-on-primary-fixed transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           NEXT
         </button>
