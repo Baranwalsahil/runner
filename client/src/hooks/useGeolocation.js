@@ -57,6 +57,13 @@ export default function useGeolocation() {
     setError(null);
   }, []);
 
+  // Seed the trace from a restored session (refresh resilience).
+  const hydrate = useCallback((initialPoints) => {
+    if (Array.isArray(initialPoints) && initialPoints.length > 0) {
+      setPoints(initialPoints);
+    }
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -67,5 +74,5 @@ export default function useGeolocation() {
     };
   }, []);
 
-  return { points, isRecording, error, start, stop, clear };
+  return { points, isRecording, error, start, stop, clear, hydrate };
 }

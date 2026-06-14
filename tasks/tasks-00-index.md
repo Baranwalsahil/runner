@@ -21,6 +21,7 @@ Tasks run strictly in order — later tasks depend on earlier scaffolding.
 | 11 | [tasks-11-territory-leaderboard-api.md](./tasks-11-territory-leaderboard-api.md) | Territory + Leaderboard GET endpoints | BE | M |
 | 12 | [tasks-12-realtime-cache.md](./tasks-12-realtime-cache.md) | Redis cache + polling/real-time updates | Infra | M |
 | 13 | [tasks-13-deploy.md](./tasks-13-deploy.md) | Vercel + Render + managed Postgres deploy | DevOps | M |
+| 14 | [tasks-14-run-pause-finish.md](./tasks-14-run-pause-finish.md) | Run session: Pause/Resume + Finish + refresh-safe persistence | FE | M |
 
 ## Rules
 
