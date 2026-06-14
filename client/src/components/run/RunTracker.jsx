@@ -203,16 +203,6 @@ export default function RunTracker() {
         </button>
       )}
 
-      {result && (
-        <button
-          type="button"
-          onClick={handleStart}
-          className="w-full bg-primary-fixed px-md py-md text-lg font-hud-mono font-bold uppercase tracking-widest text-on-primary-fixed"
-        >
-          New Run
-        </button>
-      )}
-
       {(recording || paused) && (
         <div className="grid grid-cols-2 gap-md">
           {recording ? (
