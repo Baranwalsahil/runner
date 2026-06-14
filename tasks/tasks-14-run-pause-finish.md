@@ -18,7 +18,7 @@ Session states: `idle → recording ⇄ paused → finished`.
 | idle | **Start** | off | 00:00 |
 | recording | **Pause**, **Finish** | on | counting up |
 | paused | **Resume**, **Finish** | off | frozen |
-| finished | result + **New Run** | off | final |
+| finished | result + **View Dashboard** | off | final |
 
 - **Start** — begin a fresh session (clears any prior session).
 - **Pause** — stop GPS watch, freeze elapsed time and all stats at that
