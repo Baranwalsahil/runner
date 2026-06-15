@@ -1,7 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useGeolocation from "../../hooks/useGeolocation.js";
 import { apiJson } from "../../lib/auth.js";
+import {
+  loadSession,
+  saveSession,
+  clearSession,
+  elapsedMs as calcElapsedMs,
+  startSession,
+  pauseSession,
+  resumeSession,
+} from "../../lib/runSession.js";
 
 function formatDuration(ms) {
   const totalSec = Math.floor(ms / 1000);
@@ -32,22 +41,46 @@ function totalKm(points) {
 }
 
 export default function RunTracker() {
-  const { points, isRecording, error: geoError, start, stop, clear } = useGeolocation();
+  const { points, error: geoError, start, stop, clear, hydrate } = useGeolocation();
   const navigate = useNavigate();
-  const startedAtRef = useRef(null);
-  const [now, setNow] = useState(Date.now());
+  // session === null  -> idle (or finished, when `result` is set).
+  // Lazy-init from localStorage so a refresh restores the same run.
+  const [session, setSession] = useState(() => loadSession());
+  const [now, setNow] = useState(() => Date.now());
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [result, setResult] = useState(null);
 
+  const status = session?.status ?? "idle";
+  const recording = status === "recording";
+  const paused = status === "paused";
+
+  // After restoring a session, re-sync external systems (GPS trace + watch).
+  // Runs once on mount; no direct setState here (hydrate/start own their state).
   useEffect(() => {
-    if (!isRecording) return;
+    const saved = loadSession();
+    if (!saved) return;
+    hydrate(saved.points);
+    if (saved.status === "recording") {
+      start(); // re-open the GPS watch; trace keeps appending
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Tick the clock while recording.
+  useEffect(() => {
+    if (!recording) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [isRecording]);
+  }, [recording]);
 
-  const elapsedMs =
-    startedAtRef.current ? now - startedAtRef.current : 0;
+  // Persist the active session (status + timing + trace) on every change.
+  useEffect(() => {
+    if (!session) return;
+    saveSession({ ...session, points });
+  }, [session, points]);
+
+  const elapsedMs = calcElapsedMs(session, now);
   const distanceKm = totalKm(points);
   const estimatedCells = new Set(
     points.map((p) => `${p.lat.toFixed(4)},${p.lng.toFixed(4)}`)
@@ -57,15 +90,28 @@ export default function RunTracker() {
     setResult(null);
     setSubmitError(null);
     clear();
-    startedAtRef.current = Date.now();
+    clearSession();
+    const next = startSession(Date.now());
+    setSession(next);
     setNow(Date.now());
     start();
   }
 
-  async function handleStop() {
+  function handlePause() {
+    stop();
+    setSession((s) => pauseSession(s, Date.now()));
+  }
+
+  function handleResume() {
+    setSession((s) => resumeSession(s, Date.now()));
+    setNow(Date.now());
+    start();
+  }
+
+  async function handleFinish() {
     stop();
     const endedAt = new Date().toISOString();
-    const startedAt = new Date(startedAtRef.current || Date.now()).toISOString();
+    const startedAt = new Date(session?.startedAt || Date.now()).toISOString();
     if (points.length < 2) {
       setSubmitError("Need at least 2 GPS points to submit");
       return;
@@ -82,6 +128,8 @@ export default function RunTracker() {
         }),
       });
       setResult(data);
+      clearSession();
+      setSession(null);
     } catch (err) {
       setSubmitError(err.message || "Submit failed");
     } finally {
@@ -97,6 +145,15 @@ export default function RunTracker() {
       <h1 className="font-hud-mono font-bold text-2xl uppercase tracking-widest text-primary-fixed [text-shadow:0_0_12px_rgba(195,244,0,0.35)]">
         Session Tracker
       </h1>
+
+      {paused && (
+        <p
+          data-testid="paused-badge"
+          className="text-center text-xs font-hud-mono uppercase tracking-widest text-amber-400"
+        >
+          ▮▮ Paused
+        </p>
+      )}
 
       <div className="grid grid-cols-3 gap-md text-center">
         <Stat label="Time" value={formatDuration(elapsedMs)} />
@@ -135,7 +192,7 @@ export default function RunTracker() {
         </div>
       )}
 
-      {!isRecording && !result && (
+      {status === "idle" && !result && (
         <button
           type="button"
           onClick={handleStart}
@@ -145,15 +202,37 @@ export default function RunTracker() {
           Start
         </button>
       )}
-      {isRecording && (
-        <button
-          type="button"
-          onClick={handleStop}
-          disabled={submitting}
-          className="w-full bg-red-500 px-md py-md text-lg font-hud-mono font-bold uppercase tracking-widest text-white disabled:opacity-50"
-        >
-          {submitting ? "Submitting…" : "Stop & Submit"}
-        </button>
+
+      {(recording || paused) && (
+        <div className="grid grid-cols-2 gap-md">
+          {recording ? (
+            <button
+              type="button"
+              onClick={handlePause}
+              disabled={submitting}
+              className="w-full bg-amber-500 px-md py-md text-lg font-hud-mono font-bold uppercase tracking-widest text-black disabled:opacity-50"
+            >
+              Pause
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleResume}
+              disabled={submitting}
+              className="w-full bg-primary-fixed px-md py-md text-lg font-hud-mono font-bold uppercase tracking-widest text-on-primary-fixed disabled:opacity-50"
+            >
+              Resume
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleFinish}
+            disabled={submitting}
+            className="w-full bg-red-500 px-md py-md text-lg font-hud-mono font-bold uppercase tracking-widest text-white disabled:opacity-50"
+          >
+            {submitting ? "Submitting…" : "Finish"}
+          </button>
+        </div>
       )}
     </div>
   );
