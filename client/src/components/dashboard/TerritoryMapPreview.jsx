@@ -77,7 +77,7 @@ export default function TerritoryMapPreview({
   return (
     <div
       data-testid="territory-map-preview"
-      className="lg:col-span-3 hud-panel hud-corners overflow-hidden relative group h-[500px]"
+      className="lg:col-span-2 hud-panel hud-corners overflow-hidden relative group h-[500px]"
     >
       {showMap ? (
         <MapCanvas
