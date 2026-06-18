@@ -666,11 +666,12 @@ For **every** code change — task implementation, bug fix, polish, refactor —
    - `chore/...`, `refactor/...`, `docs/...` — other categories
 2. Implement on the branch. Commit incrementally — small logical commits beat one giant commit.
 3. Run full test suite (`npm test` for FE, `pytest -v` for BE). Run curl checks for acceptance. Update `progress.md` if the change tracks against a `tasks/` file.
-4. Push the branch:
+4. **Verify the flow in Chrome — MANDATORY before pushing, never skip.** Green unit tests / lint / build do NOT count as verification. Bring up the local stack (`docker compose up -d`, see the `territory-dev` skill), seed data if the flow needs it (`python server/scripts/seed_demo.py`), then drive the *actual changed behaviour* in the real UI with the `claude-in-chrome` tools (`territory-dev` creds: `demo_a@test.com` / `secretsecret`). Exercise the specific feature/fix end-to-end (e.g. click the new control, confirm the screen updates), capture a screenshot or GIF for multi-step flows, and only proceed once you've seen it work. If it can't be verified in Chrome (pure backend/infra), say so explicitly and fall back to curl/log evidence. Record what you verified in the PR's Test plan.
+5. Push the branch:
    ```bash
    git push -u origin <prefix>/<short-slug>
    ```
-5. Open a Pull Request via `gh pr create`:
+6. Open a Pull Request via `gh pr create`:
    ```bash
    gh pr create --title "<concise title>" --body "$(cat <<'EOF'
    ## Summary
@@ -693,6 +694,6 @@ For **every** code change — task implementation, bug fix, polish, refactor —
 
 **Why:** Every change reviewed via PR, GitHub history is the source of truth, `main` only updates through the PR workflow. Local merges hide review.
 
-**How to apply:** Triggers on any "implement task NN", "fix bug", "continue tasks", "resume tasks", or any other code-change prompt — including small follow-ups. After pushing the branch and opening the PR, stop. Do not merge.
+**How to apply:** Triggers on any "implement task NN", "fix bug", "continue tasks", "resume tasks", or any other code-change prompt — including small follow-ups. The Chrome-flow verification (step 4) is a hard gate: do not push or open the PR until you have driven the change in the browser and seen it work. After pushing the branch and opening the PR, stop. Do not merge.
 
 
