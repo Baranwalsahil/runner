@@ -3,35 +3,35 @@ import { render, screen } from '@testing-library/react';
 import QuickRunStats from '../components/dashboard/QuickRunStats.jsx';
 
 describe('QuickRunStats', () => {
-  it('renders PACE/MILES/CALORIES rows', () => {
+  it('renders BEST and AVG column headers', () => {
     render(<QuickRunStats />);
-    expect(screen.getByText('PACE')).toBeInTheDocument();
-    expect(screen.getByText('MILES')).toBeInTheDocument();
-    expect(screen.getByText('CALORIES')).toBeInTheDocument();
+    expect(screen.getByText('BEST')).toBeInTheDocument();
+    expect(screen.getByText('AVG')).toBeInTheDocument();
   });
 
-  it('renders default values', () => {
+  it('renders default metric rows', () => {
     render(<QuickRunStats />);
-    expect(screen.getByText(/7'12"/)).toBeInTheDocument();
-    expect(screen.getByText(/42\.8/)).toBeInTheDocument();
-    expect(screen.getByText(/3,450/)).toBeInTheDocument();
+    expect(screen.getByText('PACE')).toBeInTheDocument();
+    expect(screen.getByText('CELLS')).toBeInTheDocument();
+    expect(screen.getByText('DIST')).toBeInTheDocument();
+  });
+
+  it('renders both best and avg values per metric', () => {
+    const stats = [
+      { label: 'CELLS', best: '42', avg: '18', unit: 'HEX' },
+      { label: 'DIST', best: '5.20', avg: '3.10', unit: 'KM' },
+    ];
+    render(<QuickRunStats stats={stats} />);
+    expect(screen.getByText('42')).toBeInTheDocument();
+    expect(screen.getByText('18')).toBeInTheDocument();
+    expect(screen.getByText('5.20')).toBeInTheDocument();
+    expect(screen.getByText('3.10')).toBeInTheDocument();
+    expect(screen.getAllByTestId('stat-best')).toHaveLength(2);
+    expect(screen.getAllByTestId('stat-avg')).toHaveLength(2);
   });
 
   it('does not render LOG SESSION button', () => {
     render(<QuickRunStats />);
     expect(screen.queryByTestId('log-session')).toBeNull();
-  });
-
-  it('renders custom stats with BEST suffix', () => {
-    const stats = [
-      { label: 'CELLS', value: '6', suffix: 'BEST' },
-      { label: 'DIST', value: '1.23', suffix: 'KM BEST' },
-      { label: 'AREA', value: '0.63', suffix: 'KM² BEST' },
-    ];
-    render(<QuickRunStats stats={stats} />);
-    expect(screen.getByText('CELLS')).toBeInTheDocument();
-    expect(screen.getByText(/1\.23/)).toBeInTheDocument();
-    expect(screen.getByText(/0\.63/)).toBeInTheDocument();
-    expect(screen.getAllByText(/BEST/).length).toBeGreaterThanOrEqual(3);
   });
 });

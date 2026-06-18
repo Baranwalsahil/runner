@@ -35,11 +35,12 @@ function setup({ user = null } = {}) {
 }
 
 describe("Dashboard route", () => {
-  it("mounts all 4 dashboard blocks", () => {
+  it("mounts all dashboard blocks", () => {
     setup();
     expect(screen.getByTestId("territory-dominance")).toBeInTheDocument();
     expect(screen.getByTestId("quick-run-stats")).toBeInTheDocument();
     expect(screen.getByTestId("territory-map-preview")).toBeInTheDocument();
+    expect(screen.getByTestId("selected-run-metrics")).toBeInTheDocument();
     expect(screen.getByTestId("recent-battles")).toBeInTheDocument();
   });
 

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import TerritoryDominance from "../components/dashboard/TerritoryDominance.jsx";
 import QuickRunStats from "../components/dashboard/QuickRunStats.jsx";
 import TerritoryMapPreview from "../components/dashboard/TerritoryMapPreview.jsx";
+import SelectedRunMetrics from "../components/dashboard/SelectedRunMetrics.jsx";
 import RecentBattlesFeed from "../components/dashboard/RecentBattlesFeed.jsx";
 import { cellToLatLng } from "h3-js";
 import useAuth from "../hooks/useAuth.js";
@@ -39,22 +40,118 @@ function filterCellsNearLocation(cells, position, radiusKm) {
   });
 }
 
-function build7DayChart(runs) {
-  const buckets = new Array(7).fill(0);
+const DAY_MS = 86_400_000;
+const CHART_WINDOW_DAYS = 30;
+
+// One bar per run from the last 30 days, oldest→newest, height ∝ cells claimed.
+// Feed ids are prefixed "run-", so bar runId matches that for selection parity.
+function build30DayRunChart(runs) {
   const now = Date.now();
-  for (const r of runs) {
-    const t = new Date(r.started_at).getTime();
-    const daysAgo = Math.floor((now - t) / 86_400_000);
-    if (daysAgo >= 0 && daysAgo < 7) {
-      buckets[6 - daysAgo] += r.cells_claimed ?? 0;
-    }
-  }
-  const max = Math.max(...buckets, 1);
-  return buckets.map((v, i) => ({
-    height: Math.max(8, Math.round((v / max) * 100)),
-    opacity: 40 + Math.round((i / 6) * 60),
-    label: i === 6 && v > 0 ? `+${v}` : undefined,
-  }));
+  const windowRuns = runs
+    .filter((r) => {
+      const t = new Date(r.started_at).getTime();
+      const daysAgo = (now - t) / DAY_MS;
+      return daysAgo >= 0 && daysAgo < CHART_WINDOW_DAYS;
+    })
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(a.started_at).getTime() - new Date(b.started_at).getTime(),
+    );
+  const max = windowRuns.reduce(
+    (m, r) => Math.max(m, Number(r.cells_claimed) || 0),
+    1,
+  );
+  const count = windowRuns.length;
+  return windowRuns.map((r, i) => {
+    const cells = Number(r.cells_claimed) || 0;
+    return {
+      runId: `run-${r.id}`,
+      cells,
+      started_at: r.started_at,
+      height: Math.max(8, Math.round((cells / max) * 100)),
+      opacity: count > 1 ? 40 + Math.round((i / (count - 1)) * 60) : 100,
+      date: new Date(r.started_at).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      }),
+    };
+  });
+}
+
+// Per-run derived metrics used by the bar drill-down + best/avg rollups.
+function runMetrics(r) {
+  const cells = Number(r.cells_claimed) || 0;
+  const distanceM = Number(r.distance_meters) || 0;
+  const durationMs =
+    r.started_at && r.ended_at
+      ? new Date(r.ended_at).getTime() - new Date(r.started_at).getTime()
+      : 0;
+  const areaM2 = cells * HEX_AREA_M2;
+  const paceMinPerKm =
+    distanceM > 0 && durationMs > 0
+      ? durationMs / 60_000 / (distanceM / 1000)
+      : null;
+  return { cells, distanceM, durationMs, areaM2, paceMinPerKm };
+}
+
+function mean(values) {
+  if (!values.length) return 0;
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+function formatPace(minPerKm) {
+  if (minPerKm == null || !isFinite(minPerKm) || minPerKm <= 0) return "—";
+  const m = Math.floor(minPerKm);
+  const s = Math.round((minPerKm - m) * 60);
+  // Carry seconds rounding (e.g. 5'60" → 6'00").
+  const mm = s === 60 ? m + 1 : m;
+  const ss = s === 60 ? 0 : s;
+  return `${mm}'${String(ss).padStart(2, "0")}"`;
+}
+
+// All-time best + average across every recorded metric (full run history).
+function buildAllTimeStats(runs) {
+  const all = runs.map(runMetrics);
+  const cells = all.map((m) => m.cells);
+  const distances = all.map((m) => m.distanceM);
+  const areas = all.map((m) => m.areaM2);
+  const durations = all.map((m) => m.durationMs);
+  const paces = all.map((m) => m.paceMinPerKm).filter((p) => p != null);
+  const maxOr0 = (xs) => (xs.length ? Math.max(...xs) : 0);
+  return [
+    {
+      label: "CELLS",
+      best: String(maxOr0(cells)),
+      avg: String(Math.round(mean(cells))),
+      unit: "HEX",
+    },
+    {
+      label: "DIST",
+      best: formatKm(maxOr0(distances)),
+      avg: formatKm(mean(distances)),
+      unit: "KM",
+    },
+    {
+      label: "AREA",
+      best: formatAreaKm2(maxOr0(areas)),
+      avg: formatAreaKm2(mean(areas)),
+      unit: "KM²",
+    },
+    {
+      label: "TIME",
+      best: formatDuration(maxOr0(durations)),
+      avg: formatDuration(mean(durations)),
+      unit: "RUN",
+    },
+    {
+      // Lower pace is better, so "best" = minimum min/km.
+      label: "PACE",
+      best: formatPace(paces.length ? Math.min(...paces) : null),
+      avg: formatPace(paces.length ? mean(paces) : null),
+      unit: "/KM",
+    },
+  ];
 }
 
 function formatKm(meters) {
@@ -172,33 +269,10 @@ export default function Dashboard() {
 
   const totalCells = me?.total_cells ?? 0;
   const totalStrength = me?.total_strength ?? 0;
-  const chartData = build7DayChart(runs);
-
-  const bestCells = runs.reduce(
-    (acc, r) => Math.max(acc, Number(r.cells_claimed) || 0),
-    0,
-  );
-  const bestDistanceRun = runs.reduce(
-    (best, r) =>
-      (Number(r.distance_meters) || 0) > (Number(best?.distance_meters) || 0)
-        ? r
-        : best,
-    null,
-  );
-  const bestDistanceM = Number(bestDistanceRun?.distance_meters) || 0;
-  const bestAreaM2 = bestCells * HEX_AREA_M2;
-  const bestDistanceDurationMs =
-    bestDistanceRun?.started_at && bestDistanceRun?.ended_at
-      ? new Date(bestDistanceRun.ended_at).getTime() -
-        new Date(bestDistanceRun.started_at).getTime()
-      : 0;
-
-  const stats = [
-    { label: "CELLS", value: String(bestCells), suffix: "BEST" },
-    { label: "DIST", value: formatKm(bestDistanceM), suffix: "KM BEST" },
-    { label: "AREA", value: formatAreaKm2(bestAreaM2), suffix: "KM² BEST" },
-    { label: "TIME", value: formatDuration(bestDistanceDurationMs), suffix: "BEST RUN" },
-  ];
+  // One bar per run over the last 30 days (display window only).
+  const chartData = build30DayRunChart(runs);
+  // BEST + AVG per metric over the full run history (all-time).
+  const stats = buildAllTimeStats(runs);
 
   const battles = {
     initialBattles: feedItems.slice(0, PAGE_SIZE),
@@ -249,6 +323,23 @@ export default function Dashboard() {
         })
       : null;
   const isExplicitSelection = Boolean(selectedRunId);
+  // Metrics for the run currently shown on the map (selected bar, else latest).
+  const selectedRunMetrics = viewingRun
+    ? (() => {
+        const m = runMetrics(selectedRun);
+        return {
+          date: runDate,
+          isLatest: !isExplicitSelection,
+          rows: [
+            { label: "CELLS", value: String(m.cells), unit: "HEX" },
+            { label: "DIST", value: formatKm(m.distanceM), unit: "KM" },
+            { label: "AREA", value: formatAreaKm2(m.areaM2), unit: "KM²" },
+            { label: "TIME", value: formatDuration(m.durationMs), unit: "" },
+            { label: "PACE", value: formatPace(m.paceMinPerKm), unit: "/KM" },
+          ],
+        };
+      })()
+    : null;
   const mapDistrict = viewingRun
     ? `${isExplicitSelection ? "RUN" : "LATEST RUN"} · ${runDate ?? ""}`.trim()
     : totalCells > 0
@@ -263,6 +354,8 @@ export default function Dashboard() {
           strength={totalStrength}
           region={region}
           chartData={chartData}
+          selectedRunId={activeRunId}
+          onSelectBar={handleSelectRun}
         />
         <QuickRunStats stats={stats} />
       </div>
@@ -276,6 +369,7 @@ export default function Dashboard() {
           currentLocation={currentLocation}
           locationLoading={locLoading}
         />
+        <SelectedRunMetrics metrics={selectedRunMetrics} />
         <RecentBattlesFeed
           {...battles}
           loading={feedLoading}

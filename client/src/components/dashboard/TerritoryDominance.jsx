@@ -15,6 +15,8 @@ export default function TerritoryDominance({
   strength = null,
   region = "TOP 5% IN SEATTLE",
   chartData = DEFAULT_CHART,
+  selectedRunId = null,
+  onSelectBar = null,
 }) {
   return (
     <div
@@ -55,42 +57,74 @@ export default function TerritoryDominance({
             <span aria-hidden="true"> ]</span>
           </div>
         </div>
-        <div className="h-48 w-full flex items-end gap-2 px-1" data-testid="growth-chart">
-          {chartData.map((bar, i) => {
-            const isLast = i === chartData.length - 1;
-            return (
-              <div
-                key={i}
-                data-testid="chart-bar"
-                className={`flex-1 ${
-                  isLast
-                    ? "bg-primary-fixed shadow-[0_0_20px_rgba(195,244,0,0.4)]"
-                    : "bg-surface-container-high"
-                } relative group`}
-                style={{ height: `${bar.height}%` }}
-              >
-                {!isLast && (
-                  <div
-                    className="absolute bottom-0 w-full h-full"
-                    style={{
-                      backgroundColor: `rgba(195, 244, 0, ${bar.opacity / 100})`,
-                    }}
-                  />
-                )}
-                {bar.label && (
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-primary-fixed font-hud-mono text-xs">
-                    {bar.label}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        {chartData.length === 0 ? (
+          <div
+            data-testid="growth-chart"
+            className="h-48 w-full flex items-center justify-center font-hud-mono text-xs uppercase tracking-widest text-on-surface-variant"
+          >
+            NO RUNS IN LAST 30 DAYS
+          </div>
+        ) : (
+          // Horizontally scrollable track — one bar per run, slide left→right.
+          <div
+            data-testid="growth-chart"
+            className="h-48 w-full overflow-x-auto overflow-y-hidden"
+          >
+            <div className="h-full flex items-end gap-1.5 px-1 w-max min-w-full">
+              {chartData.map((bar, i) => {
+                const selected = bar.runId != null && bar.runId === selectedRunId;
+                const clickable = Boolean(bar.runId && onSelectBar);
+                const title = bar.date
+                  ? `${bar.date} · ${bar.cells ?? 0} cells`
+                  : undefined;
+                return (
+                  <button
+                    key={bar.runId ?? i}
+                    type="button"
+                    data-testid="chart-bar"
+                    data-selected={selected ? "true" : undefined}
+                    aria-pressed={clickable ? selected : undefined}
+                    aria-label={
+                      title ? `Run ${bar.date}, ${bar.cells ?? 0} cells` : undefined
+                    }
+                    title={title}
+                    disabled={!clickable}
+                    onClick={clickable ? () => onSelectBar(bar.runId) : undefined}
+                    className={`relative group w-6 shrink-0 ${
+                      selected
+                        ? "bg-primary-fixed shadow-[0_0_20px_rgba(195,244,0,0.4)]"
+                        : "bg-surface-container-high"
+                    } ${
+                      clickable
+                        ? "cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed"
+                        : ""
+                    }`}
+                    style={{ height: `${bar.height}%` }}
+                  >
+                    {!selected && (
+                      <div
+                        className="absolute bottom-0 w-full h-full"
+                        style={{
+                          backgroundColor: `rgba(195, 244, 0, ${bar.opacity / 100})`,
+                        }}
+                      />
+                    )}
+                    {bar.label && (
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-primary-fixed font-hud-mono text-xs">
+                        {bar.label}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         <p className="font-hud-mono text-xs uppercase tracking-widest text-on-surface-variant text-center mt-4">
           <span aria-hidden="true" className="text-primary-fixed">
             ▣{" "}
           </span>
-          TERRITORY GROWTH <span aria-hidden="true" className="opacity-40">//</span> LAST 7 DAYS
+          TERRITORY GROWTH <span aria-hidden="true" className="opacity-40">//</span> LAST 30 DAYS · PER RUN
         </p>
       </div>
     </div>
