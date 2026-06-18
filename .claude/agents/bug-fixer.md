@@ -65,12 +65,6 @@ Fix one reported bug per invocation. Both frontend (`client/`) and backend (`ser
    - If browser-automation tools are unavailable, instruct the user with exact click-by-click steps to verify.
    - Record a short GIF (`mcp__claude-in-chrome__gif_creator`) when the bug had a visible UI symptom — name it `<area>-<bug>.gif` and reference it in the PR body if useful.
 
-8. **Logout GitHub CLI** — Last step, every time, regardless of success/failure earlier:
-   ```bash
-   gh auth logout --hostname github.com
-   ```
-   Confirm with `gh auth status 2>&1 | head -3` — must report "not logged in" before reporting the task complete to the user. Run this even if the fix was aborted, the bug couldn't be reproduced, or the PR failed to open.
-
 ## Hard rules
 
 - **Never merge locally.** No `git merge` into `main`, no `git push origin main`. PR only.
