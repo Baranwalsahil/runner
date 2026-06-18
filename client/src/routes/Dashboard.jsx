@@ -1,18 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import TerritoryDominance from "../components/dashboard/TerritoryDominance.jsx";
 import QuickRunStats from "../components/dashboard/QuickRunStats.jsx";
 import TerritoryMapPreview from "../components/dashboard/TerritoryMapPreview.jsx";
 import SelectedRunMetrics from "../components/dashboard/SelectedRunMetrics.jsx";
-import RecentBattlesFeed from "../components/dashboard/RecentBattlesFeed.jsx";
 import { cellToLatLng } from "h3-js";
 import useAuth from "../hooks/useAuth.js";
 import useCurrentLocation from "../hooks/useCurrentLocation.js";
-import usePolling from "../hooks/usePolling.js";
 import { apiJson } from "../lib/auth.js";
 import { runs as runsApi, territory } from "../lib/api.js";
 
 const PAGE_SIZE = 4;
-const FEED_POLL_MS = 15_000;
 const HEX_AREA_M2 = 105_332.353; // H3 resolution 9 average hex area
 const NEARBY_RADIUS_KM = 50;
 const RUN_CELL_COLOR = "#c3f400"; // lime fill for a selected run's claimed cells
@@ -181,12 +178,9 @@ export default function Dashboard() {
   const [me, setMe] = useState(null);
   const [runs, setRuns] = useState([]);
   const [cells, setCells] = useState([]);
-  const [feedItems, setFeedItems] = useState([]);
   const [selectedRunId, setSelectedRunId] = useState(null);
   const [selectedRun, setSelectedRun] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [feedLoading, setFeedLoading] = useState(true);
-  const feedLoadedOnceRef = useRef(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -210,25 +204,6 @@ export default function Dashboard() {
       cancelled = true;
     };
   }, [user?.id]);
-
-  useEffect(() => {
-    feedLoadedOnceRef.current = false;
-    setFeedLoading(true);
-  }, [user?.id]);
-
-  const fetchFeed = useCallback(async () => {
-    try {
-      const items = await runsApi.feed({ limit: 12 });
-      setFeedItems(Array.isArray(items) ? items : []);
-    } catch {
-      if (!feedLoadedOnceRef.current) setFeedItems([]);
-    } finally {
-      feedLoadedOnceRef.current = true;
-      setFeedLoading(false);
-    }
-  }, []);
-
-  usePolling(user?.id ? fetchFeed : null, user?.id ? FEED_POLL_MS : 0);
 
   // Reset run selection when the signed-in user changes.
   useEffect(() => {
@@ -273,11 +248,6 @@ export default function Dashboard() {
   const chartData = build30DayRunChart(runs);
   // BEST + AVG per metric over the full run history (all-time).
   const stats = buildAllTimeStats(runs);
-
-  const battles = {
-    initialBattles: feedItems.slice(0, PAGE_SIZE),
-    extraBattles: feedItems.slice(PAGE_SIZE),
-  };
 
   const region =
     totalCells === 0
@@ -359,7 +329,7 @@ export default function Dashboard() {
         />
         <QuickRunStats stats={stats} />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-gutter h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter h-full">
         <TerritoryMapPreview
           liveBattles={mapLiveBattles}
           liveLabel={viewingRun ? "RUN CELLS" : "YOUR CELLS"}
@@ -370,12 +340,6 @@ export default function Dashboard() {
           locationLoading={locLoading}
         />
         <SelectedRunMetrics metrics={selectedRunMetrics} />
-        <RecentBattlesFeed
-          {...battles}
-          loading={feedLoading}
-          onSelectRun={handleSelectRun}
-          selectedRunId={activeRunId}
-        />
       </div>
     </div>
   );
