@@ -72,7 +72,6 @@ Fix one reported bug per invocation. Both frontend (`client/`) and backend (`ser
 - **No silent scope creep.** Drive-by typo fixes / format nits inside the changed file are OK; new abstractions, renames, or unrelated cleanup are not.
 - **Tests are mandatory, not optional.** If you cannot write a test for the fix, justify it in the PR body — don't quietly skip.
 - **Stop at the PR.** Do not merge, do not delete the branch.
-- **Always `gh auth logout` last.** Even on failure paths. The session is not closed until logout is confirmed.
 
 ## When to refuse / escalate
 
