@@ -89,7 +89,9 @@ function runMetrics(r) {
     distanceM > 0 && durationMs > 0
       ? durationMs / 60_000 / (distanceM / 1000)
       : null;
-  return { cells, distanceM, durationMs, areaM2, paceMinPerKm };
+  const avgElevationM =
+    r.avg_elevation_m == null ? null : Number(r.avg_elevation_m);
+  return { cells, distanceM, durationMs, areaM2, paceMinPerKm, avgElevationM };
 }
 
 function mean(values) {
@@ -107,6 +109,12 @@ function formatPace(minPerKm) {
   return `${mm}'${String(ss).padStart(2, "0")}"`;
 }
 
+// Average elevation, rounded to whole metres. Null/unknown → em dash.
+function formatElevation(m) {
+  if (m == null || !isFinite(m)) return "—";
+  return String(Math.round(m));
+}
+
 // All-time best + average across every recorded metric (full run history).
 function buildAllTimeStats(runs) {
   const all = runs.map(runMetrics);
@@ -115,6 +123,7 @@ function buildAllTimeStats(runs) {
   const areas = all.map((m) => m.areaM2);
   const durations = all.map((m) => m.durationMs);
   const paces = all.map((m) => m.paceMinPerKm).filter((p) => p != null);
+  const elevations = all.map((m) => m.avgElevationM).filter((e) => e != null);
   const maxOr0 = (xs) => (xs.length ? Math.max(...xs) : 0);
   return [
     {
@@ -147,6 +156,12 @@ function buildAllTimeStats(runs) {
       best: formatPace(paces.length ? Math.min(...paces) : null),
       avg: formatPace(paces.length ? mean(paces) : null),
       unit: "/KM",
+    },
+    {
+      label: "ELEV",
+      best: formatElevation(elevations.length ? maxOr0(elevations) : null),
+      avg: formatElevation(elevations.length ? mean(elevations) : null),
+      unit: "M",
     },
   ];
 }
@@ -306,6 +321,7 @@ export default function Dashboard() {
             { label: "AREA", value: formatAreaKm2(m.areaM2), unit: "KM²" },
             { label: "TIME", value: formatDuration(m.durationMs), unit: "" },
             { label: "PACE", value: formatPace(m.paceMinPerKm), unit: "/KM" },
+            { label: "ELEV", value: formatElevation(m.avgElevationM), unit: "M" },
           ],
         };
       })()

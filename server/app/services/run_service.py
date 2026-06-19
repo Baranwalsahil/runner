@@ -82,6 +82,15 @@ def _bad_request(msg: str) -> HTTPException:
     return HTTPException(status.HTTP_400_BAD_REQUEST, msg)
 
 
+def _avg_elevation(points) -> float | None:
+    """Mean device altitude (metres) over points that report one. None if no
+    point carries an altitude (desktop / no-fix devices)."""
+    alts = [p.alt for p in points if p.alt is not None]
+    if not alts:
+        return None
+    return round(sum(alts) / len(alts), 2)
+
+
 async def ingest_run(
     pool: asyncpg.Pool,
     user_id: UUID,
@@ -99,6 +108,7 @@ async def ingest_run(
         raise _bad_request(f"trace exceeds {MAX_CELLS_PER_RUN} cells")
 
     distance_m = trace_distance_m(cleaned)
+    avg_elevation_m = _avg_elevation(cleaned)
 
     # Build LINESTRING WKT (lng lat order per WKT spec)
     wkt = "LINESTRING(" + ", ".join(f"{p.lng} {p.lat}" for p in cleaned) + ")"
@@ -123,14 +133,15 @@ async def ingest_run(
             run_row = await conn.fetchrow(
                 """
                 INSERT INTO runs (user_id, started_at, ended_at, distance_meters,
-                                  gps_trace, cells_claimed)
-                VALUES ($1, $2, $3, $4, ST_GeomFromText($5, 4326), $6)
+                                  avg_elevation_m, gps_trace, cells_claimed)
+                VALUES ($1, $2, $3, $4, $5, ST_GeomFromText($6, 4326), $7)
                 RETURNING id
                 """,
                 user_id,
                 payload.started_at.replace(tzinfo=None) if payload.started_at.tzinfo else payload.started_at,
                 payload.ended_at.replace(tzinfo=None) if payload.ended_at.tzinfo else payload.ended_at,
                 distance_m,
+                avg_elevation_m,
                 wkt,
                 len(cells),
             )
@@ -183,7 +194,8 @@ async def ingest_run(
 async def list_runs(pool: asyncpg.Pool, user_id: UUID) -> list[RunSummary]:
     rows = await pool.fetch(
         """
-        SELECT id, started_at, ended_at, distance_meters, cells_claimed, created_at
+        SELECT id, started_at, ended_at, distance_meters, avg_elevation_m,
+               cells_claimed, created_at
         FROM runs WHERE user_id = $1 ORDER BY started_at DESC LIMIT 100
         """,
         user_id,
@@ -194,6 +206,7 @@ async def list_runs(pool: asyncpg.Pool, user_id: UUID) -> list[RunSummary]:
             started_at=r["started_at"],
             ended_at=r["ended_at"],
             distance_meters=float(r["distance_meters"]) if r["distance_meters"] is not None else None,
+            avg_elevation_m=float(r["avg_elevation_m"]) if r["avg_elevation_m"] is not None else None,
             cells_claimed=r["cells_claimed"],
             created_at=r["created_at"],
         )
@@ -204,7 +217,8 @@ async def list_runs(pool: asyncpg.Pool, user_id: UUID) -> list[RunSummary]:
 async def get_run(pool: asyncpg.Pool, user_id: UUID, run_id: UUID) -> RunSummary | None:
     row = await pool.fetchrow(
         """
-        SELECT id, started_at, ended_at, distance_meters, cells_claimed, created_at
+        SELECT id, started_at, ended_at, distance_meters, avg_elevation_m,
+               cells_claimed, created_at
         FROM runs WHERE id = $1 AND user_id = $2
         """,
         run_id,
@@ -217,6 +231,7 @@ async def get_run(pool: asyncpg.Pool, user_id: UUID, run_id: UUID) -> RunSummary
         started_at=row["started_at"],
         ended_at=row["ended_at"],
         distance_meters=float(row["distance_meters"]) if row["distance_meters"] is not None else None,
+        avg_elevation_m=float(row["avg_elevation_m"]) if row["avg_elevation_m"] is not None else None,
         cells_claimed=row["cells_claimed"],
         created_at=row["created_at"],
     )
@@ -233,7 +248,8 @@ async def get_run_detail(
     """
     row = await pool.fetchrow(
         """
-        SELECT id, started_at, ended_at, distance_meters, cells_claimed, created_at,
+        SELECT id, started_at, ended_at, distance_meters, avg_elevation_m,
+               cells_claimed, created_at,
                ST_AsGeoJSON(gps_trace) AS trace_geojson
         FROM runs WHERE id = $1 AND user_id = $2
         """,
@@ -257,6 +273,7 @@ async def get_run_detail(
         started_at=row["started_at"],
         ended_at=row["ended_at"],
         distance_meters=float(row["distance_meters"]) if row["distance_meters"] is not None else None,
+        avg_elevation_m=float(row["avg_elevation_m"]) if row["avg_elevation_m"] is not None else None,
         cells_claimed=row["cells_claimed"],
         created_at=row["created_at"],
         trace=trace,

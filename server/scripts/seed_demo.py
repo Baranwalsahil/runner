@@ -66,8 +66,11 @@ def trace(start_lat: float, start_lng: float, steps: int) -> list[dict]:
     for i in range(steps):
         lat = start_lat + i * 0.0003   # ~33 m/step latitude
         lng = start_lng + i * 0.0001   # small lng drift
+        alt = 50.0 + i * 2.0           # gentle climb so avg elevation is non-null
         ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(base_ts + i * 5))
-        pts.append({"lat": lat, "lng": lng, "timestamp": ts, "accuracy": 10})
+        pts.append(
+            {"lat": lat, "lng": lng, "alt": alt, "timestamp": ts, "accuracy": 10}
+        )
     return pts
 
 
