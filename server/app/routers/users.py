@@ -23,6 +23,11 @@ async def update_me(
             username=body.username,
             first_name=body.first_name,
             last_name=body.last_name,
+            weight_kg=body.weight_kg,
+            goal_weight_kg=body.goal_weight_kg,
+            height_cm=body.height_cm,
+            age=body.age,
+            sex=body.sex,
         )
     except user_service.UserAlreadyExists:
         raise HTTPException(

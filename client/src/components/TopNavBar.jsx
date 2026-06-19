@@ -6,6 +6,7 @@ const NAV_LINKS = [
   { to: "/battlefield", label: "BATTLEFIELD" },
   { to: "/dashboard", label: "DASHBOARD" },
   { to: "/leaderboard", label: "LEADERBOARD" },
+  { to: "/growth", label: "GROWTH" },
 ];
 
 export default function TopNavBar() {

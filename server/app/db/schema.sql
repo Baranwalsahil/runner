@@ -14,6 +14,11 @@ CREATE TABLE IF NOT EXISTS users (
     total_cells INTEGER DEFAULT 0,
     total_strength INTEGER DEFAULT 0,
     total_area_m2 DECIMAL(12,2) DEFAULT 0,
+    weight_kg DECIMAL(5,2),
+    goal_weight_kg DECIMAL(5,2),
+    height_cm DECIMAL(5,2),
+    age INTEGER,
+    sex VARCHAR(10),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -22,6 +27,13 @@ CREATE TABLE IF NOT EXISTS users (
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
 UPDATE users SET password_hash = '!disabled' WHERE password_hash IS NULL;
 ALTER TABLE users ALTER COLUMN password_hash SET NOT NULL;
+
+-- Growth profile (see migrations/006_user_growth_profile.sql).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS weight_kg DECIMAL(5,2);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS goal_weight_kg DECIMAL(5,2);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS height_cm DECIMAL(5,2);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS sex VARCHAR(10);
 
 -- Runs table (stores GPS traces)
 CREATE TABLE IF NOT EXISTS runs (
