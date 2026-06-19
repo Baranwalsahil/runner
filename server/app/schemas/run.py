@@ -13,6 +13,7 @@ class Point(BaseModel):
     lng: float = Field(ge=-180.0, le=180.0)
     timestamp: datetime | None = None
     accuracy: float | None = Field(default=None, ge=0.0)
+    alt: float | None = None  # device altitude, metres (WGS84); often null
 
 
 class RunCreate(BaseModel):
@@ -41,6 +42,7 @@ class RunSummary(BaseModel):
     started_at: datetime
     ended_at: datetime | None
     distance_meters: float | None
+    avg_elevation_m: float | None
     cells_claimed: int
     created_at: datetime
 
@@ -55,6 +57,7 @@ class RunDetail(BaseModel):
     started_at: datetime
     ended_at: datetime | None
     distance_meters: float | None
+    avg_elevation_m: float | None
     cells_claimed: int
     created_at: datetime
     trace: list[TracePoint]

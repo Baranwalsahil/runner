@@ -373,3 +373,51 @@ async def test_get_run_404_for_other_user(app_client):
         f"/runs/{run_id}", headers={"Authorization": f"Bearer {token_b}"}
     )
     assert resp.status_code == 404
+
+
+def _trace_with_alt(lat: float, lng: float, alts: list[float]) -> list[dict]:
+    base = datetime(2026, 5, 19, 12, 0, 0, tzinfo=timezone.utc)
+    return [
+        {
+            "lat": lat + i * 0.00005,
+            "lng": lng,
+            "alt": alt,
+            "timestamp": (base + timedelta(seconds=i * 3)).isoformat(),
+            "accuracy": 10,
+        }
+        for i, alt in enumerate(alts)
+    ]
+
+
+@pytest.mark.asyncio
+async def test_run_stores_avg_elevation(app_client):
+    token, _ = await _signup(app_client)
+    submit = await app_client.post(
+        "/runs",
+        json=_run_body(_trace_with_alt(47.6062, -122.3321, [100.0, 150.0, 200.0])),
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert submit.status_code == 201, submit.text
+    run_id = submit.json()["run_id"]
+    resp = await app_client.get(
+        f"/runs/{run_id}", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert resp.status_code == 200
+    assert resp.json()["avg_elevation_m"] == 150.0
+
+
+@pytest.mark.asyncio
+async def test_run_without_altitude_stores_null(app_client):
+    token, _ = await _signup(app_client)
+    submit = await app_client.post(
+        "/runs",
+        json=_run_body(_trace_around(47.6062, -122.3321, n=5)),
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert submit.status_code == 201, submit.text
+    run_id = submit.json()["run_id"]
+    resp = await app_client.get(
+        f"/runs/{run_id}", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert resp.status_code == 200
+    assert resp.json()["avg_elevation_m"] is None

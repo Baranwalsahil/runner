@@ -18,6 +18,7 @@ describe('SelectedRunMetrics', () => {
             { label: 'CELLS', value: '7', unit: 'HEX' },
             { label: 'DIST', value: '2.40', unit: 'KM' },
             { label: 'PACE', value: "6'30\"", unit: '/KM' },
+            { label: 'ELEV', value: '152', unit: 'M' },
           ],
         }}
       />
@@ -26,6 +27,8 @@ describe('SelectedRunMetrics', () => {
     expect(screen.getByText('7')).toBeInTheDocument();
     expect(screen.getByText('2.40')).toBeInTheDocument();
     expect(screen.getByText(/6'30"/)).toBeInTheDocument();
+    expect(screen.getByText('ELEV')).toBeInTheDocument();
+    expect(screen.getByText('152')).toBeInTheDocument();
     expect(screen.getByText(/Jun 12/)).toBeInTheDocument();
   });
 
