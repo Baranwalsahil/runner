@@ -41,7 +41,7 @@ describe("Dashboard route", () => {
     expect(screen.getByTestId("quick-run-stats")).toBeInTheDocument();
     expect(screen.getByTestId("territory-map-preview")).toBeInTheDocument();
     expect(screen.getByTestId("selected-run-metrics")).toBeInTheDocument();
-    expect(screen.getByTestId("recent-battles")).toBeInTheDocument();
+    expect(screen.queryByTestId("recent-battles")).toBeNull();
   });
 
   it("shows AlertBar with contested message on /dashboard", () => {
