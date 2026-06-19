@@ -26,13 +26,14 @@ export default function useGeolocation() {
     setIsRecording(true);
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        const { latitude, longitude, accuracy } = pos.coords;
+        const { latitude, longitude, accuracy, altitude } = pos.coords;
         setPoints((prev) => [
           ...prev,
           {
             lat: latitude,
             lng: longitude,
             accuracy,
+            alt: altitude ?? null,
             timestamp: new Date(pos.timestamp || Date.now()).toISOString(),
           },
         ]);

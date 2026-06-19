@@ -44,6 +44,12 @@ describe("Dashboard route", () => {
     expect(screen.queryByTestId("recent-battles")).toBeNull();
   });
 
+  it("includes the ELEV metric in all-time run stats", () => {
+    setup();
+    // buildAllTimeStats always emits an ELEV row (— when no samples).
+    expect(screen.getByText("ELEV")).toBeInTheDocument();
+  });
+
   it("shows AlertBar with contested message on /dashboard", () => {
     setup();
     expect(screen.getByTestId("alert-bar")).toBeInTheDocument();

@@ -23,7 +23,9 @@ Tasks run strictly in order — later tasks depend on earlier scaffolding.
 | 13 | [tasks-13-deploy.md](./tasks-13-deploy.md) | Vercel + Render + managed Postgres deploy | DevOps | M |
 | 14 | [tasks-14-run-pause-finish.md](./tasks-14-run-pause-finish.md) | Run session: Pause/Resume + Finish + refresh-safe persistence | FE | M |
 | 15 | [tasks-15-dashboard-run-history-chart.md](./tasks-15-dashboard-run-history-chart.md) | Dashboard run-history bar chart (30-day slider + per-run drill-down) | FE | M |
+| 16 | [tasks-16-run-elevation.md](./tasks-16-run-elevation.md) | Average elevation: capture GPS altitude → store per run → show in dashboard RUN.DETAIL card | FE+BE | M |
 | 17 | [tasks-17-growth-weight-projection.md](./tasks-17-growth-weight-projection.md) | Growth page: weight goal + run-trend → days-to-goal projection, daily calorie burn, computed speed-up scenarios | FE+BE | L |
+
 
 ## Rules
 

@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS runs (
     started_at TIMESTAMP NOT NULL,
     ended_at TIMESTAMP,
     distance_meters DECIMAL(10,2),
+    avg_elevation_m DECIMAL(8,2),
     gps_trace GEOMETRY(LINESTRING, 4326),
     cells_claimed INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW()
