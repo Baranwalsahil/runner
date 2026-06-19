@@ -9,6 +9,7 @@ import Battlefield from "./routes/Battlefield.jsx";
 import Leaderboard from "./routes/Leaderboard.jsx";
 import Run from "./routes/Run.jsx";
 import Profile from "./routes/Profile.jsx";
+import Growth from "./routes/Growth.jsx";
 
 export default function App() {
   return (
@@ -55,6 +56,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/growth"
+              element={
+                <ProtectedRoute>
+                  <Growth />
                 </ProtectedRoute>
               }
             />

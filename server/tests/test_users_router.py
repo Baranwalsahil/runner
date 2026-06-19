@@ -125,6 +125,69 @@ async def test_patch_me_invalid_username_chars_422(app_client):
 
 
 @pytest.mark.asyncio
+async def test_patch_me_updates_growth_profile(app_client):
+    token, _ = await _signup(app_client)
+    resp = await app_client.patch(
+        "/users/me",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "weight_kg": 72.5,
+            "goal_weight_kg": 68,
+            "height_cm": 178,
+            "age": 31,
+            "sex": "male",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["weight_kg"] == 72.5
+    assert body["goal_weight_kg"] == 68
+    assert body["height_cm"] == 178
+    assert body["age"] == 31
+    assert body["sex"] == "male"
+
+
+@pytest.mark.asyncio
+async def test_me_includes_growth_profile_after_update(app_client):
+    token, _ = await _signup(app_client)
+    await app_client.patch(
+        "/users/me",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"weight_kg": 80, "goal_weight_kg": 75, "sex": "female"},
+    )
+    resp = await app_client.get(
+        "/auth/me", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["weight_kg"] == 80
+    assert body["goal_weight_kg"] == 75
+    assert body["sex"] == "female"
+
+
+@pytest.mark.asyncio
+async def test_patch_me_invalid_sex_422(app_client):
+    token, _ = await _signup(app_client)
+    resp = await app_client.patch(
+        "/users/me",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"sex": "wizard"},
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_patch_me_invalid_weight_422(app_client):
+    token, _ = await _signup(app_client)
+    resp = await app_client.patch(
+        "/users/me",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"weight_kg": -5},
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_me_includes_first_last_name_after_update(app_client):
     token, _ = await _signup(app_client)
     await app_client.patch(
