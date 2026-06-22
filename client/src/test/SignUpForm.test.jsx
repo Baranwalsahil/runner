@@ -54,8 +54,10 @@ describe("<SignUpForm>", () => {
     fireEvent.change(screen.getByLabelText(/password/i), {
       target: { value: "secretsecret" },
     });
-    // Pick a non-default palette color.
-    fireEvent.click(screen.getByRole("radio", { name: /#ff6b6b/i }));
+    // Pick a custom hex color.
+    fireEvent.change(screen.getByLabelText(/territory color/i), {
+      target: { value: "#ff6b6b" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
     await waitFor(() =>
       expect(signUp).toHaveBeenCalledWith(

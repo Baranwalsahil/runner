@@ -2,15 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth.js";
 
-// Mirror of shared/constants.js OWNER_PALETTE — the allowed territory colors.
-const OWNER_PALETTE = [
-  "#c3f400",
-  "#00dbe9",
-  "#ffb4aa",
-  "#7df4ff",
-  "#ffdad5",
-  "#ff6b6b",
-];
+// Default territory color shown in the picker. The user may change it to any
+// hex color; colors are unique per user (server rejects an already-taken one).
+const DEFAULT_COLOR = "#c3f400";
 
 export default function SignUpForm() {
   const { signUp } = useAuth();
@@ -19,7 +13,7 @@ export default function SignUpForm() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [color, setColor] = useState(OWNER_PALETTE[0]);
+  const [color, setColor] = useState(DEFAULT_COLOR);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -86,32 +80,28 @@ export default function SignUpForm() {
         />
       </label>
 
-      <fieldset className="block">
-        <legend className="block text-xs font-hud-mono uppercase tracking-widest text-on-surface-variant">
+      <label className="block">
+        <span className="block text-xs font-hud-mono uppercase tracking-widest text-on-surface-variant">
           Territory color
-        </legend>
-        <div className="mt-xs flex flex-wrap gap-sm" role="radiogroup" aria-label="Territory color">
-          {OWNER_PALETTE.map((c) => {
-            const selected = c === color;
-            return (
-              <button
-                key={c}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                aria-label={`Color ${c}`}
-                onClick={() => setColor(c)}
-                style={{ backgroundColor: c }}
-                className={`h-8 w-8 rounded-full border-2 transition focus:outline-none focus:ring-2 focus:ring-primary-fixed ${
-                  selected
-                    ? "border-on-surface scale-110"
-                    : "border-transparent opacity-80 hover:opacity-100"
-                }`}
-              />
-            );
-          })}
+        </span>
+        <div className="mt-xs flex items-center gap-md">
+          <input
+            type="color"
+            aria-label="Territory color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="h-10 w-14 cursor-pointer border border-primary-fixed/40 bg-surface-container-lowest p-xs"
+          />
+          <span
+            className="h-10 w-10 border border-primary-fixed/40"
+            style={{ backgroundColor: color }}
+            aria-hidden="true"
+          />
+          <span className="font-hud-mono text-sm uppercase tracking-widest text-on-surface">
+            {color}
+          </span>
         </div>
-      </fieldset>
+      </label>
 
       {error && (
         <p role="alert" className="text-sm text-red-400">

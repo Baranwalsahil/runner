@@ -11,6 +11,10 @@ class UserAlreadyExists(Exception):
     pass
 
 
+class ColorTaken(Exception):
+    pass
+
+
 _SELECT_COLUMNS = (
     "id, email, username, first_name, last_name, "
     "avatar_url, color, total_cells, total_strength, total_area_m2, "
@@ -55,6 +59,8 @@ async def create_user(
     try:
         row = await pool.fetchrow(query, email, username, password_hash, color)
     except asyncpg.UniqueViolationError as e:
+        if e.constraint_name == "users_color_key":
+            raise ColorTaken(str(e)) from e
         raise UserAlreadyExists(str(e)) from e
     return _row_to_user(row)
 

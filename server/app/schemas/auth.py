@@ -3,16 +3,18 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
+import re
+
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from app.constants import OWNER_PALETTE
+_HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
 class SignupRequest(BaseModel):
     email: EmailStr
     username: str = Field(min_length=3, max_length=50)
     password: str = Field(min_length=8, max_length=128)
-    color: str = Field(default=OWNER_PALETTE[0])
+    color: str | None = None
 
     @field_validator("username")
     @classmethod
@@ -23,10 +25,12 @@ class SignupRequest(BaseModel):
 
     @field_validator("color")
     @classmethod
-    def _color_in_palette(cls, v: str) -> str:
-        if v not in OWNER_PALETTE:
-            raise ValueError("color must be one of the allowed palette colors")
-        return v
+    def _color_hex(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        if not _HEX_COLOR_RE.match(v):
+            raise ValueError("color must be a hex string like #rrggbb")
+        return v.lower()
 
 
 class LoginRequest(BaseModel):

@@ -20,11 +20,12 @@ color.
 
 | Question | Choice |
 |----------|--------|
-| Picker type | **Preset palette** — the existing `OWNER_PALETTE` swatches (no free hex input) |
+| Picker type | **Full hex color picker** — native `<input type="color">`, any hex color |
+| Uniqueness | **Unique per user** — a color taken by another user is rejected (409) |
 | Editable later | **Signup-only** for now (no profile edit this round) |
-| Existing users | **Backfill** every existing row to its current UUID-derived color (stored as a real value) |
-| Source of truth for palette | `shared/constants.js` / `server/app/constants.py` `OWNER_PALETTE` (already mirrored) |
-| Validation | Server rejects any color not in `OWNER_PALETTE` |
+| Existing users | **Backfill** every existing row to a deterministic near-unique hex (`md5(id)`) so a UNIQUE index can be added |
+| Validation | Server validates `#rrggbb` hex format (422); DB UNIQUE index enforces uniqueness (race-safe) |
+| Fallback | NULL color (e.g. seeded/legacy rows) falls back to `color_for_uuid`; multiple NULLs allowed by the unique index |
 
 ## Files touched
 
@@ -58,13 +59,13 @@ color.
 
 ## Acceptance criteria
 
-- [ ] Signup screen shows a row of palette swatches; one is selected by default; selection is keyboard-accessible.
-- [ ] Signing up with a chosen color stores it on the `users` row; `GET /auth/me` returns it.
-- [ ] Server rejects a signup `color` not in `OWNER_PALETTE` (422).
+- [ ] Signup screen shows a native color picker defaulting to a color; the user can pick any hex color.
+- [ ] Signing up with a chosen color stores it on the `users` row; `GET /auth/me` returns it (lowercased).
+- [ ] Server rejects a malformed `color` (not `#rrggbb`) with 422.
+- [ ] Signing up with a color already owned by another user returns 409.
 - [ ] New user's owned hexes render in the chosen color on Dashboard + Battlefield; leaderboard chip matches.
-- [ ] Existing (pre-migration) users keep their previous (now backfilled) color — no visual change for them.
-- [ ] BE tests (`pytest`) + FE tests (`vitest`) green; signup form test covers color selection.
-- [ ] Chrome flow verified: sign up a fresh user with a non-default color, confirm their cells render that color on the map.
+- [ ] BE tests (`pytest`) + FE tests (`vitest`) green; signup form test covers custom color + uniqueness 409.
+- [ ] Chrome flow verified: sign up a fresh user with a custom color, confirm their cells render that color on the map.
 
 ## Out of scope
 

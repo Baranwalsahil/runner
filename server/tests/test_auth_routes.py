@@ -97,6 +97,32 @@ async def test_signup_validates_short_password(app_client):
 
 
 @pytest.mark.asyncio
+async def test_signup_stores_chosen_color(app_client):
+    creds = {**_unique_creds(), "color": "#A1B2C3"}
+    resp = await app_client.post("/auth/signup", json=creds)
+    assert resp.status_code == 201, resp.text
+    # Stored and returned lowercased.
+    assert resp.json()["user"]["color"] == "#a1b2c3"
+
+
+@pytest.mark.asyncio
+async def test_signup_rejects_malformed_color(app_client):
+    creds = {**_unique_creds(), "color": "red"}
+    resp = await app_client.post("/auth/signup", json=creds)
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_signup_rejects_taken_color_409(app_client):
+    color = "#0a0b0c"
+    first = {**_unique_creds(), "color": color}
+    assert (await app_client.post("/auth/signup", json=first)).status_code == 201
+    second = {**_unique_creds(), "color": color}
+    resp = await app_client.post("/auth/signup", json=second)
+    assert resp.status_code == 409
+
+
+@pytest.mark.asyncio
 async def test_login_valid_returns_token(app_client):
     creds = _unique_creds()
     await app_client.post("/auth/signup", json=creds)
