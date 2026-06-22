@@ -390,7 +390,12 @@ def _trace_with_alt(lat: float, lng: float, alts: list[float]) -> list[dict]:
 
 
 @pytest.mark.asyncio
-async def test_run_stores_avg_elevation(app_client):
+async def test_run_stores_elevation_gain(app_client):
+    """avg_elevation_m column now stores cumulative elevation GAIN.
+
+    [100, 150, 200]: two rises of 50 m each → gain = 100 m (well above 3 m
+    threshold), so stored value should be 100.0.
+    """
     token, _ = await _signup(app_client)
     submit = await app_client.post(
         "/runs",
@@ -403,7 +408,8 @@ async def test_run_stores_avg_elevation(app_client):
         f"/runs/{run_id}", headers={"Authorization": f"Bearer {token}"}
     )
     assert resp.status_code == 200
-    assert resp.json()["avg_elevation_m"] == 150.0
+    # Gain = 50 + 50 = 100.0 m (not the old mean of 150.0)
+    assert resp.json()["avg_elevation_m"] == 100.0
 
 
 @pytest.mark.asyncio
