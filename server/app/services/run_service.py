@@ -82,13 +82,39 @@ def _bad_request(msg: str) -> HTTPException:
     return HTTPException(status.HTTP_400_BAD_REQUEST, msg)
 
 
-def _avg_elevation(points) -> float | None:
-    """Mean device altitude (metres) over points that report one. None if no
-    point carries an altitude (desktop / no-fix devices)."""
-    alts = [p.alt for p in points if p.alt is not None]
-    if not alts:
+MIN_GAIN_THRESHOLD_M = 3.0  # ignore climbs below this to suppress GPS jitter
+
+
+def _elevation_gain(points) -> float | None:
+    """Cumulative positive elevation gain (metres) over a GPS trace.
+
+    Only consecutive point-pairs that both report an altitude are considered.
+    Tiny GPS-jitter climbs are suppressed: a rise is only counted once the
+    cumulative upward movement since the last accepted gain exceeds
+    MIN_GAIN_THRESHOLD_M.  Returns None when fewer than 2 points carry
+    altitude (e.g. desktop/no-fix devices)."""
+    alts = [(i, p.alt) for i, p in enumerate(points) if p.alt is not None]
+    if len(alts) < 2:
         return None
-    return round(sum(alts) / len(alts), 2)
+
+    total_gain = 0.0
+    pending = 0.0  # accumulated rise not yet counted
+    prev_alt = alts[0][1]
+
+    for _, alt in alts[1:]:
+        delta = alt - prev_alt
+        if delta > 0:
+            pending += delta
+            if pending >= MIN_GAIN_THRESHOLD_M:
+                total_gain += pending
+                pending = 0.0
+        else:
+            # Descent resets the pending accumulator so we don't double-count
+            # after GPS noise bounces.
+            pending = 0.0
+        prev_alt = alt
+
+    return round(total_gain, 2)
 
 
 async def ingest_run(
@@ -108,7 +134,7 @@ async def ingest_run(
         raise _bad_request(f"trace exceeds {MAX_CELLS_PER_RUN} cells")
 
     distance_m = trace_distance_m(cleaned)
-    avg_elevation_m = _avg_elevation(cleaned)
+    elevation_gain_m = _elevation_gain(cleaned)
 
     # Build LINESTRING WKT (lng lat order per WKT spec)
     wkt = "LINESTRING(" + ", ".join(f"{p.lng} {p.lat}" for p in cleaned) + ")"
@@ -141,7 +167,7 @@ async def ingest_run(
                 payload.started_at.replace(tzinfo=None) if payload.started_at.tzinfo else payload.started_at,
                 payload.ended_at.replace(tzinfo=None) if payload.ended_at.tzinfo else payload.ended_at,
                 distance_m,
-                avg_elevation_m,
+                elevation_gain_m,
                 wkt,
                 len(cells),
             )

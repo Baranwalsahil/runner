@@ -89,9 +89,9 @@ function runMetrics(r) {
     distanceM > 0 && durationMs > 0
       ? durationMs / 60_000 / (distanceM / 1000)
       : null;
-  const avgElevationM =
+  const elevationGainM =
     r.avg_elevation_m == null ? null : Number(r.avg_elevation_m);
-  return { cells, distanceM, durationMs, areaM2, paceMinPerKm, avgElevationM };
+  return { cells, distanceM, durationMs, areaM2, paceMinPerKm, elevationGainM };
 }
 
 function mean(values) {
@@ -109,7 +109,7 @@ function formatPace(minPerKm) {
   return `${mm}'${String(ss).padStart(2, "0")}"`;
 }
 
-// Average elevation, rounded to whole metres. Null/unknown → em dash.
+// Elevation gain, rounded to whole metres. Null/unknown → em dash.
 function formatElevation(m) {
   if (m == null || !isFinite(m)) return "—";
   return String(Math.round(m));
@@ -123,7 +123,7 @@ function buildAllTimeStats(runs) {
   const areas = all.map((m) => m.areaM2);
   const durations = all.map((m) => m.durationMs);
   const paces = all.map((m) => m.paceMinPerKm).filter((p) => p != null);
-  const elevations = all.map((m) => m.avgElevationM).filter((e) => e != null);
+  const elevations = all.map((m) => m.elevationGainM).filter((e) => e != null);
   const maxOr0 = (xs) => (xs.length ? Math.max(...xs) : 0);
   return [
     {
@@ -321,7 +321,7 @@ export default function Dashboard() {
             { label: "AREA", value: formatAreaKm2(m.areaM2), unit: "KM²" },
             { label: "TIME", value: formatDuration(m.durationMs), unit: "" },
             { label: "PACE", value: formatPace(m.paceMinPerKm), unit: "/KM" },
-            { label: "ELEV", value: formatElevation(m.avgElevationM), unit: "M" },
+            { label: "ELEV", value: formatElevation(m.elevationGainM), unit: "M" },
           ],
         };
       })()
