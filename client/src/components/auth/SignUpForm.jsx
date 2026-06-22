@@ -2,6 +2,16 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth.js";
 
+// Mirror of shared/constants.js OWNER_PALETTE — the allowed territory colors.
+const OWNER_PALETTE = [
+  "#c3f400",
+  "#00dbe9",
+  "#ffb4aa",
+  "#7df4ff",
+  "#ffdad5",
+  "#ff6b6b",
+];
+
 export default function SignUpForm() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -9,6 +19,7 @@ export default function SignUpForm() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [color, setColor] = useState(OWNER_PALETTE[0]);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -17,7 +28,7 @@ export default function SignUpForm() {
     setError(null);
     setSubmitting(true);
     try {
-      await signUp({ email, username, password });
+      await signUp({ email, username, password, color });
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.message || "Sign up failed");
@@ -74,6 +85,33 @@ export default function SignUpForm() {
           className="mt-xs w-full border border-primary-fixed/40 bg-surface-container-lowest px-md py-sm text-on-surface focus:border-primary-fixed focus:outline-none"
         />
       </label>
+
+      <fieldset className="block">
+        <legend className="block text-xs font-hud-mono uppercase tracking-widest text-on-surface-variant">
+          Territory color
+        </legend>
+        <div className="mt-xs flex flex-wrap gap-sm" role="radiogroup" aria-label="Territory color">
+          {OWNER_PALETTE.map((c) => {
+            const selected = c === color;
+            return (
+              <button
+                key={c}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                aria-label={`Color ${c}`}
+                onClick={() => setColor(c)}
+                style={{ backgroundColor: c }}
+                className={`h-8 w-8 rounded-full border-2 transition focus:outline-none focus:ring-2 focus:ring-primary-fixed ${
+                  selected
+                    ? "border-on-surface scale-110"
+                    : "border-transparent opacity-80 hover:opacity-100"
+                }`}
+              />
+            );
+          })}
+        </div>
+      </fieldset>
 
       {error && (
         <p role="alert" className="text-sm text-red-400">

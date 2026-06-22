@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     avatar_url TEXT,
+    color VARCHAR(7),
     total_cells INTEGER DEFAULT 0,
     total_strength INTEGER DEFAULT 0,
     total_area_m2 DECIMAL(12,2) DEFAULT 0,

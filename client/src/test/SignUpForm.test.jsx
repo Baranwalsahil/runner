@@ -37,8 +37,31 @@ describe("<SignUpForm>", () => {
       email: "new@example.com",
       username: "new_user",
       password: "secretsecret",
+      color: "#c3f400",
     }));
     await waitFor(() => expect(screen.getByTestId("dash")).toBeInTheDocument());
+  });
+
+  it("submits the chosen territory color", async () => {
+    const signUp = vi.fn().mockResolvedValue({ id: "u1" });
+    renderForm({ signUp });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "new@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/username/i), {
+      target: { value: "new_user" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "secretsecret" },
+    });
+    // Pick a non-default palette color.
+    fireEvent.click(screen.getByRole("radio", { name: /#ff6b6b/i }));
+    fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
+    await waitFor(() =>
+      expect(signUp).toHaveBeenCalledWith(
+        expect.objectContaining({ color: "#ff6b6b" })
+      )
+    );
   });
 
   it("surfaces error on signUp rejection", async () => {

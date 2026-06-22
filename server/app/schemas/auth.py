@@ -5,17 +5,27 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+from app.constants import OWNER_PALETTE
+
 
 class SignupRequest(BaseModel):
     email: EmailStr
     username: str = Field(min_length=3, max_length=50)
     password: str = Field(min_length=8, max_length=128)
+    color: str = Field(default=OWNER_PALETTE[0])
 
     @field_validator("username")
     @classmethod
     def _username_chars(cls, v: str) -> str:
         if not all(c.isalnum() or c in "-_" for c in v):
             raise ValueError("username must be alphanumeric, dash, or underscore")
+        return v
+
+    @field_validator("color")
+    @classmethod
+    def _color_in_palette(cls, v: str) -> str:
+        if v not in OWNER_PALETTE:
+            raise ValueError("color must be one of the allowed palette colors")
         return v
 
 
@@ -31,6 +41,7 @@ class User(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     avatar_url: str | None = None
+    color: str | None = None
     total_cells: int = 0
     total_strength: int = 0
     total_area_m2: float = 0.0

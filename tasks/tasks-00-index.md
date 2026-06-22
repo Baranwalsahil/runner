@@ -25,6 +25,7 @@ Tasks run strictly in order — later tasks depend on earlier scaffolding.
 | 15 | [tasks-15-dashboard-run-history-chart.md](./tasks-15-dashboard-run-history-chart.md) | Dashboard run-history bar chart (30-day slider + per-run drill-down) | FE | M |
 | 16 | [tasks-16-run-elevation.md](./tasks-16-run-elevation.md) | Average elevation: capture GPS altitude → store per run → show in dashboard RUN.DETAIL card | FE+BE | M |
 | 17 | [tasks-17-growth-weight-projection.md](./tasks-17-growth-weight-projection.md) | Growth page: weight goal + run-trend → days-to-goal projection, daily calorie burn, computed speed-up scenarios | FE+BE | L |
+| 18 | [tasks-18-user-chosen-color.md](./tasks-18-user-chosen-color.md) | User picks territory color at signup → stored on user → renders owned hexes on Dashboard + Battlefield | FE+BE | M |
 
 
 ## Rules

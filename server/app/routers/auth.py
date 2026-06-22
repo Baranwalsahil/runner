@@ -33,6 +33,7 @@ async def signup(
             email=body.email.lower(),
             username=body.username,
             password_hash=password_hash,
+            color=body.color,
         )
     except user_service.UserAlreadyExists:
         raise HTTPException(

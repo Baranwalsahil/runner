@@ -13,7 +13,7 @@ class UserAlreadyExists(Exception):
 
 _SELECT_COLUMNS = (
     "id, email, username, first_name, last_name, "
-    "avatar_url, total_cells, total_strength, total_area_m2, "
+    "avatar_url, color, total_cells, total_strength, total_area_m2, "
     "weight_kg, goal_weight_kg, height_cm, age, sex, created_at"
 )
 
@@ -26,6 +26,7 @@ def _row_to_user(row: asyncpg.Record) -> User:
         first_name=row["first_name"],
         last_name=row["last_name"],
         avatar_url=row["avatar_url"],
+        color=row["color"],
         total_cells=row["total_cells"],
         total_strength=row["total_strength"],
         total_area_m2=float(row["total_area_m2"]),
@@ -45,13 +46,14 @@ async def create_user(
     email: str,
     username: str,
     password_hash: str,
+    color: str | None = None,
 ) -> User:
     query = (
-        f"INSERT INTO users (email, username, password_hash) "
-        f"VALUES ($1, $2, $3) RETURNING {_SELECT_COLUMNS}"
+        f"INSERT INTO users (email, username, password_hash, color) "
+        f"VALUES ($1, $2, $3, $4) RETURNING {_SELECT_COLUMNS}"
     )
     try:
-        row = await pool.fetchrow(query, email, username, password_hash)
+        row = await pool.fetchrow(query, email, username, password_hash, color)
     except asyncpg.UniqueViolationError as e:
         raise UserAlreadyExists(str(e)) from e
     return _row_to_user(row)

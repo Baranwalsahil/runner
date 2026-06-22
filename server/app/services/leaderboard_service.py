@@ -19,7 +19,7 @@ def _row_to_lb(row: asyncpg.Record) -> LeaderboardRow:
         username=row["username"],
         total_cells=row["total_cells"],
         rank=row["rank"],
-        color=color_for_uuid(uid),
+        color=row["color"] or color_for_uuid(uid),
     )
 
 
@@ -28,23 +28,24 @@ async def _hydrate_users(
 ) -> list[LeaderboardRow]:
     ids = [UUID(uid) for uid, _ in scored]
     rows = await pool.fetch(
-        "SELECT id, username FROM users WHERE id = ANY($1::uuid[])",
+        "SELECT id, username, color FROM users WHERE id = ANY($1::uuid[])",
         ids,
     )
-    by_id = {row["id"]: row["username"] for row in rows}
+    by_id = {row["id"]: (row["username"], row["color"]) for row in rows}
     out: list[LeaderboardRow] = []
     for uid, score in scored:
         uuid_obj = UUID(uid)
-        username = by_id.get(uuid_obj)
-        if username is None:
+        entry = by_id.get(uuid_obj)
+        if entry is None:
             continue
+        username, color = entry
         out.append(
             LeaderboardRow(
                 user_id=uuid_obj,
                 username=username,
                 total_cells=score,
                 rank=offset + len(out) + 1,
-                color=color_for_uuid(uuid_obj),
+                color=color or color_for_uuid(uuid_obj),
             )
         )
     return out
@@ -69,9 +70,9 @@ async def top(
     if period == "all":
         rows = await pool.fetch(
             """
-            SELECT user_id, username, total_cells, rank
+            SELECT user_id, username, color, total_cells, rank
             FROM (
-              SELECT id AS user_id, username, total_strength AS total_cells,
+              SELECT id AS user_id, username, color, total_strength AS total_cells,
                      ROW_NUMBER() OVER (ORDER BY total_strength DESC, username ASC) AS rank
               FROM users
             ) ranked
@@ -94,7 +95,7 @@ async def top(
                 AND claimed_at > NOW() - INTERVAL '{interval}'
               GROUP BY user_id
             )
-            SELECT u.id AS user_id, u.username, r.recent_cells AS total_cells,
+            SELECT u.id AS user_id, u.username, u.color, r.recent_cells AS total_cells,
                    ROW_NUMBER() OVER (ORDER BY r.recent_cells DESC, u.username ASC) AS rank
             FROM recent r
             JOIN users u ON u.id = r.user_id
@@ -128,14 +129,14 @@ async def nearby(
     rows = await pool.fetch(
         """
         WITH ranked AS (
-          SELECT id AS user_id, username, total_strength AS total_cells,
+          SELECT id AS user_id, username, color, total_strength AS total_cells,
                  ROW_NUMBER() OVER (ORDER BY total_strength DESC, username ASC) AS rank
           FROM users
         ),
         me AS (
           SELECT rank FROM ranked WHERE user_id = $1
         )
-        SELECT ranked.user_id, ranked.username, ranked.total_cells, ranked.rank
+        SELECT ranked.user_id, ranked.username, ranked.color, ranked.total_cells, ranked.rank
         FROM ranked, me
         WHERE ABS(ranked.rank - me.rank) <= $2
         ORDER BY ranked.rank
