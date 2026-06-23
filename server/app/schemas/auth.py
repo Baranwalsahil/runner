@@ -3,13 +3,18 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
+import re
+
 from pydantic import BaseModel, EmailStr, Field, field_validator
+
+_HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
 class SignupRequest(BaseModel):
     email: EmailStr
     username: str = Field(min_length=3, max_length=50)
     password: str = Field(min_length=8, max_length=128)
+    color: str | None = None
 
     @field_validator("username")
     @classmethod
@@ -17,6 +22,15 @@ class SignupRequest(BaseModel):
         if not all(c.isalnum() or c in "-_" for c in v):
             raise ValueError("username must be alphanumeric, dash, or underscore")
         return v
+
+    @field_validator("color")
+    @classmethod
+    def _color_hex(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        if not _HEX_COLOR_RE.match(v):
+            raise ValueError("color must be a hex string like #rrggbb")
+        return v.lower()
 
 
 class LoginRequest(BaseModel):
@@ -31,6 +45,7 @@ class User(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     avatar_url: str | None = None
+    color: str | None = None
     total_cells: int = 0
     total_strength: int = 0
     total_area_m2: float = 0.0

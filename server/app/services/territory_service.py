@@ -31,7 +31,7 @@ def _row_to_cell(
         h3_index=row["h3_index"],
         user_id=uid,
         username=row["username"],
-        color=color_for_uuid(uid) if uid is not None else None,
+        color=(row["color"] or color_for_uuid(uid)) if uid is not None else None,
         resolution=row["resolution"],
         claim_count=row["claim_count"],
         claimed_at=row["claimed_at"],
@@ -47,7 +47,7 @@ async def _shares_by_cell(
         return {}
     rows = await pool.fetch(
         """
-        SELECT cu.h3_index, cu.user_id, cu.count, u.username
+        SELECT cu.h3_index, cu.user_id, cu.count, u.username, u.color
         FROM claimed_cell_users cu
         JOIN users u ON u.id = cu.user_id
         WHERE cu.h3_index = ANY($1::text[])
@@ -61,7 +61,7 @@ async def _shares_by_cell(
             CellShare(
                 user_id=r["user_id"],
                 username=r["username"],
-                color=color_for_uuid(r["user_id"]),
+                color=r["color"] or color_for_uuid(r["user_id"]),
                 count=r["count"],
             )
         )
@@ -85,7 +85,7 @@ async def cells_in_bounds(
         rows = await pool.fetch(
             """
             SELECT c.h3_index, c.user_id, c.resolution, c.claim_count, c.claimed_at,
-                   u.username
+                   u.username, u.color
             FROM claimed_cells c
             LEFT JOIN users u ON u.id = c.user_id
             WHERE c.h3_index = ANY($1::text[])
@@ -109,7 +109,7 @@ async def cells_for_user(
     rows = await pool.fetch(
         """
         SELECT c.h3_index, c.user_id, c.resolution, c.claim_count, c.claimed_at,
-               u.username
+               u.username, u.color
         FROM claimed_cells c
         LEFT JOIN users u ON u.id = c.user_id
         WHERE c.user_id = $1

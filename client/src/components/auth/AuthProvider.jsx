@@ -49,10 +49,10 @@ export default function AuthProvider({ children }) {
     return data.user;
   }, []);
 
-  const signUp = useCallback(async ({ email, username, password }) => {
+  const signUp = useCallback(async ({ email, username, password, color }) => {
     const data = await apiJson("/auth/signup", {
       method: "POST",
-      body: JSON.stringify({ email, username, password }),
+      body: JSON.stringify({ email, username, password, color }),
     });
     saveToken(data.token);
     setToken(data.token);

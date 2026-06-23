@@ -2,6 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth.js";
 
+// Default territory color shown in the picker. The user may change it to any
+// hex color; colors are unique per user (server rejects an already-taken one).
+const DEFAULT_COLOR = "#c3f400";
+
 export default function SignUpForm() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -9,6 +13,7 @@ export default function SignUpForm() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [color, setColor] = useState(DEFAULT_COLOR);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -17,7 +22,7 @@ export default function SignUpForm() {
     setError(null);
     setSubmitting(true);
     try {
-      await signUp({ email, username, password });
+      await signUp({ email, username, password, color });
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.message || "Sign up failed");
@@ -73,6 +78,29 @@ export default function SignUpForm() {
           onChange={(e) => setPassword(e.target.value)}
           className="mt-xs w-full border border-primary-fixed/40 bg-surface-container-lowest px-md py-sm text-on-surface focus:border-primary-fixed focus:outline-none"
         />
+      </label>
+
+      <label className="block">
+        <span className="block text-xs font-hud-mono uppercase tracking-widest text-on-surface-variant">
+          Territory color
+        </span>
+        <div className="mt-xs flex items-center gap-md">
+          <input
+            type="color"
+            aria-label="Territory color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="h-10 w-14 cursor-pointer border border-primary-fixed/40 bg-surface-container-lowest p-xs"
+          />
+          <span
+            className="h-10 w-10 border border-primary-fixed/40"
+            style={{ backgroundColor: color }}
+            aria-hidden="true"
+          />
+          <span className="font-hud-mono text-sm uppercase tracking-widest text-on-surface">
+            {color}
+          </span>
+        </div>
       </label>
 
       {error && (
