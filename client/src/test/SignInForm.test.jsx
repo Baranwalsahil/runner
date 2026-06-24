@@ -20,18 +20,18 @@ function renderForm({ signIn }) {
 }
 
 describe("<SignInForm>", () => {
-  it("calls signIn with email + password and navigates on success", async () => {
+  it("calls signIn with username + password and navigates on success", async () => {
     const signIn = vi.fn().mockResolvedValue({ id: "u1" });
     renderForm({ signIn });
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: "t@example.com" },
+    fireEvent.change(screen.getByLabelText(/username/i), {
+      target: { value: "demo_user" },
     });
     fireEvent.change(screen.getByLabelText(/password/i), {
       target: { value: "secretsecret" },
     });
     fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
     await waitFor(() => expect(signIn).toHaveBeenCalledWith({
-      email: "t@example.com",
+      username: "demo_user",
       password: "secretsecret",
     }));
     await waitFor(() => expect(screen.getByTestId("dash")).toBeInTheDocument());
@@ -40,8 +40,8 @@ describe("<SignInForm>", () => {
   it("shows error message on signIn failure", async () => {
     const signIn = vi.fn().mockRejectedValue(new Error("Invalid credentials"));
     renderForm({ signIn });
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: "t@example.com" },
+    fireEvent.change(screen.getByLabelText(/username/i), {
+      target: { value: "demo_user" },
     });
     fireEvent.change(screen.getByLabelText(/password/i), {
       target: { value: "wrongpassword" },
