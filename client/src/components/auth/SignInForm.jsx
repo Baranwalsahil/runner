@@ -8,7 +8,7 @@ export default function SignInForm() {
   const location = useLocation();
   const redirectTo = location.state?.from?.pathname || "/dashboard";
 
-  const [identifier, setIdentifier] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -18,7 +18,7 @@ export default function SignInForm() {
     setError(null);
     setSubmitting(true);
     try {
-      await signIn({ identifier, password });
+      await signIn({ username, password });
       navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.message || "Sign in failed");
@@ -31,14 +31,14 @@ export default function SignInForm() {
     <form onSubmit={onSubmit} className="space-y-md" aria-label="Sign in">
       <label className="block">
         <span className="block text-xs font-hud-mono uppercase tracking-widest text-on-surface-variant">
-          Email or Username
+          Username
         </span>
         <input
           type="text"
-          autoComplete="username email"
+          autoComplete="username"
           required
-          value={identifier}
-          onChange={(e) => setIdentifier(e.target.value)}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           className="mt-xs w-full border border-primary-fixed/40 bg-surface-container-lowest px-md py-sm text-on-surface focus:border-primary-fixed focus:outline-none"
         />
       </label>

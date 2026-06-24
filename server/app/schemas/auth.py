@@ -34,7 +34,7 @@ class SignupRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    identifier: str = Field(min_length=1, max_length=255)
+    username: str = Field(min_length=1, max_length=50)
     password: str = Field(min_length=1, max_length=128)
 
 
