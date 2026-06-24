@@ -76,6 +76,20 @@ async def get_user_by_email(pool: asyncpg.Pool, email: str) -> tuple[User, str] 
     return _row_to_user(row), row["password_hash"]
 
 
+async def get_user_by_identifier(
+    pool: asyncpg.Pool, identifier: str
+) -> tuple[User, str] | None:
+    """Lookup by email OR username. Returns (user, password_hash) or None."""
+    row = await pool.fetchrow(
+        f"SELECT {_SELECT_COLUMNS}, password_hash FROM users "
+        f"WHERE email = $1 OR username = $1",
+        identifier,
+    )
+    if row is None:
+        return None
+    return _row_to_user(row), row["password_hash"]
+
+
 async def get_user_by_id(pool: asyncpg.Pool, user_id: UUID) -> User | None:
     row = await pool.fetchrow(
         f"SELECT {_SELECT_COLUMNS} FROM users WHERE id = $1",

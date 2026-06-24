@@ -123,15 +123,30 @@ async def test_signup_rejects_taken_color_409(app_client):
 
 
 @pytest.mark.asyncio
-async def test_login_valid_returns_token(app_client):
+async def test_login_valid_by_email_returns_token(app_client):
     creds = _unique_creds()
     await app_client.post("/auth/signup", json=creds)
     resp = await app_client.post(
         "/auth/login",
-        json={"email": creds["email"], "password": creds["password"]},
+        json={"identifier": creds["email"], "password": creds["password"]},
     )
     assert resp.status_code == 200, resp.text
     assert "token" in resp.json()
+
+
+@pytest.mark.asyncio
+async def test_login_valid_by_username_returns_token(app_client):
+    """Login with username instead of email must succeed."""
+    creds = _unique_creds()
+    await app_client.post("/auth/signup", json=creds)
+    resp = await app_client.post(
+        "/auth/login",
+        json={"identifier": creds["username"], "password": creds["password"]},
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert "token" in data
+    assert data["user"]["username"] == creds["username"]
 
 
 @pytest.mark.asyncio
@@ -140,17 +155,17 @@ async def test_login_wrong_password_401_generic(app_client):
     await app_client.post("/auth/signup", json=creds)
     resp = await app_client.post(
         "/auth/login",
-        json={"email": creds["email"], "password": "wrong-password-here"},
+        json={"identifier": creds["email"], "password": "wrong-password-here"},
     )
     assert resp.status_code == 401
     assert resp.json()["message"] == "Invalid credentials"
 
 
 @pytest.mark.asyncio
-async def test_login_unknown_email_401_generic(app_client):
+async def test_login_unknown_identifier_401_generic(app_client):
     resp = await app_client.post(
         "/auth/login",
-        json={"email": "no-such@example.com", "password": "anythinghere"},
+        json={"identifier": "no-such@example.com", "password": "anythinghere"},
     )
     assert resp.status_code == 401
     assert resp.json()["message"] == "Invalid credentials"

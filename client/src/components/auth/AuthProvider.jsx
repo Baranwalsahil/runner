@@ -38,10 +38,10 @@ export default function AuthProvider({ children }) {
     };
   }, []);
 
-  const signIn = useCallback(async ({ email, password }) => {
+  const signIn = useCallback(async ({ identifier, password }) => {
     const data = await apiJson("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ identifier, password }),
     });
     saveToken(data.token);
     setToken(data.token);

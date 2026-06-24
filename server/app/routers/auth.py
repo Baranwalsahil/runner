@@ -54,7 +54,7 @@ async def login(
     body: LoginRequest,
     pool: asyncpg.Pool = Depends(get_db_pool),
 ) -> AuthResponse:
-    result = await user_service.get_user_by_email(pool, body.email.lower())
+    result = await user_service.get_user_by_identifier(pool, body.identifier.lower())
     if result is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, INVALID_CREDS)
     user, password_hash = result
