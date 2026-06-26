@@ -316,10 +316,15 @@ export default function Dashboard() {
   const isExplicitSelection = Boolean(selectedRunId);
   // When a bar is explicitly selected and the run detail is loaded, show that
   // run's cell count in the CELLS.OWNED headline; otherwise show the all-time total.
-  const displayedCells =
-    isExplicitSelection && selectedRunLoaded
-      ? Number(selectedRun.cells_claimed) || 0
-      : totalCells;
+  // Read the selected run's count straight from the in-memory runs list rather
+  // than the async-loaded detail, so the headline updates the instant a bar is
+  // clicked instead of lagging a click behind the runsApi.detail() fetch.
+  const selectedRunSummary = isExplicitSelection
+    ? runs.find((r) => `run-${r.id}` === selectedRunId)
+    : null;
+  const displayedCells = selectedRunSummary
+    ? Number(selectedRunSummary.cells_claimed) || 0
+    : totalCells;
   // Metrics for the run currently shown on the map (selected bar, else latest).
   const selectedRunMetrics = viewingRun
     ? (() => {
