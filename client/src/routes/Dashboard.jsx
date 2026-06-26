@@ -308,6 +308,12 @@ export default function Dashboard() {
         })
       : null;
   const isExplicitSelection = Boolean(selectedRunId);
+  // When a bar is explicitly selected and the run detail is loaded, show that
+  // run's cell count in the CELLS.OWNED headline; otherwise show the all-time total.
+  const displayedCells =
+    isExplicitSelection && selectedRun != null
+      ? Number(selectedRun.cells_claimed) || 0
+      : totalCells;
   // Metrics for the run currently shown on the map (selected bar, else latest).
   const selectedRunMetrics = viewingRun
     ? (() => {
@@ -336,7 +342,7 @@ export default function Dashboard() {
     <div className="px-margin-safe max-w-7xl mx-auto w-full">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
         <TerritoryDominance
-          cells={totalCells}
+          cells={displayedCells}
           strength={totalStrength}
           region={region}
           chartData={chartData}
