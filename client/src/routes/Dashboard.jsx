@@ -271,7 +271,13 @@ export default function Dashboard() {
         : "NEW RUNNER"
       : `${totalCells} CELL${totalCells === 1 ? "" : "S"} CLAIMED`;
 
-  const viewingRun = Boolean(selectedRun);
+  // selectedRun lags behind activeRunId until runsApi.detail() resolves for the
+  // newly active run. Only treat it as the current run once the loaded detail's
+  // id matches, so the headline/map never flash the previous run's data.
+  const activeRunIdRaw = activeRunId ? activeRunId.replace(/^run-/, "") : null;
+  const selectedRunLoaded =
+    selectedRun != null && String(selectedRun.id) === activeRunIdRaw;
+  const viewingRun = selectedRunLoaded;
   // Current strength the signed-in user holds per owned cell (from territory).
   const myCountByH3 = new Map();
   for (const c of cells) {
@@ -308,6 +314,17 @@ export default function Dashboard() {
         })
       : null;
   const isExplicitSelection = Boolean(selectedRunId);
+  // When a bar is explicitly selected and the run detail is loaded, show that
+  // run's cell count in the CELLS.OWNED headline; otherwise show the all-time total.
+  // Read the selected run's count straight from the in-memory runs list rather
+  // than the async-loaded detail, so the headline updates the instant a bar is
+  // clicked instead of lagging a click behind the runsApi.detail() fetch.
+  const selectedRunSummary = isExplicitSelection
+    ? runs.find((r) => `run-${r.id}` === selectedRunId)
+    : null;
+  const displayedCells = selectedRunSummary
+    ? Number(selectedRunSummary.cells_claimed) || 0
+    : totalCells;
   // Metrics for the run currently shown on the map (selected bar, else latest).
   const selectedRunMetrics = viewingRun
     ? (() => {
@@ -336,7 +353,7 @@ export default function Dashboard() {
     <div className="px-margin-safe max-w-7xl mx-auto w-full">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-lg">
         <TerritoryDominance
-          cells={totalCells}
+          cells={displayedCells}
           strength={totalStrength}
           region={region}
           chartData={chartData}
