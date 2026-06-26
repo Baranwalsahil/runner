@@ -664,7 +664,11 @@ For **every** code change — task implementation, bug fix, polish, refactor —
    - `feat/task-NN-...` — task implementation (e.g. `feat/task-07-backend-scaffold`)
    - `fix/<area>-<bug>` — bug fix (e.g. `fix/battlefield-legend-empty`)
    - `chore/...`, `refactor/...`, `docs/...` — other categories
-2. Implement on the branch. Commit incrementally — small logical commits beat one giant commit.
+2. Implement on the branch. Commit incrementally — small logical commits beat one giant commit. **Before every `git commit`, run the CodeRabbit CLI review on the working changes and resolve real findings first:**
+   ```bash
+   coderabbit review --plain   # local review of all changes vs main; --agent for structured output
+   ```
+   Fix anything actionable (skip pure style nits), re-run if you changed code, then commit. This is a hard gate — do not commit unreviewed code.
 3. Run full test suite (`npm test` for FE, `pytest -v` for BE). Run curl checks for acceptance. Update `progress.md` if the change tracks against a `tasks/` file.
 4. **Verify the flow in Chrome — MANDATORY before pushing, never skip.** Green unit tests / lint / build do NOT count as verification. Bring up the local stack (`docker compose up -d`, see the `territory-dev` skill), seed data if the flow needs it (`python server/scripts/seed_demo.py`), then drive the *actual changed behaviour* in the real UI with the `claude-in-chrome` tools (`territory-dev` creds: `demo_a@test.com` / `secretsecret`). Exercise the specific feature/fix end-to-end (e.g. click the new control, confirm the screen updates), capture a screenshot or GIF for multi-step flows, and only proceed once you've seen it work. If it can't be verified in Chrome (pure backend/infra), say so explicitly and fall back to curl/log evidence. Record what you verified in the PR's Test plan.
 5. Push the branch:
@@ -685,8 +689,10 @@ For **every** code change — task implementation, bug fix, polish, refactor —
    )"
    ```
    Return the PR URL to the user.
+7. **After the PR is raised, run the CodeRabbit CLI review again** (`coderabbit review --plain`) and address any findings in a follow-up commit on the same branch before requesting merge. The `autofix` skill (`.claude/skills/autofix/`) handles fetching + applying CodeRabbit's GitHub PR review threads when the app is installed.
 
 **Hard rules:**
+- **Always run CodeRabbit CLI review (`coderabbit review`) before committing, and again after the PR is raised** — resolve real findings before pushing / requesting merge.
 - **Never merge locally.** No `git merge` into `main`, no `git push origin main`, no branch deletion. PRs are the only path to `main`.
 - **Never commit on `main`.** Even for typo fixes — open a tiny PR.
 - **Never `--force` push** unless the user explicitly asks for it.
