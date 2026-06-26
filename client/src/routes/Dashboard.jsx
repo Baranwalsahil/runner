@@ -271,7 +271,13 @@ export default function Dashboard() {
         : "NEW RUNNER"
       : `${totalCells} CELL${totalCells === 1 ? "" : "S"} CLAIMED`;
 
-  const viewingRun = Boolean(selectedRun);
+  // selectedRun lags behind activeRunId until runsApi.detail() resolves for the
+  // newly active run. Only treat it as the current run once the loaded detail's
+  // id matches, so the headline/map never flash the previous run's data.
+  const activeRunIdRaw = activeRunId ? activeRunId.replace(/^run-/, "") : null;
+  const selectedRunLoaded =
+    selectedRun != null && String(selectedRun.id) === activeRunIdRaw;
+  const viewingRun = selectedRunLoaded;
   // Current strength the signed-in user holds per owned cell (from territory).
   const myCountByH3 = new Map();
   for (const c of cells) {
@@ -311,7 +317,7 @@ export default function Dashboard() {
   // When a bar is explicitly selected and the run detail is loaded, show that
   // run's cell count in the CELLS.OWNED headline; otherwise show the all-time total.
   const displayedCells =
-    isExplicitSelection && selectedRun != null
+    isExplicitSelection && selectedRunLoaded
       ? Number(selectedRun.cells_claimed) || 0
       : totalCells;
   // Metrics for the run currently shown on the map (selected bar, else latest).
