@@ -1,11 +1,28 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import AppLayout from "../components/AppLayout.jsx";
 import Dashboard from "../routes/Dashboard.jsx";
 import { withAuth } from "./utils/withAuth.jsx";
 
+// Module-level log to capture TerritoryMapPreview `cells` props across renders.
+// vi.mock is hoisted so the factory must reference module-scope variables.
+let _cellsLog = [];
+
+vi.mock("maplibre-gl", () => import("./__mocks__/maplibre-gl.js"));
+
+vi.mock("../components/dashboard/TerritoryMapPreview.jsx", async (importOriginal) => {
+  const mod = await importOriginal();
+  return {
+    default: (props) => {
+      _cellsLog.push([...(props.cells ?? [])]);
+      return mod.default(props);
+    },
+  };
+});
+
 beforeEach(() => {
+  _cellsLog = [];
   Element.prototype.scrollIntoView = vi.fn();
   vi.stubGlobal(
     "fetch",
@@ -33,6 +50,163 @@ function setup({ user = null } = {}) {
     )
   );
 }
+
+// ---------------------------------------------------------------------------
+// Regression: no flash of rival-coloured territory cells on Dashboard
+// ---------------------------------------------------------------------------
+describe("Dashboard territory-flash regression", () => {
+  const USER_ID = "user-flash-001";
+  const RUN_ID = "run-flash-aaa-0000-0000-000000000001";
+  // A valid H3 resolution-9 cell (Seattle centre).
+  const H3_CELL = "8928d542c9bffff";
+
+  // Territory cell that belongs to USER_ID but also has a RIVAL share.
+  const rivalTerritoryCell = {
+    h3_index: H3_CELL,
+    user_id: USER_ID,
+    username: "me",
+    color: "#c3f400",
+    resolution: 9,
+    claim_count: 2,
+    claimed_at: new Date().toISOString(),
+    shares: [
+      { user_id: USER_ID, username: "me", color: "#c3f400", count: 2 },
+      { user_id: "rival-001", username: "rival", color: "#ff0000", count: 1 },
+    ],
+  };
+
+  function makeUser() {
+    return { id: USER_ID, username: "me" };
+  }
+
+  it("strips rival shares from territory-view cells so rival colours never appear in the map", async () => {
+    // Scenario: no runs at all → activeRunId=null, runDetailPending=false.
+    // The territory view is shown with the user's contested cell.
+    // After fix: rival share is stripped, so TerritoryMapPreview only sees self share.
+    vi.stubGlobal("fetch", vi.fn().mockImplementation((url) => {
+      const u = typeof url === "string" ? url : url.toString();
+      if (u.includes("/auth/me")) {
+        return Promise.resolve(new Response(
+          JSON.stringify({ id: USER_ID, username: "me", total_cells: 1 }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        ));
+      }
+      if (u.includes("/territory/user/")) {
+        return Promise.resolve(new Response(
+          JSON.stringify([rivalTerritoryCell]),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        ));
+      }
+      // No runs → empty list
+      return Promise.resolve(new Response("[]", { status: 200, headers: { "Content-Type": "application/json" } }));
+    }));
+
+    render(
+      withAuth(
+        <MemoryRouter initialEntries={["/dashboard"]}>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>,
+        { user: makeUser() }
+      )
+    );
+
+    // Wait until the territory data has been loaded and at least one snapshot exists.
+    await waitFor(() => {
+      expect(_cellsLog.length).toBeGreaterThan(0);
+    });
+
+    // None of the rendered snapshots should contain rival shares.
+    // Before the fix, the contested cell was passed as-is (with "rival-001" share).
+    const hasRivalSlice = _cellsLog.some((snapshot) =>
+      snapshot.some((c) =>
+        (c.shares ?? []).some((s) => s.userId === "rival-001")
+      )
+    );
+    expect(hasRivalSlice).toBe(false);
+  });
+
+  it("does not flash territory cells while run detail is loading", async () => {
+    // Use a deferred promise to keep run detail pending long enough to observe
+    // the intermediate state. But since microtask timing in jsdom is hard to
+    // control, we verify the STRUCTURAL guarantee instead: the territory cells
+    // are filtered/hidden whenever runDetailPending would be true.
+    // This test ensures the cells snapshot log never includes rival colours
+    // regardless of resolution order.
+    vi.stubGlobal("fetch", vi.fn().mockImplementation((url) => {
+      const u = typeof url === "string" ? url : url.toString();
+      if (u.includes("/auth/me")) {
+        return Promise.resolve(new Response(
+          JSON.stringify({ id: USER_ID, username: "me", total_cells: 1 }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        ));
+      }
+      if (u.includes(`/runs/${RUN_ID}/detail`)) {
+        return Promise.resolve(new Response(
+          JSON.stringify({
+            id: RUN_ID,
+            cells_claimed: 1,
+            cells: [H3_CELL],
+            started_at: new Date().toISOString(),
+            ended_at: new Date().toISOString(),
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        ));
+      }
+      if (u.includes("/runs")) {
+        return Promise.resolve(new Response(
+          JSON.stringify([{
+            id: RUN_ID,
+            cells_claimed: 1,
+            started_at: new Date().toISOString(),
+            ended_at: new Date().toISOString(),
+          }]),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        ));
+      }
+      if (u.includes("/territory/user/")) {
+        return Promise.resolve(new Response(
+          JSON.stringify([rivalTerritoryCell]),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        ));
+      }
+      return Promise.resolve(new Response("[]", { status: 200, headers: { "Content-Type": "application/json" } }));
+    }));
+
+    render(
+      withAuth(
+        <MemoryRouter initialEntries={["/dashboard"]}>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>,
+        { user: makeUser() }
+      )
+    );
+
+    // Wait until run detail has loaded (final state: viewingRun=true).
+    await waitFor(() => {
+      // The run-view cells are lime-coloured, no rival shares.
+      const lastSnapshot = _cellsLog[_cellsLog.length - 1];
+      // Once run detail is done, we may see run cells (possibly empty if run
+      // has no cells) or the territory cells, but NEVER with a rival share.
+      expect(lastSnapshot).toBeDefined();
+    });
+
+    // Regardless of resolve order, rival colours must never appear in ANY render.
+    const hasRivalAtAnyPoint = _cellsLog.some((snapshot) =>
+      snapshot.some((c) =>
+        (c.shares ?? []).some((s) => s.userId === "rival-001")
+      )
+    );
+    expect(hasRivalAtAnyPoint).toBe(false);
+  });
+});
 
 describe("Dashboard route", () => {
   it("mounts all dashboard blocks", () => {

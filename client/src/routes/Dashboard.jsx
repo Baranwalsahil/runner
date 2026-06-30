@@ -195,6 +195,7 @@ export default function Dashboard() {
   const [cells, setCells] = useState([]);
   const [selectedRunId, setSelectedRunId] = useState(null);
   const [selectedRun, setSelectedRun] = useState(null);
+  const [runDetailLoading, setRunDetailLoading] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -240,10 +241,12 @@ export default function Dashboard() {
   useEffect(() => {
     if (!activeRunId) {
       setSelectedRun(null);
+      setRunDetailLoading(false);
       return;
     }
     const runId = activeRunId.replace(/^run-/, "");
     let cancelled = false;
+    setRunDetailLoading(true);
     runsApi
       .detail(runId)
       .then((detail) => {
@@ -251,6 +254,9 @@ export default function Dashboard() {
       })
       .catch(() => {
         if (!cancelled) setSelectedRun(null);
+      })
+      .finally(() => {
+        if (!cancelled) setRunDetailLoading(false);
       });
     return () => {
       cancelled = true;
@@ -301,9 +307,24 @@ export default function Dashboard() {
         };
       })
     : [];
+  // While we are waiting for the active run's detail to load, show an empty map
+  // rather than briefly flashing the user's territory (which can include other
+  // players' wedge colours on contested cells, making it look like everyone's
+  // cells are visible for ~1 s before the run view takes over).
+  // Use the explicit runDetailLoading flag so a failed fetch clears the pending
+  // state (selectedRunLoaded stays false on error, which would otherwise leave
+  // the map empty permanently).
+  const runDetailPending = runDetailLoading;
   const mapCells = viewingRun
     ? selectedCells
-    : filterCellsNearLocation(cells, currentLocation, NEARBY_RADIUS_KM);
+    : runDetailPending
+      ? []
+      : filterCellsNearLocation(cells, currentLocation, NEARBY_RADIUS_KM).map((c) => ({
+          ...c,
+          // Strip competing users' shares so only the current user's wedge colour
+          // is rendered in the territory view — no rival-coloured slices visible.
+          shares: (c.shares ?? []).filter((s) => s.userId === user?.id),
+        }));
   const mapLiveBattles = viewingRun ? selectedRun.cells_claimed ?? 0 : totalCells;
   const runDate =
     viewingRun && selectedRun.started_at
