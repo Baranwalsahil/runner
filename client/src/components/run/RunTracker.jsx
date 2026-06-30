@@ -110,6 +110,9 @@ export default function RunTracker() {
 
   async function handleFinish() {
     stop();
+    // Freeze the timer immediately — pause the session before any early return
+    // or async work so the clock is always stopped on click.
+    setSession((s) => pauseSession(s, Date.now()));
     const endedAt = new Date().toISOString();
     const startedAt = new Date(session?.startedAt || Date.now()).toISOString();
     if (points.length < 2) {
@@ -204,35 +207,44 @@ export default function RunTracker() {
       )}
 
       {(recording || paused) && (
-        <div className="grid grid-cols-2 gap-md">
-          {recording ? (
-            <button
-              type="button"
-              onClick={handlePause}
-              disabled={submitting}
-              className="w-full bg-amber-500 px-md py-md text-lg font-hud-mono font-bold uppercase tracking-widest text-black disabled:opacity-50"
-            >
-              Pause
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleResume}
-              disabled={submitting}
-              className="w-full bg-primary-fixed px-md py-md text-lg font-hud-mono font-bold uppercase tracking-widest text-on-primary-fixed disabled:opacity-50"
-            >
-              Resume
-            </button>
-          )}
+        submitting ? (
+          // During submission: full-width button so "Submitting…" is never
+          // squeezed into a half-width column on narrow mobile screens.
           <button
             type="button"
-            onClick={handleFinish}
-            disabled={submitting}
-            className="w-full bg-red-500 px-md py-md text-lg font-hud-mono font-bold uppercase tracking-widest text-white disabled:opacity-50"
+            disabled
+            className="w-full bg-red-500 px-md py-md text-lg font-hud-mono font-bold uppercase tracking-widest text-white opacity-50"
           >
-            {submitting ? "Submitting…" : "Finish"}
+            Submitting…
           </button>
-        </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-md">
+            {recording ? (
+              <button
+                type="button"
+                onClick={handlePause}
+                className="w-full bg-amber-500 px-md py-md text-lg font-hud-mono font-bold uppercase tracking-widest text-black"
+              >
+                Pause
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResume}
+                className="w-full bg-primary-fixed px-md py-md text-lg font-hud-mono font-bold uppercase tracking-widest text-on-primary-fixed"
+              >
+                Resume
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleFinish}
+              className="w-full bg-red-500 px-md py-md text-lg font-hud-mono font-bold uppercase tracking-widest text-white"
+            >
+              Finish
+            </button>
+          </div>
+        )
       )}
     </div>
   );

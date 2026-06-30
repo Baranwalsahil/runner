@@ -201,4 +201,79 @@ describe("<RunTracker>", () => {
     expect(screen.getByTestId("paused-badge")).toBeInTheDocument();
     expect(geo.watchPosition).not.toHaveBeenCalled();
   });
+
+  // Bug fix: timer stops immediately on Submit click, not after network resolves.
+  it("timer stops immediately when Finish is clicked (before network resolves)", async () => {
+    vi.useFakeTimers();
+    // Use a promise we can control so the request stays pending.
+    let resolveRequest;
+    fetchMock.mockReturnValue(
+      new Promise((res) => {
+        resolveRequest = res;
+      })
+    );
+
+    renderTracker();
+    fireEvent.click(screen.getByRole("button", { name: /^start$/i }));
+    emitTwoPoints();
+
+    // Advance time by 3 seconds so the timer shows a non-zero value.
+    act(() => { vi.advanceTimersByTime(3000); });
+
+    // Capture the timer value displayed just before clicking Finish.
+    const timeBefore = screen.getByText(/^\d{2}:\d{2}$/).textContent;
+    expect(timeBefore).toBe("00:03");
+
+    fireEvent.click(screen.getByRole("button", { name: /^finish$/i }));
+
+    // Button should now show "Submitting…" (request is in-flight).
+    // The session transitions to paused state so the button grid stays visible.
+    expect(screen.getByRole("button", { name: /submitting/i })).toBeInTheDocument();
+
+    // Advance another 5 seconds — the timer must NOT advance because the
+    // session was moved to paused state synchronously on click.
+    act(() => { vi.advanceTimersByTime(5000); });
+    const timeAfterAdvance = screen.getByText(/^\d{2}:\d{2}$/).textContent;
+    expect(timeAfterAdvance).toBe(timeBefore);
+
+    // Clean up: resolve the pending request so no React state-update warnings.
+    await act(async () => {
+      resolveRequest(
+        new Response(
+          JSON.stringify({ run_id: "x", cells_claimed: 0, new_total: 0 }),
+          { status: 201, headers: { "Content-Type": "application/json" } }
+        )
+      );
+    });
+    vi.useRealTimers();
+  });
+
+  // Bug fix: during submission the "Submitting…" button is rendered full-width
+  // (not inside grid-cols-2) so it never gets squeezed on narrow mobile screens.
+  it("Submitting button is full-width (not in two-column grid) during submission", async () => {
+    let resolveRequest;
+    fetchMock.mockReturnValue(new Promise((res) => { resolveRequest = res; }));
+
+    renderTracker();
+    fireEvent.click(screen.getByRole("button", { name: /^start$/i }));
+    emitTwoPoints();
+    fireEvent.click(screen.getByRole("button", { name: /^finish$/i }));
+
+    const submittingBtn = screen.getByRole("button", { name: /submitting/i });
+    // Must have w-full so it spans the whole container, not half a grid column.
+    expect(submittingBtn.className).toMatch(/w-full/);
+    // Its parent must NOT be a two-column grid — the grid is replaced by a
+    // single full-width button during submission.
+    expect(submittingBtn.parentElement.className).not.toMatch(/grid-cols-2/);
+
+    // Clean up.
+    await act(async () => {
+      resolveRequest(
+        new Response(
+          JSON.stringify({ run_id: "x", cells_claimed: 0, new_total: 0 }),
+          { status: 201, headers: { "Content-Type": "application/json" } }
+        )
+      );
+    });
+  });
 });
