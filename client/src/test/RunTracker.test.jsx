@@ -201,4 +201,55 @@ describe("<RunTracker>", () => {
     expect(screen.getByTestId("paused-badge")).toBeInTheDocument();
     expect(geo.watchPosition).not.toHaveBeenCalled();
   });
+
+  // Bug fix: timer stops immediately on Submit click, not after network resolves.
+  it("timer stops immediately when Finish is clicked (before network resolves)", async () => {
+    // Use a promise we can control so the request stays pending.
+    let resolveRequest;
+    fetchMock.mockReturnValue(
+      new Promise((res) => {
+        resolveRequest = res;
+      })
+    );
+
+    renderTracker();
+    fireEvent.click(screen.getByRole("button", { name: /^start$/i }));
+    emitTwoPoints();
+
+    // Capture the timer value displayed just before clicking Finish.
+    const timeBefore = screen.getByText(/^\d{2}:\d{2}$/).textContent;
+
+    fireEvent.click(screen.getByRole("button", { name: /^finish$/i }));
+
+    // Button should now show "Submitting…" (request is in-flight).
+    // The session transitions to paused state so the button grid stays visible.
+    expect(screen.getByRole("button", { name: /submitting/i })).toBeInTheDocument();
+
+    // The timer must be frozen at the same value — the session was synchronously
+    // moved to paused state on click so no more interval ticks accumulate.
+    const timeAfterClick = screen.getByText(/^\d{2}:\d{2}$/).textContent;
+    expect(timeAfterClick).toBe(timeBefore);
+
+    // Clean up: resolve the pending request so no React state-update warnings.
+    act(() => {
+      resolveRequest(
+        new Response(
+          JSON.stringify({ run_id: "x", cells_claimed: 0, new_total: 0 }),
+          { status: 201, headers: { "Content-Type": "application/json" } }
+        )
+      );
+    });
+    await waitFor(() => expect(screen.queryByRole("button", { name: /submitting/i })).not.toBeInTheDocument());
+  });
+
+  // Bug fix: Finish button carries whitespace-nowrap so "Submitting…" never
+  // overflows its box.
+  it("Finish button has whitespace-nowrap class to prevent text overflow", () => {
+    renderTracker();
+    fireEvent.click(screen.getByRole("button", { name: /^start$/i }));
+    emitTwoPoints();
+
+    const finishBtn = screen.getByRole("button", { name: /^finish$/i });
+    expect(finishBtn.className).toMatch(/whitespace-nowrap/);
+  });
 });

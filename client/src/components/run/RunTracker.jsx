@@ -116,6 +116,9 @@ export default function RunTracker() {
       setSubmitError("Need at least 2 GPS points to submit");
       return;
     }
+    // Freeze the timer immediately on submit click by banking the current
+    // segment into a paused state — before the async request starts.
+    setSession((s) => pauseSession(s, Date.now()));
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -228,7 +231,7 @@ export default function RunTracker() {
             type="button"
             onClick={handleFinish}
             disabled={submitting}
-            className="w-full bg-red-500 px-md py-md text-lg font-hud-mono font-bold uppercase tracking-widest text-white disabled:opacity-50"
+            className="w-full bg-red-500 px-md py-md text-lg font-hud-mono font-bold uppercase tracking-widest text-white disabled:opacity-50 whitespace-nowrap overflow-hidden text-ellipsis"
           >
             {submitting ? "Submitting…" : "Finish"}
           </button>
