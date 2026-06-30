@@ -110,15 +110,15 @@ export default function RunTracker() {
 
   async function handleFinish() {
     stop();
+    // Freeze the timer immediately — pause the session before any early return
+    // or async work so the clock is always stopped on click.
+    setSession((s) => pauseSession(s, Date.now()));
     const endedAt = new Date().toISOString();
     const startedAt = new Date(session?.startedAt || Date.now()).toISOString();
     if (points.length < 2) {
       setSubmitError("Need at least 2 GPS points to submit");
       return;
     }
-    // Freeze the timer immediately on submit click by banking the current
-    // segment into a paused state — before the async request starts.
-    setSession((s) => pauseSession(s, Date.now()));
     setSubmitting(true);
     setSubmitError(null);
     try {

@@ -204,6 +204,7 @@ describe("<RunTracker>", () => {
 
   // Bug fix: timer stops immediately on Submit click, not after network resolves.
   it("timer stops immediately when Finish is clicked (before network resolves)", async () => {
+    vi.useFakeTimers();
     // Use a promise we can control so the request stays pending.
     let resolveRequest;
     fetchMock.mockReturnValue(
@@ -216,8 +217,12 @@ describe("<RunTracker>", () => {
     fireEvent.click(screen.getByRole("button", { name: /^start$/i }));
     emitTwoPoints();
 
+    // Advance time by 3 seconds so the timer shows a non-zero value.
+    act(() => { vi.advanceTimersByTime(3000); });
+
     // Capture the timer value displayed just before clicking Finish.
     const timeBefore = screen.getByText(/^\d{2}:\d{2}$/).textContent;
+    expect(timeBefore).toBe("00:03");
 
     fireEvent.click(screen.getByRole("button", { name: /^finish$/i }));
 
@@ -225,13 +230,14 @@ describe("<RunTracker>", () => {
     // The session transitions to paused state so the button grid stays visible.
     expect(screen.getByRole("button", { name: /submitting/i })).toBeInTheDocument();
 
-    // The timer must be frozen at the same value — the session was synchronously
-    // moved to paused state on click so no more interval ticks accumulate.
-    const timeAfterClick = screen.getByText(/^\d{2}:\d{2}$/).textContent;
-    expect(timeAfterClick).toBe(timeBefore);
+    // Advance another 5 seconds — the timer must NOT advance because the
+    // session was moved to paused state synchronously on click.
+    act(() => { vi.advanceTimersByTime(5000); });
+    const timeAfterAdvance = screen.getByText(/^\d{2}:\d{2}$/).textContent;
+    expect(timeAfterAdvance).toBe(timeBefore);
 
     // Clean up: resolve the pending request so no React state-update warnings.
-    act(() => {
+    await act(async () => {
       resolveRequest(
         new Response(
           JSON.stringify({ run_id: "x", cells_claimed: 0, new_total: 0 }),
@@ -239,7 +245,7 @@ describe("<RunTracker>", () => {
         )
       );
     });
-    await waitFor(() => expect(screen.queryByRole("button", { name: /submitting/i })).not.toBeInTheDocument());
+    vi.useRealTimers();
   });
 
   // Bug fix: Finish button carries whitespace-nowrap so "Submitting…" never
