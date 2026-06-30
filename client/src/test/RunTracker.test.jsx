@@ -248,14 +248,32 @@ describe("<RunTracker>", () => {
     vi.useRealTimers();
   });
 
-  // Bug fix: Finish button carries whitespace-nowrap so "Submitting…" never
-  // overflows its box.
-  it("Finish button has whitespace-nowrap class to prevent text overflow", () => {
+  // Bug fix: during submission the "Submitting…" button is rendered full-width
+  // (not inside grid-cols-2) so it never gets squeezed on narrow mobile screens.
+  it("Submitting button is full-width (not in two-column grid) during submission", async () => {
+    let resolveRequest;
+    fetchMock.mockReturnValue(new Promise((res) => { resolveRequest = res; }));
+
     renderTracker();
     fireEvent.click(screen.getByRole("button", { name: /^start$/i }));
     emitTwoPoints();
+    fireEvent.click(screen.getByRole("button", { name: /^finish$/i }));
 
-    const finishBtn = screen.getByRole("button", { name: /^finish$/i });
-    expect(finishBtn.className).toMatch(/whitespace-nowrap/);
+    const submittingBtn = screen.getByRole("button", { name: /submitting/i });
+    // Must have w-full so it spans the whole container, not half a grid column.
+    expect(submittingBtn.className).toMatch(/w-full/);
+    // Its parent must NOT be a two-column grid — the grid is replaced by a
+    // single full-width button during submission.
+    expect(submittingBtn.parentElement.className).not.toMatch(/grid-cols-2/);
+
+    // Clean up.
+    await act(async () => {
+      resolveRequest(
+        new Response(
+          JSON.stringify({ run_id: "x", cells_claimed: 0, new_total: 0 }),
+          { status: 201, headers: { "Content-Type": "application/json" } }
+        )
+      );
+    });
   });
 });
